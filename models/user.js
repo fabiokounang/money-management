@@ -3,7 +3,6 @@ const {
 } = require('../utils/db');
 
 async function find_by_id(id) {
-  console.log(id, 'asd')
   const sql = `
         SELECT
             id,

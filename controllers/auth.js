@@ -113,7 +113,7 @@ async function register(req, res, next) {
       email: created_user.email
     };
 
-    await seed_user_default_data(userId);
+    await seed_user_default_data(user_id);
     req.flash('success_msg', 'Register berhasil, selamat datang');
     return res.redirect('/dashboard');
   } catch (error) {

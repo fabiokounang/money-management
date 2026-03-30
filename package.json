@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "check": "node --check index.js && node --check controllers/auth.js && node --check controllers/budget.js && node --check controllers/report.js && node --check models/budget.js && node --check models/user.js && node --check utils/seed.js && node --check routes/web.js"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,7 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "method-override": "^3.0.0",
-    "mysql2": "^3.20.0"
+    "mysql2": "^3.20.0",
+    "nodemon": "^3.1.10"
   }
 }
