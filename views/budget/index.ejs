@@ -12,7 +12,14 @@
 
         <%
             const safeBudgets = Array.isArray(budgets) ? budgets : [];
-            const safeBudgetActualSummary = Array.isArray(budget_actual_summary) ? budget_actual_summary : [];
+            const safeBudgetActualMap = budget_actual_map && typeof budget_actual_map === 'object'
+                ? budget_actual_map
+                : {};
+            const safeSummaryStats = summary_stats || {
+                total_budget_amount: 0,
+                total_actual_amount: 0,
+                over_budget_count: 0
+            };
             const safeFilters = filters || {
                 search: '',
                 period_type: '',
@@ -26,24 +33,9 @@
             const startRow = totalRows === 0 ? 0 : ((currentPage - 1) * perPage) + 1;
             const endRow = Math.min(currentPage * perPage, totalRows);
 
-            let totalBudgetAmount = 0;
-            let totalActualAmount = 0;
-            let totalRemainingAmount = 0;
-            let overBudgetCount = 0;
-
-            safeBudgetActualSummary.forEach((item) => {
-                const budgetAmount = Number(item.amount || 0);
-                const actualAmount = Number(item.actual_amount || 0);
-                const remainingAmount = budgetAmount - actualAmount;
-
-                totalBudgetAmount += budgetAmount;
-                totalActualAmount += actualAmount;
-                totalRemainingAmount += remainingAmount;
-
-                if (actualAmount > budgetAmount) {
-                    overBudgetCount += 1;
-                }
-            });
+            const totalBudgetAmount = Number(safeSummaryStats.total_budget_amount || 0);
+            const totalActualAmount = Number(safeSummaryStats.total_actual_amount || 0);
+            const overBudgetCount = Number(safeSummaryStats.over_budget_count || 0);
 
             function formatCurrency(value) {
                 return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
@@ -112,8 +104,8 @@
                 return 'bg-emerald-500';
             }
 
-            function getBudgetActualItem(budgetId) {
-                return safeBudgetActualSummary.find((item) => Number(item.id) === Number(budgetId)) || null;
+            function getActualAmountByBudgetId(budgetId) {
+                return Number(safeBudgetActualMap[String(budgetId)] || 0);
             }
         %>
 
@@ -290,8 +282,7 @@
 
                         <% safeBudgets.forEach((item) => { %>
                             <%
-                                const actualItem = getBudgetActualItem(item.id);
-                                const actualAmount = Number(actualItem?.actual_amount || 0);
+                                const actualAmount = getActualAmountByBudgetId(item.id);
                                 const budgetAmount = Number(item.amount || 0);
                                 const remainingAmount = budgetAmount - actualAmount;
                                 const progressWidth = getProgressWidth(actualAmount, budgetAmount);
