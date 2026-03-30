@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/app_head') %>
+</head>
+
+<body class="min-h-screen bg-stone-50 text-stone-800">
+  <%- include('../partials/sidebar') %>
+  <div id="app-overlay" class="app-overlay lg:hidden"></div>
+
+  <main class="app-main px-4 py-4 sm:px-6 sm:py-6">
+    <%- include('../partials/topbar') %>
+
+    <%
+      const item = typeof budget_item !== 'undefined' && budget_item ? budget_item : {};
+      const safeCategories = Array.isArray(categories) ? categories : [];
+    %>
+
+    <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]">
+      <div>
+        <div class="overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50 backdrop-blur">
+          <div class="border-b border-stone-100 bg-gradient-to-r from-amber-50 via-white to-emerald-50 px-5 py-5 sm:px-7 sm:py-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 shadow-sm">
+                  Budget
+                </div>
+                <h1 class="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">
+                  Edit Budget
+                </h1>
+                <p class="mt-2 max-w-2xl text-sm leading-7 text-stone-600">
+                  Perbarui budget agar target pengeluaran tetap relevan dengan kebutuhan dan pola belanjamu.
+                </p>
+              </div>
+
+              <a
+                href="/budget"
+                class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700"
+              >
+                ← Back to Budgets
+              </a>
+            </div>
+          </div>
+
+          <div class="px-5 py-6 sm:px-7 sm:py-7">
+            <% if (typeof error !== 'undefined' && error) { %>
+            <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+              <%= error %>
+            </div>
+            <% } %>
+
+            <form action="/budget/<%= item.id %>?_method=PUT" method="POST" class="space-y-8">
+              <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-lg text-emerald-700">
+                    •
+                  </div>
+                  <div>
+                    <h2 class="text-base font-semibold text-stone-900">Budget Details</h2>
+                    <p class="mt-1 text-sm text-stone-500">
+                      Ubah kategori, nominal, dan periode budget sesuai kebutuhan.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">Expense Category</label>
+                    <select
+                      name="category_id"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      required
+                    >
+                      <option value="">Select category</option>
+                      <% safeCategories.forEach((entry) => { %>
+                      <option value="<%= entry.id %>" <%= Number(item.category_id) === Number(entry.id) ? 'selected' : '' %>>
+                        <%= entry.category_name %>
+                      </option>
+                      <% }) %>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">Budget Amount</label>
+                    <input
+                      type="number"
+                      name="amount"
+                      min="1"
+                      step="0.01"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      value="<%= item.amount ?? '' %>"
+                      required
+                    >
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">Period Type</label>
+                    <select
+                      name="period_type"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      required
+                    >
+                      <option value="">Select period</option>
+                      <option value="weekly" <%= item.period_type === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                      <option value="monthly" <%= item.period_type === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                      <option value="yearly" <%= item.period_type === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                      <option value="custom" <%= item.period_type === 'custom' ? 'selected' : '' %>>Custom</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">Status</label>
+                    <select
+                      name="is_active"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      required
+                    >
+                      <option value="1" <%= Number(item.is_active) === 1 ? 'selected' : '' %>>Active</option>
+                      <option value="0" <%= Number(item.is_active) === 0 ? 'selected' : '' %>>Inactive</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">Start Date</label>
+                    <input
+                      type="date"
+                      name="start_date"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      value="<%= item.start_date ? String(item.start_date).slice(0, 10) : '' %>"
+                      required
+                    >
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">End Date</label>
+                    <input
+                      type="date"
+                      name="end_date"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      value="<%= item.end_date ? String(item.end_date).slice(0, 10) : '' %>"
+                      required
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-lg text-amber-700">
+                    •
+                  </div>
+                  <div>
+                    <h2 class="text-base font-semibold text-stone-900">Additional Note</h2>
+                    <p class="mt-1 text-sm text-stone-500">
+                      Tambahkan atau perbarui catatan agar budget lebih mudah dipahami nanti.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6">
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Note</label>
+                  <textarea
+                    name="note"
+                    rows="4"
+                    class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-4 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                  ><%= item.note || '' %></textarea>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 border-t border-stone-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="submit"
+                  form="delete-budget-form"
+                  class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                >
+                  Delete Budget
+                </button>
+
+                <div class="flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="/budget"
+                    class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
+                  >
+                    Cancel
+                  </a>
+
+                  <button
+                    type="submit"
+                    class="inline-flex items-center justify-center rounded-2xl bg-stone-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-300/40 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                  >
+                    Update Budget
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <form
+              id="delete-budget-form"
+              action="/budget/<%= item.id %>?_method=DELETE"
+              method="POST"
+              onsubmit="return confirm('Delete this budget?');"
+            ></form>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40 sm:p-6">
+          <div class="flex items-center gap-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              ✦
+            </div>
+            <div>
+              <p class="text-base font-semibold text-stone-900">Budget Tips</p>
+              <p class="mt-1 text-sm text-stone-500">Helpful reminders while editing your budget.</p>
+            </div>
+          </div>
+
+          <div class="mt-5 space-y-4">
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Review before increasing</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Sebelum menaikkan budget, cek dulu apakah pengeluarannya memang konsisten naik.
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Keep the period clear</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Period yang jelas bikin evaluasi budget jauh lebih mudah dilakukan.
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Inactive is safer than delete</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Kalau budget sudah tidak dipakai, kadang lebih aman ubah jadi inactive dulu.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40 sm:p-6">
+          <div class="flex items-center gap-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              ▣
+            </div>
+            <div>
+              <p class="text-base font-semibold text-stone-900">Preview Summary</p>
+              <p class="mt-1 text-sm text-stone-500">A quick snapshot of this budget.</p>
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-[28px] border border-stone-200 bg-gradient-to-br from-stone-900 to-stone-700 p-5 text-white shadow-lg">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-semibold">
+                  <%= safeCategories.find((entry) => Number(entry.id) === Number(item.category_id))?.category_name || 'Budget Category' %>
+                </h3>
+                <p class="mt-1 text-sm text-white/70">Spending target control</p>
+              </div>
+              <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <%= Number(item.is_active) === 1 ? 'Active' : 'Inactive' %>
+              </span>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                <p class="text-xs uppercase tracking-wide text-white/60">Amount</p>
+                <p class="mt-1 text-sm font-semibold">Rp <%= Number(item.amount || 0).toLocaleString('id-ID') %></p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                <p class="text-xs uppercase tracking-wide text-white/60">Period</p>
+                <p class="mt-1 text-sm font-semibold"><%= item.period_type || '-' %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40 sm:p-6">
+          <p class="text-base font-semibold text-stone-900">Reminder</p>
+          <p class="mt-3 text-sm leading-7 text-stone-600">
+            Budget yang diperbarui dengan baik akan lebih membantu kamu mengontrol kebiasaan belanja, bukan sekadar membatasi angka.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('app-sidebar');
+    const overlay = document.getElementById('app-overlay');
+
+    if (sidebarToggle && sidebar && overlay) {
+      sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('show');
+      });
+
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+      });
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<%- include('../partials/auth_head') %>
+</head>
+
+<body class="min-h-screen bg-stone-50 text-stone-800">
+	<div class="relative flex min-h-screen overflow-hidden">
+		<div class="pointer-events-none absolute inset-0">
+			<div class="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-100/60 blur-3xl"></div>
+			<div class="absolute right-0 top-1/4 h-80 w-80 rounded-full bg-amber-100/50 blur-3xl"></div>
+			<div class="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-lime-100/40 blur-3xl"></div>
+		</div>
+
+		<section class="relative hidden lg:flex lg:w-1/2">
+			<div class="flex w-full flex-col justify-between border-r border-stone-200/70 bg-white/55 px-12 backdrop-blur-xl xl:px-16">
+				<div>
+					<!-- <div class="inline-flex items-center gap-3 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 shadow-sm backdrop-blur">
+						<span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+						<span class="text-sm font-semibold tracking-wide text-emerald-700">Money Management</span>
+					</div> -->
+
+					<div class="mt-12 max-w-xl">
+						<p class="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-stone-500">
+							Simple personal finance
+						</p>
+
+						<h1 class="text-3xl font-bold leading-tight tracking-tight text-stone-900 xl:text-3xl">
+							Manage your money
+							<span class="block text-emerald-700">with a calmer, clearer view.</span>
+						</h1>
+
+						<p class="mt-6 max-w-lg text-base leading-8 text-stone-600 xl:text-lg">
+							Catat pemasukan, pengeluaran, dan kategori dalam tampilan yang lebih ringan,
+							lebih hangat, dan enak dipakai setiap hari.
+						</p>
+					</div>
+
+					<div class="mt-12 grid gap-4">
+						<div class="rounded-3xl border border-stone-200/80 bg-white/80 p-5 shadow-sm shadow-stone-200/40 backdrop-blur">
+							<div class="flex items-start gap-4">
+								<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-lg font-bold text-emerald-700 shadow-inner">
+									₿
+								</div>
+								<div>
+									<h3 class="text-base font-semibold text-stone-900">Quick daily tracking</h3>
+									<p class="mt-1 text-sm leading-6 text-stone-600">
+										Input transaksi harian dengan tampilan yang lebih bersih dan tidak melelahkan mata.
+									</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="rounded-3xl border border-stone-200/80 bg-white/80 p-5 shadow-sm shadow-stone-200/40 backdrop-blur">
+							<div class="flex items-start gap-4">
+								<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-lg font-bold text-amber-700 shadow-inner">
+									◎
+								</div>
+								<div>
+									<h3 class="text-base font-semibold text-stone-900">Smarter category view</h3>
+									<p class="mt-1 text-sm leading-6 text-stone-600">
+										Lebih mudah melihat kategori mana yang paling banyak memengaruhi pengeluaranmu.
+									</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="rounded-3xl border border-stone-200/80 bg-white/80 p-5 shadow-sm shadow-stone-200/40 backdrop-blur">
+							<div class="flex items-start gap-4">
+								<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-lg font-bold text-stone-700 shadow-inner">
+									↗
+								</div>
+								<div>
+									<h3 class="text-base font-semibold text-stone-900">Built for clarity</h3>
+									<p class="mt-1 text-sm leading-6 text-stone-600">
+										Layout dibuat simpel supaya fokusmu tetap ke data, bukan ke tampilan yang ramai.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- <div class="mt-10">
+					<div class="rounded-3xl border border-stone-200/80 bg-white/75 p-5 shadow-sm backdrop-blur">
+						<p class="text-sm leading-7 text-stone-600">
+							“Small financial awareness, repeated every day, creates long-term control.”
+						</p>
+					</div>
+				</div> -->
+			</div>
+		</section>
+
+		<section class="relative flex w-full items-center justify-center px-5 py-8 sm:px-8 lg:w-1/2 lg:px-10">
+			<div class="w-full max-w-md">
+				<div class="mb-6 lg:hidden">
+					<div class="inline-flex items-center gap-3 rounded-full border border-emerald-200 bg-white px-4 py-2 shadow-sm">
+						<span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+						<span class="text-sm font-semibold tracking-wide text-emerald-700">Money Management</span>
+					</div>
+				</div>
+
+				<div class="rounded-[2rem] border border-stone-200/80 bg-white/90 p-6 shadow-xl shadow-stone-200/50 backdrop-blur-xl sm:p-8">
+					<div>
+						<p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Welcome back</p>
+						<h2 class="mt-3 text-3xl font-bold tracking-tight text-stone-900">
+							Login to your account
+						</h2>
+						<p class="mt-3 text-sm leading-7 text-stone-600">
+							Masuk untuk lanjut melihat dashboard, transaksi, dan insight keuanganmu.
+						</p>
+					</div>
+
+					<% if (typeof error !== 'undefined' && error) { %>
+					<div class="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+						<%= error %>
+					</div>
+					<% } %>
+
+					<% if (success_msg && success_msg.length > 0) { %>
+					<div class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+						<%= success_msg[0] %>
+					</div>
+					<% } %>
+
+					<% const loginOld = typeof old !== 'undefined' && old ? old : {}; %>
+
+					<form action="/login" method="POST" class="mt-7 space-y-5">
+						<div>
+							<label for="email" class="mb-2 block text-sm font-semibold text-stone-800">
+								Email
+							</label>
+							<input
+								type="email"
+								id="email"
+								name="email"
+								value="<%= loginOld.email || '' %>"
+								placeholder="you@example.com"
+								autocomplete="email"
+								required
+								class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition duration-200 placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+							>
+						</div>
+
+						<div>
+							<div class="mb-2 flex items-center justify-between gap-3">
+								<label for="password" class="block text-sm font-semibold text-stone-800">
+									Password
+								</label>
+							</div>
+							<input
+								type="password"
+								id="password"
+								name="password"
+								placeholder="Enter your password"
+								autocomplete="current-password"
+								required
+								class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition duration-200 placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+							>
+							<p class="mt-2 text-xs leading-6 text-stone-500">
+								Gunakan email dan password yang sudah kamu daftarkan.
+							</p>
+						</div>
+
+						<button
+							type="submit"
+							class="inline-flex w-full items-center justify-center rounded-2xl bg-stone-900 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-stone-300/40 transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+						>
+							Login
+						</button>
+					</form>
+
+					<div class="mt-6 text-center text-sm text-stone-600">
+						Belum punya akun?
+						<a href="/register" class="font-semibold text-emerald-700 transition hover:text-emerald-800 hover:underline">
+							Create account
+						</a>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+</body>
+
+</html>

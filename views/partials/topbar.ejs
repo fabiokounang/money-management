@@ -1,0 +1,53 @@
+<header class="app-topbar sticky top-0 z-30">
+  <div class="flex items-center justify-between gap-4 rounded-[28px] border border-stone-200/70 bg-white/80 px-4 py-4 shadow-soft backdrop-blur sm:px-5">
+
+    <!-- LEFT -->
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        id="sidebar-toggle"
+        class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-lineSoft bg-white text-cocoa shadow-sm transition hover:bg-stone-50 lg:hidden"
+        aria-label="Toggle sidebar"
+      >
+        ☰
+      </button>
+
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+          Overview
+        </p>
+        <h2 class="text-lg font-bold tracking-tight text-cocoa sm:text-2xl">
+          <%= title || 'Dashboard' %>
+        </h2>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="flex items-center gap-3">
+
+      <!-- MOTIVATION -->
+      <div class="hidden rounded-2xl border border-lineSoft bg-[#faf8f4] px-4 py-2 text-sm text-muted shadow-sm sm:block">
+        Stay consistent. Small steps → big clarity.
+      </div>
+
+      <!-- USER -->
+      <div class="flex items-center gap-3 rounded-2xl border border-lineSoft bg-white px-3 py-2 shadow-soft">
+
+        <!-- AVATAR -->
+        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-sage/15 font-semibold text-sageDark">
+          <%= user && user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U' %>
+        </div>
+
+        <!-- USER INFO -->
+        <div class="hidden sm:block leading-tight">
+          <p class="text-sm font-semibold text-cocoa">
+            <%= user ? user.full_name : 'User' %>
+          </p>
+          <p class="text-xs text-muted">
+            <%= user ? user.email : 'user@email.com' %>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

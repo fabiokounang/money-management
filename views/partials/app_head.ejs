@@ -1,0 +1,71 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= title || 'Money Management' %></title>
+
+<!-- SEO / basic meta -->
+<meta name="description" content="Simple and cozy money management app to track your income, expense, and financial clarity.">
+<meta name="theme-color" content="#f7f3ec">
+
+<!-- Google Font (modern & cozy) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui']
+        },
+        colors: {
+          cream: '#f7f3ec',
+          latte: '#efe7da',
+          sage: '#7b9a7e',
+          sageDark: '#5f7a62',
+          cocoa: '#2f2924',
+          muted: '#7a7067',
+          lineSoft: '#e7ded2',
+          cardSoft: '#fffdf9'
+        },
+        boxShadow: {
+          soft: '0 10px 30px rgba(58, 44, 28, 0.08)',
+          cozy: '0 24px 60px rgba(58, 44, 28, 0.12)'
+        },
+        borderRadius: {
+          '4xl': '2rem'
+        }
+      }
+    }
+  }
+</script>
+
+<!-- App custom CSS -->
+<link rel="stylesheet" href="/css/app.css">
+
+<!-- Base styles -->
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* smoother feel */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* subtle scroll style */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d6ccc2;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+</style>

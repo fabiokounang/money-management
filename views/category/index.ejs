@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/app_head') %>
+</head>
+
+<body class="min-h-screen bg-stone-50 text-stone-800">
+  <%- include('../partials/sidebar') %>
+
+  <div id="app-overlay" class="app-overlay lg:hidden"></div>
+
+  <main class="app-main px-4 py-4 sm:px-6 sm:py-6">
+    <%- include('../partials/topbar') %>
+
+    <%
+      const safeCategories = Array.isArray(categories) ? categories : [];
+      const safeFilters = filters || {
+        search: '',
+        category_type: '',
+        is_active: -1
+      };
+
+      const currentPage = Number(page || 1);
+      const perPage = Number(limit || 10);
+      const totalRows = Number(total || 0);
+      const totalPages = Number(total_pages || 1);
+
+      let incomeCount = 0;
+      let expenseCount = 0;
+
+      safeCategories.forEach((item) => {
+        if (item.category_type === 'income') {
+          incomeCount += 1;
+        }
+
+        if (item.category_type === 'expense') {
+          expenseCount += 1;
+        }
+      });
+
+      const startRow = totalRows === 0 ? 0 : ((currentPage - 1) * perPage) + 1;
+      const endRow = Math.min(currentPage * perPage, totalRows);
+
+      function getTypeBadgeClass(type) {
+        if (type === 'income') return 'bg-emerald-100 text-emerald-700';
+        return 'bg-rose-100 text-rose-700';
+      }
+
+      function getTypeLabel(type) {
+        return type === 'income' ? 'Income' : 'Expense';
+      }
+
+      function getStatusBadgeClass(isActive) {
+        return Number(isActive) === 1
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'bg-stone-200 text-stone-700';
+      }
+
+      function getStatusLabel(isActive) {
+        return Number(isActive) === 1 ? 'Active' : 'Inactive';
+      }
+
+      function getDisplayIcon(icon) {
+        return icon && String(icon).trim() !== '' ? icon : '◎';
+      }
+
+      function getDisplayColor(color) {
+        return color && String(color).trim() !== '' ? color : '-';
+      }
+
+      function getColorSwatchClass(color) {
+        const map = {
+          red: 'bg-red-300',
+          orange: 'bg-orange-300',
+          yellow: 'bg-yellow-300',
+          green: 'bg-emerald-300',
+          blue: 'bg-blue-300',
+          purple: 'bg-purple-300',
+          pink: 'bg-pink-300',
+          gray: 'bg-gray-300',
+          grey: 'bg-gray-300',
+          brown: 'bg-amber-700'
+        };
+
+        const key = String(color || '').toLowerCase();
+        return map[key] || 'bg-stone-300';
+      }
+    %>
+
+    <% if (success_msg && success_msg.length > 0) { %>
+    <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+      <%= success_msg[0] %>
+    </div>
+    <% } %>
+
+    <% if (error_msg && error_msg.length > 0) { %>
+    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+      <%= error_msg[0] %>
+    </div>
+    <% } %>
+
+    <section class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="rounded-[28px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-medium text-stone-500">Total Categories</p>
+            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= totalRows %></h3>
+            <p class="mt-2 text-xs text-stone-500">Filtered categories from database</p>
+          </div>
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">
+            ◎
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-[28px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-medium text-stone-500">Income Categories</p>
+            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= incomeCount %></h3>
+            <p class="mt-2 text-xs text-emerald-600">Visible on current page</p>
+          </div>
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-semibold text-emerald-700">
+            ↗
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-[28px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-medium text-stone-500">Expense Categories</p>
+            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= expenseCount %></h3>
+            <p class="mt-2 text-xs text-rose-600">Visible on current page</p>
+          </div>
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-lg font-semibold text-rose-700">
+            ↘
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-6 overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50">
+      <div class="border-b border-stone-100 bg-gradient-to-r from-emerald-50 via-white to-amber-50 px-5 py-5 sm:px-7 sm:py-6">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 shadow-sm">
+              Category Management
+            </div>
+            <h1 class="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">
+              Manage Your Categories
+            </h1>
+            <p class="mt-2 text-sm leading-7 text-stone-600">
+              Kelola kategori income dan expense agar transaksi tetap rapi dan mudah dianalisis.
+            </p>
+          </div>
+
+          <a
+            href="/category/create"
+            class="inline-flex items-center justify-center gap-2 rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-300/40 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+          >
+            <span>＋</span>
+            <span>Add Category</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="px-5 py-6 sm:px-7 sm:py-7">
+        <form method="GET" action="/category" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div class="xl:col-span-2">
+            <label class="mb-2 block text-sm font-semibold text-stone-800">Search</label>
+            <input
+              type="text"
+              name="search"
+              value="<%= safeFilters.search || '' %>"
+              placeholder="Search category name..."
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+            >
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-stone-800">Type</label>
+            <select
+              name="category_type"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+            >
+              <option value="" <%= safeFilters.category_type === '' ? 'selected' : '' %>>All Type</option>
+              <option value="income" <%= safeFilters.category_type === 'income' ? 'selected' : '' %>>Income</option>
+              <option value="expense" <%= safeFilters.category_type === 'expense' ? 'selected' : '' %>>Expense</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-stone-800">Status</label>
+            <select
+              name="is_active"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+            >
+              <option value="" <%= Number(safeFilters.is_active) === -1 ? 'selected' : '' %>>All Status</option>
+              <option value="1" <%= Number(safeFilters.is_active) === 1 ? 'selected' : '' %>>Active</option>
+              <option value="0" <%= Number(safeFilters.is_active) === 0 ? 'selected' : '' %>>Inactive</option>
+            </select>
+          </div>
+
+          <div class="flex items-end">
+            <button
+              type="submit"
+              class="inline-flex h-[50px] w-full items-center justify-center rounded-2xl bg-stone-900 px-5 text-sm font-semibold text-white shadow-lg shadow-stone-300/30 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+            >
+              Apply Filter
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="mt-6 overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50">
+      <div class="flex flex-col gap-3 border-b border-stone-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6">
+        <div>
+          <p class="text-base font-semibold text-stone-900">Category List</p>
+          <p class="mt-1 text-sm text-stone-500">All categories available from your database</p>
+        </div>
+
+        <div class="inline-flex rounded-2xl border border-stone-200 bg-stone-50 p-1">
+          <button
+            type="button"
+            id="category-table-view-btn"
+            class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-stone-900 shadow-sm"
+          >
+            Table
+          </button>
+          <button
+            type="button"
+            id="category-card-view-btn"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-stone-500"
+          >
+            Cards
+          </button>
+        </div>
+      </div>
+
+      <div id="category-table-view" class="hidden lg:block">
+        <div class="overflow-x-auto">
+          <table class="min-w-full border-collapse">
+            <thead>
+              <tr class="border-b border-stone-200 bg-stone-50">
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Name</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Type</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Icon</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Color</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Status</th>
+                <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (safeCategories.length === 0) { %>
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-sm text-stone-500">
+                  No categories found for the current filter.
+                </td>
+              </tr>
+              <% } %>
+
+              <% safeCategories.forEach((item) => { %>
+              <tr class="border-b border-stone-100 last:border-b-0 hover:bg-stone-50/70">
+                <td class="px-6 py-4 align-top">
+                  <p class="font-semibold text-stone-900"><%= item.category_name %></p>
+                  <p class="mt-1 text-xs text-stone-500">Created category record</p>
+                </td>
+
+                <td class="px-6 py-4">
+                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= getTypeBadgeClass(item.category_type) %>">
+                    <%= getTypeLabel(item.category_type) %>
+                  </span>
+                </td>
+
+                <td class="px-6 py-4 text-sm font-semibold text-stone-900">
+                  <%= getDisplayIcon(item.icon) %>
+                </td>
+
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-2 text-sm text-stone-800">
+                    <span class="h-4 w-4 rounded-full <%= getColorSwatchClass(item.color) %>"></span>
+                    <%= getDisplayColor(item.color) %>
+                  </span>
+                </td>
+
+                <td class="px-6 py-4">
+                  <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= getStatusBadgeClass(item.is_active) %>">
+                    <%= getStatusLabel(item.is_active) %>
+                  </span>
+                </td>
+
+                <td class="px-6 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <a
+                      href="/category/<%= item.id %>/edit"
+                      class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50"
+                    >
+                      Edit
+                    </a>
+
+                    <form action="/category/<%= item.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Delete this category?');">
+                      <button
+                        type="submit"
+                        class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="category-card-view" class="space-y-4 p-5 sm:p-6 lg:hidden">
+        <% if (safeCategories.length === 0) { %>
+        <div class="rounded-[24px] border border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-500">
+          No categories found for the current filter.
+        </div>
+        <% } %>
+
+        <% safeCategories.forEach((item) => { %>
+        <div class="rounded-[28px] border border-stone-200 bg-white p-4 shadow-sm">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <span class="text-xl"><%= getDisplayIcon(item.icon) %></span>
+                <h3 class="text-base font-semibold text-stone-900"><%= item.category_name %></h3>
+              </div>
+              <p class="mt-2 text-sm text-stone-500">Stored category for transactions and reports</p>
+            </div>
+
+            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= getTypeBadgeClass(item.category_type) %>">
+              <%= getTypeLabel(item.category_type) %>
+            </span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-2xl bg-stone-50 p-3">
+              <p class="text-xs text-stone-500">Color</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="h-4 w-4 rounded-full <%= getColorSwatchClass(item.color) %>"></span>
+                <p class="text-sm font-semibold text-stone-900"><%= getDisplayColor(item.color) %></p>
+              </div>
+            </div>
+
+            <div class="rounded-2xl bg-stone-50 p-3">
+              <p class="text-xs text-stone-500">Status</p>
+              <p class="mt-1 text-sm font-semibold text-stone-900"><%= getStatusLabel(item.is_active) %></p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex gap-2">
+            <a
+              href="/category/<%= item.id %>/edit"
+              class="flex-1 rounded-xl border border-stone-200 bg-white px-3 py-3 text-center text-xs font-semibold text-stone-700"
+            >
+              Edit
+            </a>
+
+            <form action="/category/<%= item.id %>?_method=DELETE" method="POST" class="flex-1" onsubmit="return confirm('Delete this category?');">
+              <button
+                type="submit"
+                class="w-full rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-xs font-semibold text-rose-700"
+              >
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+
+      <div class="flex flex-col gap-3 border-t border-stone-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6">
+        <p class="text-sm text-stone-500">
+          Showing <span class="font-semibold text-stone-900"><%= startRow %> - <%= endRow %></span> of
+          <span class="font-semibold text-stone-900"><%= totalRows %></span> categories
+        </p>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <% if (currentPage > 1) { %>
+          <a
+            href="/category?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&category_type=<%= encodeURIComponent(safeFilters.category_type || '') %>&is_active=<%= encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active) %>"
+            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"
+          >
+            Prev
+          </a>
+          <% } else { %>
+          <span class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-400">
+            Prev
+          </span>
+          <% } %>
+
+          <% for (let i = 1; i <= totalPages; i += 1) { %>
+          <% if (i === currentPage) { %>
+          <span class="rounded-xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+            <%= i %>
+          </span>
+          <% } else { %>
+          <a
+            href="/category?page=<%= i %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&category_type=<%= encodeURIComponent(safeFilters.category_type || '') %>&is_active=<%= encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active) %>"
+            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"
+          >
+            <%= i %>
+          </a>
+          <% } %>
+          <% } %>
+
+          <% if (currentPage < totalPages) { %>
+          <a
+            href="/category?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&category_type=<%= encodeURIComponent(safeFilters.category_type || '') %>&is_active=<%= encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active) %>"
+            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"
+          >
+            Next
+          </a>
+          <% } else { %>
+          <span class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-400">
+            Next
+          </span>
+          <% } %>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('app-sidebar');
+    const overlay = document.getElementById('app-overlay');
+
+    if (sidebarToggle && sidebar && overlay) {
+      sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('show');
+      });
+
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+      });
+    }
+
+    const tableViewBtn = document.getElementById('category-table-view-btn');
+    const cardViewBtn = document.getElementById('category-card-view-btn');
+    const tableView = document.getElementById('category-table-view');
+    const cardView = document.getElementById('category-card-view');
+
+    if (tableViewBtn && cardViewBtn && tableView && cardView) {
+      tableViewBtn.addEventListener('click', () => {
+        tableView.classList.remove('hidden');
+        cardView.classList.add('hidden');
+
+        tableViewBtn.classList.add('bg-white', 'text-stone-900', 'shadow-sm');
+        tableViewBtn.classList.remove('text-stone-500');
+
+        cardViewBtn.classList.remove('bg-white', 'text-stone-900', 'shadow-sm');
+        cardViewBtn.classList.add('text-stone-500');
+      });
+
+      cardViewBtn.addEventListener('click', () => {
+        tableView.classList.add('hidden');
+        cardView.classList.remove('hidden');
+
+        cardViewBtn.classList.add('bg-white', 'text-stone-900', 'shadow-sm');
+        cardViewBtn.classList.remove('text-stone-500');
+
+        tableViewBtn.classList.remove('bg-white', 'text-stone-900', 'shadow-sm');
+        tableViewBtn.classList.add('text-stone-500');
+      });
+    }
+  </script>
+</body>
+
+</html>

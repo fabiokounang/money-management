@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/app_head') %>
+</head>
+
+<body class="min-h-screen bg-stone-50 text-stone-800">
+  <%- include('../partials/sidebar') %>
+
+  <div id="app-overlay" class="app-overlay lg:hidden"></div>
+
+  <main class="app-main px-4 py-4 sm:px-6 sm:py-6">
+    <%- include('../partials/topbar') %>
+
+    <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]">
+      <div>
+        <div class="overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50 backdrop-blur">
+          <div class="border-b border-stone-100 bg-gradient-to-r from-emerald-50 via-white to-amber-50 px-5 py-5 sm:px-7 sm:py-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 shadow-sm">
+                  Account
+                </div>
+                <h1 class="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">
+                  Create New Account
+                </h1>
+                <p class="mt-2 max-w-2xl text-sm leading-7 text-stone-600">
+                  Tambahkan akun keuangan baru untuk tracking uangmu dengan lebih rapi dan nyaman.
+                </p>
+              </div>
+
+              <a
+                href="/account"
+                class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700"
+              >
+                ← Back to Accounts
+              </a>
+            </div>
+          </div>
+
+          <div class="px-5 py-6 sm:px-7 sm:py-7">
+            <% if (typeof error !== 'undefined' && error) { %>
+              <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                <%= error %>
+              </div>
+            <% } %>
+
+            <% const oldData = typeof old !== 'undefined' && old ? old : {}; %>
+
+            <form action="/account" method="POST" class="space-y-8">
+              <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-lg text-emerald-700">
+                    •
+                  </div>
+                  <div>
+                    <h2 class="text-base font-semibold text-stone-900">Basic Information</h2>
+                    <p class="mt-1 text-sm text-stone-500">
+                      Informasi utama akun yang akan dipakai untuk pencatatan.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">
+                      Account Name
+                    </label>
+                    <input
+                      type="text"
+                      name="account_name"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      placeholder="Example: Cash, BCA, Dana"
+                      value="<%= oldData.account_name || '' %>"
+                      required
+                    >
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">
+                      Account Type
+                    </label>
+                    <select
+                      name="account_type"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      required
+                    >
+                      <option value="">Select type</option>
+                      <option value="cash" <%= oldData.account_type === 'cash' ? 'selected' : '' %>>Cash</option>
+                      <option value="bank" <%= oldData.account_type === 'bank' ? 'selected' : '' %>>Bank</option>
+                      <option value="ewallet" <%= oldData.account_type === 'ewallet' ? 'selected' : '' %>>E-Wallet</option>
+                      <option value="other" <%= oldData.account_type === 'other' ? 'selected' : '' %>>Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">
+                      Opening Balance
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      name="opening_balance"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      placeholder="Example: 1000000"
+                      value="<%= oldData.opening_balance ?? '' %>"
+                      required
+                    >
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">
+                      Account Color
+                    </label>
+                    <input
+                      type="text"
+                      name="account_color"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      placeholder="Example: blue, green, orange"
+                      value="<%= oldData.account_color || '' %>"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-lg text-amber-700">
+                    •
+                  </div>
+                  <div>
+                    <h2 class="text-base font-semibold text-stone-900">Additional Info</h2>
+                    <p class="mt-1 text-sm text-stone-500">
+                      Detail tambahan untuk membantu pengelolaan akun.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-5">
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">
+                      Note
+                    </label>
+                    <textarea
+                      name="note"
+                      rows="4"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-4 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      placeholder="Example: Main salary account..."
+                    ><%= oldData.note || '' %></textarea>
+                  </div>
+
+                  <div class="max-w-md">
+                    <label class="mb-2 block text-sm font-semibold text-stone-800">
+                      Status
+                    </label>
+                    <select
+                      name="is_active"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                      required
+                    >
+                      <option value="1" <%= Number(oldData.is_active ?? 1) === 1 ? 'selected' : '' %>>Active</option>
+                      <option value="0" <%= Number(oldData.is_active ?? 1) === 0 ? 'selected' : '' %>>Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 border-t border-stone-200 pt-6 sm:flex-row sm:justify-end">
+                <a
+                  href="/account"
+                  class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
+                >
+                  Cancel
+                </a>
+
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center rounded-2xl bg-stone-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-300/40 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                >
+                  Save Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40 sm:p-6">
+          <div class="flex items-center gap-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              ✦
+            </div>
+            <div>
+              <p class="text-base font-semibold text-stone-900">Tips</p>
+              <p class="mt-1 text-sm text-stone-500">Supaya akunmu lebih rapi dan mudah dipahami.</p>
+            </div>
+          </div>
+
+          <div class="mt-5 space-y-4">
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Use clear names</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Gunakan nama akun yang mudah dikenali.
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Opening balance matters</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Saldo awal akan jadi dasar tracking saldo selanjutnya.
+              </p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Deactivate instead delete</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Lebih aman nonaktifkan akun lama daripada hapus.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40 sm:p-6">
+          <div class="flex items-center gap-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              ▣
+            </div>
+            <div>
+              <p class="text-base font-semibold text-stone-900">Preview</p>
+              <p class="mt-1 text-sm text-stone-500">Contoh tampilan akun yang akan dibuat.</p>
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-[28px] border border-stone-200 bg-gradient-to-br from-stone-900 to-stone-700 p-5 text-white shadow-lg">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-semibold">BCA</h3>
+                <p class="mt-1 text-sm text-white/70">Bank Account</p>
+              </div>
+              <div class="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.8)]"></div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                <p class="text-xs uppercase tracking-wide text-white/60">Opening</p>
+                <p class="mt-1 text-sm font-semibold">Rp 10.000.000</p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                <p class="text-xs uppercase tracking-wide text-white/60">Current</p>
+                <p class="mt-1 text-sm font-semibold">Rp 10.000.000</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/40 sm:p-6">
+          <p class="text-base font-semibold text-stone-900">Reminder</p>
+          <p class="mt-3 text-sm leading-7 text-stone-600">
+            Semua transaksi akan memengaruhi saldo akun ini, jadi pastikan data awalnya benar.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('app-sidebar');
+    const overlay = document.getElementById('app-overlay');
+
+    if (sidebarToggle && sidebar && overlay) {
+      sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('show');
+      });
+
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+      });
+    }
+  </script>
+</body>
+
+</html>

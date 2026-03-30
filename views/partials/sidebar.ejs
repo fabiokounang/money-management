@@ -1,0 +1,95 @@
+<aside id="app-sidebar" class="app-sidebar fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full lg:translate-x-0">
+  <div class="flex h-full flex-col bg-white/90 backdrop-blur border-r border-stone-200/60">
+
+    <!-- HEADER -->
+    <div class="flex items-center gap-3 px-6 py-6">
+      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-sage/15 text-lg font-bold text-sageDark shadow-soft">
+        ₿
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-cocoa">Money Management</h1>
+        <p class="text-xs text-muted">Personal Finance Tracker</p>
+      </div>
+    </div>
+
+    <!-- USER CARD -->
+    <!-- <div class="px-4">
+      <div class="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-soft backdrop-blur">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Overview</p>
+
+        <div class="mt-3 flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/20 text-sm font-bold text-sageDark">
+            <%= user && user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U' %>
+          </div>
+          <div>
+            <p class="text-xs text-muted">Welcome back</p>
+            <p class="text-sm font-semibold text-cocoa">
+              <%= user ? user.full_name : 'User' %>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- NAVIGATION -->
+    <nav class="mt-6 flex-1 px-4 pb-6">
+      <div class="space-y-1">
+
+        <a href="/dashboard" class="sidebar-link <%= current_path === '/dashboard' ? 'active' : '' %>">
+          <span class="sidebar-icon">⌂</span>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="/transaction" class="sidebar-link <%= current_path.startsWith('/transaction') ? 'active' : '' %>">
+          <span class="sidebar-icon">↔</span>
+          <span>Transactions</span>
+        </a>
+
+        <a href="/category" class="sidebar-link <%= current_path.startsWith('/category') ? 'active' : '' %>">
+          <span class="sidebar-icon">◎</span>
+          <span>Categories</span>
+        </a>
+
+        <a href="/subcategory" class="sidebar-link <%= current_path.startsWith('/subcategory') ? 'active' : '' %>">
+          <span class="sidebar-icon">◌</span>
+          <span>Subcategories</span>
+        </a>
+
+        <a href="/account" class="sidebar-link <%= current_path.startsWith('/account') ? 'active' : '' %>">
+          <span class="sidebar-icon">◫</span>
+          <span>Accounts</span>
+        </a>
+
+        <a href="/budget" class="sidebar-link <%= current_path.startsWith('/budget') ? 'active' : '' %>">
+          <span class="sidebar-icon">▣</span>
+          <span>Budgets</span>
+        </a>
+
+        <!-- <a href="/report" class="sidebar-link <%= current_path.startsWith('/report') ? 'active' : '' %>">
+          <span class="sidebar-icon">↗</span>
+          <span>Reports</span>
+        </a> -->
+
+      </div>
+
+      <!-- MOTIVATION CARD -->
+      <div class="mt-8 rounded-3xl border border-white/70 bg-gradient-to-br from-white/90 to-[#f8f3ea] p-4 shadow-soft">
+        <p class="text-sm font-semibold text-cocoa">Stay aware.</p>
+        <p class="mt-2 text-xs leading-6 text-muted">
+          Small tracking habits can create big financial clarity over time.
+        </p>
+      </div>
+    </nav>
+
+    <!-- LOGOUT -->
+    <div class="border-t border-stone-200/60 px-4 py-4">
+      <form action="/logout" method="POST">
+        <button type="submit" class="sidebar-logout-btn">
+          <span class="sidebar-icon">⤴</span>
+          <span>Logout</span>
+        </button>
+      </form>
+    </div>
+
+  </div>
+</aside>

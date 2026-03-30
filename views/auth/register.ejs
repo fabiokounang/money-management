@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+	<%- include('../partials/auth_head') %>
+</head>
+
+<body class="min-h-screen bg-stone-50 text-stone-800">
+	<div class="relative flex min-h-screen overflow-hidden">
+
+```
+	<!-- background glow -->
+	<div class="pointer-events-none absolute inset-0">
+		<div class="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-100/60 blur-3xl"></div>
+		<div class="absolute right-0 top-1/4 h-80 w-80 rounded-full bg-amber-100/50 blur-3xl"></div>
+		<div class="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-lime-100/40 blur-3xl"></div>
+	</div>
+
+	<!-- LEFT PANEL -->
+	<section class="relative hidden lg:flex lg:w-1/2">
+		<div class="flex w-full flex-col justify-between border-r border-stone-200/70 bg-white/55 px-12 backdrop-blur-xl xl:px-16">
+
+			<div>
+				<!-- <div class="inline-flex items-center gap-3 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 shadow-sm">
+					<span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+					<span class="text-sm font-semibold tracking-wide text-emerald-700">Money Management</span>
+				</div> -->
+
+				<div class="mt-12 max-w-xl">
+					<p class="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-stone-500">
+						Start better money habit
+					</p>
+
+					<h1 class="text-4xl font-bold leading-tight tracking-tight text-stone-900 xl:text-5xl">
+						Build a healthier
+						<span class="block text-emerald-700">financial routine.</span>
+					</h1>
+
+					<p class="mt-6 max-w-lg text-base leading-8 text-stone-600 xl:text-lg">
+						Mulai dari hal kecil: mencatat, memahami, lalu perlahan mengendalikan arus uangmu.
+						Semua dibuat ringan supaya nyaman dipakai setiap hari.
+					</p>
+				</div>
+
+				<div class="mt-12 grid gap-4 sm:grid-cols-2">
+					<div class="rounded-3xl border border-stone-200 bg-white/80 p-5 shadow-sm">
+						<h3 class="font-semibold text-stone-900">Track</h3>
+						<p class="mt-2 text-sm text-stone-600">Catat pemasukan & pengeluaran dengan lebih rapi.</p>
+					</div>
+
+					<div class="rounded-3xl border border-stone-200 bg-white/80 p-5 shadow-sm">
+						<h3 class="font-semibold text-stone-900">Analyze</h3>
+						<p class="mt-2 text-sm text-stone-600">Lihat kategori pengeluaran terbesar dengan cepat.</p>
+					</div>
+
+					<div class="rounded-3xl border border-stone-200 bg-white/80 p-5 shadow-sm">
+						<h3 class="font-semibold text-stone-900">Control</h3>
+						<p class="mt-2 text-sm text-stone-600">Ambil keputusan finansial yang lebih sadar.</p>
+					</div>
+
+					<div class="rounded-3xl border border-stone-200 bg-white/80 p-5 shadow-sm">
+						<h3 class="font-semibold text-stone-900">Grow</h3>
+						<p class="mt-2 text-sm text-stone-600">Bangun kebiasaan finansial sehat tiap hari.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- <div class="mt-10">
+				<div class="rounded-3xl border border-stone-200 bg-white/75 p-5 shadow-sm">
+					<p class="text-sm leading-7 text-stone-600">
+						Consistency in small financial actions builds long-term control.
+					</p>
+				</div>
+			</div> -->
+
+		</div>
+	</section>
+
+	<!-- FORM -->
+	<section class="relative flex w-full items-center justify-center px-5 py-8 sm:px-8 lg:w-1/2">
+		<div class="w-full max-w-md">
+
+			<div class="mb-6 lg:hidden">
+				<div class="inline-flex items-center gap-3 rounded-full border border-emerald-200 bg-white px-4 py-2 shadow-sm">
+					<span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+					<span class="text-sm font-semibold tracking-wide text-emerald-700">Money Management</span>
+				</div>
+			</div>
+
+			<div class="rounded-[2rem] border border-stone-200 bg-white/90 p-6 shadow-xl shadow-stone-200/50 backdrop-blur-xl sm:p-8">
+
+				<div>
+					<p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Create account</p>
+					<h2 class="mt-3 text-3xl font-bold tracking-tight text-stone-900">
+						Start your journey
+					</h2>
+				</div>
+
+				<% if (typeof error !== 'undefined' && error) { %>
+				<div class="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+					<%= error %>
+				</div>
+				<% } %>
+
+				<% if (success_msg && success_msg.length > 0) { %>
+				<div class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+					<%= success_msg[0] %>
+				</div>
+				<% } %>
+
+				<% const registerOld = typeof old !== 'undefined' && old ? old : {}; %>
+
+				<form action="/register" method="POST" class="mt-7 space-y-5">
+
+					<div>
+						<label class="mb-2 block text-sm font-semibold text-stone-800">Full name</label>
+						<input
+							type="text"
+							name="full_name"
+							value="<%= registerOld.full_name || '' %>"
+							maxlength="100"
+							required
+							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+						>
+					</div>
+
+					<div>
+						<label class="mb-2 block text-sm font-semibold text-stone-800">Email</label>
+						<input
+							type="email"
+							name="email"
+							value="<%= registerOld.email || '' %>"
+							maxlength="150"
+							required
+							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+						>
+					</div>
+
+					<div>
+						<label class="mb-2 block text-sm font-semibold text-stone-800">Password</label>
+						<input
+							type="password"
+							name="password"
+							minlength="6"
+							required
+							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+						>
+					</div>
+
+					<div>
+						<label class="mb-2 block text-sm font-semibold text-stone-800">Confirm password</label>
+						<input
+							type="password"
+							name="confirm_password"
+							minlength="6"
+							required
+							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+						>
+						<p class="mt-2 text-xs text-stone-500">
+							Password minimal 6 karakter dan harus sama dengan konfirmasi password.
+						</p>
+					</div>
+
+					<button
+						type="submit"
+						class="w-full rounded-2xl bg-stone-900 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-700"
+					>
+						Create account
+					</button>
+
+				</form>
+
+				<div class="mt-6 text-center text-sm text-stone-600">
+					Sudah punya akun?
+					<a href="/login" class="font-semibold text-emerald-700 hover:underline">
+						Login here
+					</a>
+				</div>
+
+			</div>
+		</div>
+	</section>
+
+</div>
+```
+
+</body>
+
+</html>
