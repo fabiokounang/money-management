@@ -6,7 +6,7 @@
 	<%- include('../partials/auth_head') %>
 </head>
 
-<body class="min-h-screen bg-stone-50 text-stone-800">
+<body class="auth-bg text-stone-800">
 	<div class="relative flex min-h-screen overflow-hidden">
 	<!-- background glow -->
 	<div class="pointer-events-none absolute inset-0">
@@ -86,7 +86,7 @@
 				</div>
 			</div>
 
-			<div class="rounded-[2rem] border border-stone-200 bg-white/90 p-6 shadow-xl shadow-stone-200/50 backdrop-blur-xl sm:p-8">
+			<div class="auth-form-card p-6 sm:p-8">
 
 				<div>
 					<p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Create account</p>
@@ -119,7 +119,7 @@
 							value="<%= registerOld.full_name || '' %>"
 							maxlength="100"
 							required
-							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+							class="auth-input px-4 py-3 text-sm outline-none"
 						>
 					</div>
 
@@ -131,7 +131,7 @@
 							value="<%= registerOld.email || '' %>"
 							maxlength="150"
 							required
-							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+							class="auth-input px-4 py-3 text-sm outline-none"
 						>
 					</div>
 
@@ -142,7 +142,7 @@
 							name="password"
 							minlength="6"
 							required
-							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+							class="auth-input px-4 py-3 text-sm outline-none"
 						>
 					</div>
 
@@ -153,7 +153,7 @@
 							name="confirm_password"
 							minlength="6"
 							required
-							class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+							class="auth-input px-4 py-3 text-sm outline-none"
 						>
 						<p class="mt-2 text-xs text-stone-500">
 							Password minimal 6 karakter dan harus sama dengan konfirmasi password.
@@ -162,7 +162,7 @@
 
 					<button
 						type="submit"
-						class="w-full rounded-2xl bg-stone-900 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-700"
+						class="auth-btn w-full py-3.5 text-sm font-semibold"
 					>
 						Create account
 					</button>

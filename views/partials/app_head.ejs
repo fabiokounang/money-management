@@ -2,12 +2,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= title || 'Money Management' %></title>
 
-<!-- SEO / basic meta -->
-<meta name="description" content="Simple and cozy money management app to track your income, expense, and financial clarity.">
-<meta name="theme-color" content="#f7f3ec">
+<meta name="description" content="Modern and cozy money management app to track income, expense, and financial clarity.">
+<meta name="theme-color" content="#f4f1ea">
 
-<!-- Google Font (modern & cozy) -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- Tailwind CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -17,21 +15,26 @@
     theme: {
       extend: {
         fontFamily: {
-          sans: ['Inter', 'ui-sans-serif', 'system-ui']
+          sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui']
         },
         colors: {
           cream: '#f7f3ec',
           latte: '#efe7da',
           sage: '#7b9a7e',
           sageDark: '#5f7a62',
-          cocoa: '#2f2924',
-          muted: '#7a7067',
-          lineSoft: '#e7ded2',
-          cardSoft: '#fffdf9'
+          cocoa: '#2d2a26',
+          muted: '#726c64',
+          lineSoft: '#e8e2d8',
+          cardSoft: '#fffdf9',
+          sand: '#f4f1ea',
+          paper: '#fcfbf8',
+          pine: '#2f5d50',
+          pineSoft: '#e8f3ef',
+          accent: '#b07d4f'
         },
         boxShadow: {
-          soft: '0 10px 30px rgba(58, 44, 28, 0.08)',
-          cozy: '0 24px 60px rgba(58, 44, 28, 0.12)'
+          soft: '0 12px 30px rgba(41, 36, 31, 0.08)',
+          cozy: '0 30px 70px rgba(41, 36, 31, 0.12)'
         },
         borderRadius: {
           '4xl': '2rem'
@@ -44,25 +47,24 @@
 <!-- App custom CSS -->
 <link rel="stylesheet" href="/css/app.css">
 
-<!-- Base styles -->
 <style>
   body {
-    font-family: 'Inter', sans-serif;
-  }
-
-  /* smoother feel */
-  * {
+    font-family: 'Plus Jakarta Sans', sans-serif;
     -webkit-tap-highlight-color: transparent;
+    color: #2d2a26;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(176, 125, 79, 0.10), transparent 30%),
+      radial-gradient(circle at 95% 100%, rgba(47, 93, 80, 0.12), transparent 34%),
+      linear-gradient(180deg, #f8f5ef 0%, #f4f1ea 52%, #f7f4ed 100%);
   }
 
-  /* subtle scroll style */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #d6ccc2;
-    border-radius: 10px;
+    background: #d9d0c4;
+    border-radius: 999px;
   }
 
   ::-webkit-scrollbar-track {
