@@ -10,8 +10,6 @@ const accountRoutes = require('./account');
 const budgetRoutes = require('./budget');
 const exportRoutes = require('./export');
 
-const authMiddleware = require('../middleware/auth');
-
 const router = express.Router();
 
 router.use('/', authRoutes);

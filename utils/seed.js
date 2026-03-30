@@ -177,15 +177,23 @@ async function seed_user_default_data(user_id) {
             INSERT INTO accounts (
                 user_id,
                 account_name,
-                balance,
+                account_type,
+                opening_balance,
+                current_balance,
+                account_color,
+                note,
                 is_active
-            ) VALUES (?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
     await connection.execute(accountSql, [
       user_id,
       'Cash',
+      'cash',
       0,
+      0,
+      null,
+      'Default seeded account',
       1
     ]);
 

@@ -1,6 +1,141 @@
 const budget = require('../models/budget');
 const category = require('../models/category');
 
+const PERIOD_TYPES = new Set(['weekly', 'monthly', 'yearly', 'custom']);
+
+function normalize_is_active_filter(value) {
+  if (value === undefined || value === '') {
+    return -1;
+  }
+
+  const parsed = Number(value);
+  if (parsed === 0 || parsed === 1) {
+    return parsed;
+  }
+
+  return -1;
+}
+
+function format_date_for_input(value) {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parse_iso_date(value) {
+  const input = String(value || '').trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return null;
+  }
+
+  const [yearRaw, monthRaw, dayRaw] = input.split('-');
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+function to_date_string(date) {
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function normalize_period_range(period_type, start_date_input, end_date_input) {
+  const start_date = parse_iso_date(start_date_input);
+  const end_date = parse_iso_date(end_date_input);
+
+  if (!start_date) {
+    return {
+      ok: false,
+      message: 'Start date is invalid'
+    };
+  }
+
+  if (period_type === 'custom') {
+    if (!end_date) {
+      return {
+        ok: false,
+        message: 'End date is invalid'
+      };
+    }
+
+    if (start_date.getTime() > end_date.getTime()) {
+      return {
+        ok: false,
+        message: 'Start date cannot be later than end date'
+      };
+    }
+
+    return {
+      ok: true,
+      start_date: to_date_string(start_date),
+      end_date: to_date_string(end_date)
+    };
+  }
+
+  if (period_type === 'weekly') {
+    const computed_end = new Date(start_date);
+    computed_end.setDate(computed_end.getDate() + 6);
+
+    return {
+      ok: true,
+      start_date: to_date_string(start_date),
+      end_date: to_date_string(computed_end)
+    };
+  }
+
+  if (period_type === 'monthly') {
+    const first_day = new Date(start_date.getFullYear(), start_date.getMonth(), 1);
+    const last_day = new Date(start_date.getFullYear(), start_date.getMonth() + 1, 0);
+
+    return {
+      ok: true,
+      start_date: to_date_string(first_day),
+      end_date: to_date_string(last_day)
+    };
+  }
+
+  if (period_type === 'yearly') {
+    const first_day = new Date(start_date.getFullYear(), 0, 1);
+    const last_day = new Date(start_date.getFullYear(), 11, 31);
+
+    return {
+      ok: true,
+      start_date: to_date_string(first_day),
+      end_date: to_date_string(last_day)
+    };
+  }
+
+  return {
+    ok: false,
+    message: 'Invalid period type'
+  };
+}
+
 async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
@@ -10,22 +145,33 @@ async function index(req, res, next) {
 
     const search = (req.query.search || '').trim();
     const period_type = req.query.period_type || '';
-    const is_active = req.query.is_active === undefined || req.query.is_active === '' ?
-      -1 :
-      Number(req.query.is_active);
+    const is_active = normalize_is_active_filter(req.query.is_active);
 
-    const [budgets, total, budget_actual_summary] = await Promise.all([
+    const [budgets, total, totals] = await Promise.all([
       budget.get_list(user_id, limit, offset, search, period_type, is_active),
       budget.count_all(user_id, search, period_type, is_active),
-      budget.get_budget_actual_summary(user_id, search, period_type, is_active)
+      budget.get_totals(user_id, search, period_type, is_active)
     ]);
+
+    const budget_ids = budgets.map((item) => Number(item.id || 0)).filter((id) => id > 0);
+    const actual_rows = await budget.get_actual_amount_by_budget_ids(user_id, budget_ids);
+    const actual_map = {};
+
+    actual_rows.forEach((item) => {
+      actual_map[String(item.id)] = Number(item.actual_amount || 0);
+    });
 
     const total_pages = Math.max(Math.ceil(total / limit), 1);
 
     return res.render('budget/index', {
       title: 'Budgets',
       budgets,
-      budget_actual_summary,
+      budget_actual_map: actual_map,
+      summary_stats: {
+        total_budget_amount: Number(totals.total_budget_amount || 0),
+        total_actual_amount: Number(totals.total_actual_amount || 0),
+        over_budget_count: Number(totals.over_budget_count || 0)
+      },
       page,
       limit,
       total,
@@ -81,7 +227,7 @@ async function create(req, res, next) {
       is_active
     };
 
-    if (!category_id || !amount || !period_type || !start_date || !end_date) {
+    if (!category_id || !amount || !period_type || !start_date) {
       return res.status(400).render('budget/create', {
         title: 'Create Budget',
         error: 'Please fill all required fields',
@@ -90,7 +236,7 @@ async function create(req, res, next) {
       });
     }
 
-    if (!['weekly', 'monthly', 'yearly', 'custom'].includes(period_type)) {
+    if (!PERIOD_TYPES.has(period_type)) {
       return res.status(400).render('budget/create', {
         title: 'Create Budget',
         error: 'Invalid period type',
@@ -108,10 +254,12 @@ async function create(req, res, next) {
       });
     }
 
-    if (start_date > end_date) {
+    const normalized_period = normalize_period_range(period_type, start_date, end_date);
+
+    if (!normalized_period.ok) {
       return res.status(400).render('budget/create', {
         title: 'Create Budget',
-        error: 'Start date cannot be later than end date',
+        error: normalized_period.message,
         old,
         categories: expense_categories
       });
@@ -132,8 +280,8 @@ async function create(req, res, next) {
       user_id,
       category_id,
       period_type,
-      start_date,
-      end_date,
+      normalized_period.start_date,
+      normalized_period.end_date,
       0
     );
 
@@ -146,13 +294,30 @@ async function create(req, res, next) {
       });
     }
 
+    const overlap = await budget.find_overlapping_period(
+      user_id,
+      category_id,
+      normalized_period.start_date,
+      normalized_period.end_date,
+      0
+    );
+
+    if (overlap) {
+      return res.status(409).render('budget/create', {
+        title: 'Create Budget',
+        error: 'Budget period overlaps with an existing budget for this category',
+        old,
+        categories: expense_categories
+      });
+    }
+
     await budget.create({
       user_id,
       category_id,
       amount,
       period_type,
-      start_date,
-      end_date,
+      start_date: normalized_period.start_date,
+      end_date: normalized_period.end_date,
       note,
       is_active: is_active === 0 ? 0 : 1
     });
@@ -182,7 +347,11 @@ async function show_edit(req, res, next) {
     return res.render('budget/edit', {
       title: 'Edit Budget',
       error: null,
-      budget_item: item,
+      budget_item: {
+        ...item,
+        start_date: format_date_for_input(item.start_date),
+        end_date: format_date_for_input(item.end_date)
+      },
       categories: expense_categories
     });
   } catch (error) {
@@ -215,7 +384,7 @@ async function update(req, res, next) {
       is_active
     };
 
-    if (!category_id || !amount || !period_type || !start_date || !end_date) {
+    if (!category_id || !amount || !period_type || !start_date) {
       return res.status(400).render('budget/edit', {
         title: 'Edit Budget',
         error: 'Please fill all required fields',
@@ -224,7 +393,7 @@ async function update(req, res, next) {
       });
     }
 
-    if (!['weekly', 'monthly', 'yearly', 'custom'].includes(period_type)) {
+    if (!PERIOD_TYPES.has(period_type)) {
       return res.status(400).render('budget/edit', {
         title: 'Edit Budget',
         error: 'Invalid period type',
@@ -242,10 +411,12 @@ async function update(req, res, next) {
       });
     }
 
-    if (start_date > end_date) {
+    const normalized_period = normalize_period_range(period_type, start_date, end_date);
+
+    if (!normalized_period.ok) {
       return res.status(400).render('budget/edit', {
         title: 'Edit Budget',
-        error: 'Start date cannot be later than end date',
+        error: normalized_period.message,
         budget_item: old,
         categories: expense_categories
       });
@@ -273,8 +444,8 @@ async function update(req, res, next) {
       user_id,
       category_id,
       period_type,
-      start_date,
-      end_date,
+      normalized_period.start_date,
+      normalized_period.end_date,
       id
     );
 
@@ -287,14 +458,31 @@ async function update(req, res, next) {
       });
     }
 
+    const overlap = await budget.find_overlapping_period(
+      user_id,
+      category_id,
+      normalized_period.start_date,
+      normalized_period.end_date,
+      id
+    );
+
+    if (overlap) {
+      return res.status(409).render('budget/edit', {
+        title: 'Edit Budget',
+        error: 'Budget period overlaps with an existing budget for this category',
+        budget_item: old,
+        categories: expense_categories
+      });
+    }
+
     await budget.update({
       id,
       user_id,
       category_id,
       amount,
       period_type,
-      start_date,
-      end_date,
+      start_date: normalized_period.start_date,
+      end_date: normalized_period.end_date,
       note,
       is_active: is_active === 0 ? 0 : 1
     });
