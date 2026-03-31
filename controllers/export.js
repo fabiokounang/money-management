@@ -1,8 +1,8 @@
 const transaction = require('../models/transaction');
 const {
     normalize_date_range,
-    normalize_enum,
-    normalize_positive_int
+    normalize_positive_int,
+    parse_enum
 } = require('../utils/validation');
 
 function escape_csv(value) {
@@ -74,14 +74,15 @@ async function transactions_csv(req, res, next) {
             });
         }
 
-        const type_result = normalize_enum(req.query.transaction_type || '', [
+        const raw_transaction_type = String(req.query.transaction_type || '').trim();
+        const transaction_type = parse_enum(raw_transaction_type, [
             '',
             'income',
             'expense',
             'transfer'
         ]);
 
-        if (!type_result.ok) {
+        if (raw_transaction_type !== '' && transaction_type === '') {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid transaction_type filter'
@@ -112,7 +113,6 @@ async function transactions_csv(req, res, next) {
 
         const from_date = date_range.from_date;
         const to_date = date_range.to_date;
-        const transaction_type = type_result.value;
         const account_id = account_id_result.value;
         const category_id = category_id_result.value;
 
