@@ -1,6 +1,11 @@
 const bcrypt = require('bcryptjs');
 const user = require('../models/user');
 const { seed_user_default_data } = require('../utils/seed');
+const {
+  normalize_text,
+  is_valid_email,
+  is_safe_text
+} = require('../utils/validation');
 
 function show_login(req, res) {
   if (req.session.user) {
@@ -28,8 +33,8 @@ function show_register(req, res) {
 
 async function register(req, res, next) {
   try {
-    const full_name = (req.body.full_name || '').trim();
-    const email = (req.body.email || '').trim().toLowerCase();
+    const full_name = normalize_text(req.body.full_name, 100);
+    const email = String(req.body.email || '').trim().toLowerCase();
     const password = req.body.password || '';
     const confirm_password = req.body.confirm_password || '';
 
@@ -62,12 +67,20 @@ async function register(req, res, next) {
       });
     }
 
-    if (!email.includes('@')) {
+    if (!is_valid_email(email)) {
       return res.status(400).render('auth/register', {
         title: 'Register',
         error: 'Format email tidak valid',
         old
       });
+    if (!is_safe_text(full_name)) {
+      return res.status(400).render('auth/register', {
+        title: 'Register',
+        error: 'Nama mengandung karakter yang tidak diizinkan',
+        old
+      });
+    }
+
     }
 
     if (password.length < 6) {
@@ -123,8 +136,16 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
   try {
-    const email = (req.body.email || '').trim().toLowerCase();
+    const email = String(req.body.email || '').trim().toLowerCase();
     const password = req.body.password || '';
+    if (!is_valid_email(email)) {
+      return res.status(400).render('auth/login', {
+        title: 'Login',
+        error: 'Format email tidak valid',
+        old
+      });
+    }
+
 
     const old = {
       email

@@ -1,17 +1,26 @@
 const account = require('../models/account');
+const {
+    parse_positive_int,
+    parse_non_negative_int,
+    parse_active_filter,
+    parse_positive_decimal,
+    parse_iso_date,
+    normalize_range,
+    parse_enum,
+    clamp_page,
+    normalize_text
+} = require('../utils/validation');
 
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const page = Math.max(Number(req.query.page || 1), 1);
+        const page = clamp_page(req.query.page);
         const limit = 10;
         const offset = (page - 1) * limit;
 
-        const search = (req.query.search || '').trim();
-        const account_type = req.query.account_type || '';
-        const is_active = req.query.is_active === undefined || req.query.is_active === ''
-            ? -1
-            : Number(req.query.is_active);
+        const search = normalize_text(req.query.search, 120);
+        const account_type = parse_enum(req.query.account_type, ['cash', 'bank', 'ewallet', 'other'], '');
+        const is_active = parse_active_filter(req.query.is_active);
 
         const [accounts, total] = await Promise.all([
             account.get_list(user_id, limit, offset, search, account_type, is_active),
@@ -49,11 +58,11 @@ function show_create(req, res) {
 async function create(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const account_name = (req.body.account_name || '').trim();
-        const account_type = req.body.account_type || '';
-        const opening_balance = Number(req.body.opening_balance || 0);
-        const account_color = (req.body.account_color || '').trim();
-        const note = (req.body.note || '').trim();
+        const account_name = normalize_text(req.body.account_name, 100);
+        const account_type = parse_enum(req.body.account_type, ['cash', 'bank', 'ewallet', 'other'], '');
+        const opening_balance = parse_positive_decimal(req.body.opening_balance, { allow_zero: true });
+        const account_color = normalize_text(req.body.account_color, 30);
+        const note = normalize_text(req.body.note, 500);
         const is_active = Number(req.body.is_active || 1);
 
         const old = {
@@ -73,7 +82,7 @@ async function create(req, res, next) {
             });
         }
 
-        if (!['cash', 'bank', 'ewallet', 'other'].includes(account_type)) {
+        if (!account_type) {
             return res.status(400).render('account/create', {
                 title: 'Create Account',
                 error: 'Invalid account type',
@@ -81,7 +90,7 @@ async function create(req, res, next) {
             });
         }
 
-        if (opening_balance < 0) {
+        if (opening_balance === null) {
             return res.status(400).render('account/create', {
                 title: 'Create Account',
                 error: 'Opening balance cannot be negative',
@@ -120,7 +129,12 @@ async function create(req, res, next) {
 async function show_edit(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = parse_positive_int(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Invalid account id');
+            return res.redirect('/account');
+        }
 
         const item = await account.find_by_id(id, user_id);
 
@@ -142,12 +156,12 @@ async function show_edit(req, res, next) {
 async function update(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
-        const account_name = (req.body.account_name || '').trim();
-        const account_type = req.body.account_type || '';
-        const opening_balance = Number(req.body.opening_balance || 0);
-        const account_color = (req.body.account_color || '').trim();
-        const note = (req.body.note || '').trim();
+        const id = parse_positive_int(req.params.id);
+        const account_name = normalize_text(req.body.account_name, 100);
+        const account_type = parse_enum(req.body.account_type, ['cash', 'bank', 'ewallet', 'other'], '');
+        const opening_balance = parse_positive_decimal(req.body.opening_balance, { allow_zero: true });
+        const account_color = normalize_text(req.body.account_color, 30);
+        const note = normalize_text(req.body.note, 500);
         const is_active = Number(req.body.is_active || 1);
 
         const old = {
@@ -160,7 +174,7 @@ async function update(req, res, next) {
             is_active
         };
 
-        if (!account_name || !account_type) {
+        if (!id || !account_name || !account_type) {
             return res.status(400).render('account/edit', {
                 title: 'Edit Account',
                 error: 'Account name and type are required',
@@ -168,7 +182,7 @@ async function update(req, res, next) {
             });
         }
 
-        if (!['cash', 'bank', 'ewallet', 'other'].includes(account_type)) {
+        if (!account_type) {
             return res.status(400).render('account/edit', {
                 title: 'Edit Account',
                 error: 'Invalid account type',
@@ -176,7 +190,7 @@ async function update(req, res, next) {
             });
         }
 
-        if (opening_balance < 0) {
+        if (opening_balance === null) {
             return res.status(400).render('account/edit', {
                 title: 'Edit Account',
                 error: 'Opening balance cannot be negative',
@@ -222,7 +236,12 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = parse_positive_int(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Invalid account id');
+            return res.redirect('/account');
+        }
 
         const item = await account.find_by_id(id, user_id);
 

@@ -1,18 +1,23 @@
 const subcategory = require('../models/subcategory');
 const category = require('../models/category');
+const {
+    normalize_page,
+    normalize_active_filter,
+    parse_positive_int,
+    normalize_text,
+    is_allowed_date
+} = require('../utils/validation');
 
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const page = Math.max(Number(req.query.page || 1), 1);
+        const page = normalize_page(req.query.page);
         const limit = 10;
         const offset = (page - 1) * limit;
 
-        const search = (req.query.search || '').trim();
-        const category_id = Number(req.query.category_id || 0);
-        const is_active = req.query.is_active === undefined || req.query.is_active === ''
-            ? -1
-            : Number(req.query.is_active);
+        const search = normalize_text(req.query.search, 100);
+        const category_id = parse_positive_int(req.query.category_id) || 0;
+        const is_active = normalize_active_filter(req.query.is_active);
 
         const [subcategories, total, income_categories, expense_categories] = await Promise.all([
             subcategory.get_list(user_id, limit, offset, search, category_id, is_active),
@@ -65,9 +70,9 @@ async function show_create(req, res, next) {
 async function create(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const category_id = Number(req.body.category_id || 0);
-        const subcategory_name = (req.body.subcategory_name || '').trim();
-        const is_active = Number(req.body.is_active || 1);
+        const category_id = parse_positive_int(req.body.category_id) || 0;
+        const subcategory_name = normalize_text(req.body.subcategory_name, 100);
+        const is_active = normalize_active_filter(req.body.is_active, 1);
 
         const [income_categories, expense_categories] = await Promise.all([
             category.get_active_by_type(user_id, 'income'),
@@ -86,6 +91,15 @@ async function create(req, res, next) {
             return res.status(400).render('subcategory/create', {
                 title: 'Create Subcategory',
                 error: 'Category and subcategory name are required',
+                old,
+                categories
+            });
+        }
+
+        if (subcategory_name.length > 100) {
+            return res.status(400).render('subcategory/create', {
+                title: 'Create Subcategory',
+                error: 'Subcategory name too long (max 100 characters)',
                 old,
                 categories
             });
@@ -134,7 +148,12 @@ async function create(req, res, next) {
 async function show_edit(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = parse_positive_int(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Invalid subcategory id');
+            return res.redirect('/subcategory');
+        }
 
         const [item, income_categories, expense_categories] = await Promise.all([
             subcategory.find_by_id(id, user_id),
@@ -161,10 +180,10 @@ async function show_edit(req, res, next) {
 async function update(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
-        const category_id = Number(req.body.category_id || 0);
-        const subcategory_name = (req.body.subcategory_name || '').trim();
-        const is_active = Number(req.body.is_active || 1);
+        const id = parse_positive_int(req.params.id);
+        const category_id = parse_positive_int(req.body.category_id) || 0;
+        const subcategory_name = normalize_text(req.body.subcategory_name, 100);
+        const is_active = normalize_active_filter(req.body.is_active, 1);
 
         const [income_categories, expense_categories] = await Promise.all([
             category.get_active_by_type(user_id, 'income'),
@@ -180,10 +199,19 @@ async function update(req, res, next) {
             is_active
         };
 
-        if (!category_id || !subcategory_name) {
+        if (!id || !category_id || !subcategory_name) {
             return res.status(400).render('subcategory/edit', {
                 title: 'Edit Subcategory',
-                error: 'Category and subcategory name are required',
+                error: !id ? 'Invalid subcategory id' : 'Category and subcategory name are required',
+                subcategory_item: old,
+                categories
+            });
+        }
+
+        if (subcategory_name.length > 100) {
+            return res.status(400).render('subcategory/edit', {
+                title: 'Edit Subcategory',
+                error: 'Subcategory name too long (max 100 characters)',
                 subcategory_item: old,
                 categories
             });
@@ -240,7 +268,12 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = parse_positive_int(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Invalid subcategory id');
+            return res.redirect('/subcategory');
+        }
 
         const item = await subcategory.find_by_id(id, user_id);
 

@@ -1,17 +1,16 @@
 const category = require('../models/category');
+const validation = require('../utils/validation');
 
 async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
-    const page = Math.max(Number(req.query.page || 1), 1);
+    const page = validation.parse_positive_int(req.query.page, 1);
     const limit = 10;
     const offset = (page - 1) * limit;
 
-    const search = (req.query.search || '').trim();
-    const category_type = req.query.category_type || '';
-    const is_active = req.query.is_active === undefined || req.query.is_active === '' ?
-      -1 :
-      Number(req.query.is_active);
+    const search = validation.normalize_search(req.query.search, 100);
+    const category_type = validation.parse_enum(req.query.category_type, ['income', 'expense'], '');
+    const is_active = validation.parse_status_filter(req.query.is_active);
 
     const [categories, total] = await Promise.all([
       category.get_list(user_id, limit, offset, search, category_type, is_active),
@@ -49,11 +48,11 @@ function show_create(req, res) {
 async function create(req, res, next) {
   try {
     const user_id = req.session.user.id;
-    const category_name = (req.body.category_name || '').trim();
-    const category_type = req.body.category_type || '';
-    const icon = (req.body.icon || '').trim();
-    const color = (req.body.color || '').trim();
-    const is_active = Number(req.body.is_active || 1);
+    const category_name = validation.normalize_text(req.body.category_name, 100);
+    const category_type = validation.parse_enum(req.body.category_type, ['income', 'expense'], '');
+    const icon = validation.normalize_text(req.body.icon, 20);
+    const color = validation.normalize_text(req.body.color, 30);
+    const is_active = validation.parse_is_active(req.body.is_active, 1);
 
     const old = {
       category_name,
@@ -71,7 +70,7 @@ async function create(req, res, next) {
       });
     }
 
-    if (!['income', 'expense'].includes(category_type)) {
+    if (!category_type) {
       return res.status(400).render('category/create', {
         title: 'Create Category',
         error: 'Invalid category type',
@@ -113,7 +112,12 @@ async function create(req, res, next) {
 async function show_edit(req, res, next) {
   try {
     const user_id = req.session.user.id;
-    const id = Number(req.params.id || 0);
+    const id = validation.parse_positive_int(req.params.id, 0);
+
+    if (!id) {
+      req.flash('error_msg', 'Invalid category id');
+      return res.redirect('/category');
+    }
 
     const item = await category.find_by_id(id, user_id);
 
@@ -135,12 +139,17 @@ async function show_edit(req, res, next) {
 async function update(req, res, next) {
   try {
     const user_id = req.session.user.id;
-    const id = Number(req.params.id || 0);
-    const category_name = (req.body.category_name || '').trim();
-    const category_type = req.body.category_type || '';
-    const icon = (req.body.icon || '').trim();
-    const color = (req.body.color || '').trim();
-    const is_active = Number(req.body.is_active || 1);
+    const id = validation.parse_positive_int(req.params.id, 0);
+    const category_name = validation.normalize_text(req.body.category_name, 100);
+    const category_type = validation.parse_enum(req.body.category_type, ['income', 'expense'], '');
+    const icon = validation.normalize_text(req.body.icon, 20);
+    const color = validation.normalize_text(req.body.color, 30);
+    const is_active = validation.parse_is_active(req.body.is_active, 1);
+
+    if (!id) {
+      req.flash('error_msg', 'Invalid category id');
+      return res.redirect('/category');
+    }
 
     const old = {
       id,
@@ -159,7 +168,7 @@ async function update(req, res, next) {
       });
     }
 
-    if (!['income', 'expense'].includes(category_type)) {
+    if (!category_type) {
       return res.status(400).render('category/edit', {
         title: 'Edit Category',
         error: 'Invalid category type',
@@ -209,7 +218,12 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = validation.parse_positive_int(req.params.id, 0);
+
+        if (!id) {
+            req.flash('error_msg', 'Invalid category id');
+            return res.redirect('/category');
+        }
 
         const item = await category.find_by_id(id, user_id);
 
