@@ -59,10 +59,27 @@
   border-right: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: var(--app-shadow-md);
   transition: transform 0.25s ease;
+  background: linear-gradient(180deg, #f7f3eb 0%, #f3ede3 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-sidebar.show {
   transform: translateX(0);
+}
+
+.app-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(116, 108, 100, 0.35);
+  border-radius: 999px;
+}
+
+.app-sidebar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .app-overlay {
