@@ -13,7 +13,7 @@
   <main class="app-main px-4 py-4 sm:px-6 sm:py-6">
     <%- include('../partials/topbar') %>
 
-    <% const formData = typeof old !== 'undefined' && old ? old : account; %>
+    <% const formData = typeof old !== 'undefined' && old ? old : account_item; %>
 
     <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]">
       <div>
@@ -54,7 +54,7 @@
               </div>
             <% } %>
 
-            <form action="/account/<%= account.id %>?_method=PUT" method="POST" class="space-y-8">
+            <form action="/account/<%= account_item.id %>?_method=PUT" method="POST" class="space-y-8">
               <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
                 <div class="flex items-center gap-3">
                   <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-lg text-emerald-700">
