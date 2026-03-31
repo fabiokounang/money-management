@@ -1,11 +1,32 @@
 const transaction = require('../models/transaction');
 const category = require('../models/category');
 const account = require('../models/account');
+const {
+    is_valid_iso_date,
+    parse_positive_integer,
+    normalize_pagination_page,
+    normalize_flag_filter,
+    normalize_trimmed_text,
+    normalize_optional_text,
+    parse_non_negative_number,
+    is_valid_enum
+} = require('../utils/validation');
+
+const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer']);
+const PAYMENT_METHODS = new Set([
+    'cash',
+    'bank_transfer',
+    'debit_card',
+    'credit_card',
+    'qris',
+    'ewallet',
+    'other'
+]);
 
 async function index(req, res, next) {
 	try {
 		const user_id = req.session.user.id;
-		const page = Math.max(Number(req.query.page || 1), 1);
+		const page = normalize_pagination_page(req.query.page);
 		const limit = 10;
 		const offset = (page - 1) * limit;
 
@@ -54,7 +75,12 @@ async function show_create(req, res, next) {
 async function show_edit(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = parse_positive_integer(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Transaction not found');
+            return res.redirect('/transaction');
+        }
 
         const [item, income_categories, expense_categories, accounts] = await Promise.all([
             transaction.find_full_by_id(id, user_id),
@@ -91,16 +117,16 @@ async function show_edit(req, res, next) {
 async function create(req, res, next) {
 	try {
 		const user_id = req.session.user.id;
-		const transaction_date = req.body.transaction_date || '';
-		const transaction_type = req.body.transaction_type || '';
-		const amount = Number(req.body.amount || 0);
-		const category_id = req.body.category_id ? Number(req.body.category_id) : null;
-		const subcategory_id = req.body.subcategory_id ? Number(req.body.subcategory_id) : null;
-		const account_id = req.body.account_id ? Number(req.body.account_id) : null;
-		const transfer_to_account_id = req.body.transfer_to_account_id ? Number(req.body.transfer_to_account_id) : null;
-		const payment_method = req.body.payment_method || '';
-		const description = (req.body.description || '').trim();
-		const reference_no = (req.body.reference_no || '').trim();
+		const transaction_date = String(req.body.transaction_date || '').trim();
+		const transaction_type = String(req.body.transaction_type || '').trim();
+		const amount = parse_non_negative_number(req.body.amount);
+		const category_id = parse_positive_integer(req.body.category_id);
+		const subcategory_id = parse_positive_integer(req.body.subcategory_id);
+		const account_id = parse_positive_integer(req.body.account_id);
+		const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
+		const payment_method = String(req.body.payment_method || '').trim();
+		const description = normalize_optional_text(req.body.description, 500);
+		const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
 		if (!transaction_date || !transaction_type || !amount || !account_id || !payment_method) {
 			const [income_categories, expense_categories, accounts] = await Promise.all([
@@ -118,7 +144,23 @@ async function create(req, res, next) {
 			});
 		}
 
-		if (!['income', 'expense', 'transfer'].includes(transaction_type)) {
+		if (!is_valid_iso_date(transaction_date)) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Invalid transaction date',
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
+		if (!is_valid_enum(transaction_type, TRANSACTION_TYPES)) {
 			const [income_categories, expense_categories, accounts] = await Promise.all([
 				category.get_active_by_type(user_id, 'income'),
 				category.get_active_by_type(user_id, 'expense'),
@@ -128,6 +170,22 @@ async function create(req, res, next) {
 			return res.status(400).render('transaction/create', {
 				title: 'Create Transaction',
 				error: 'Invalid transaction type',
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
+		if (!is_valid_enum(payment_method, PAYMENT_METHODS)) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Invalid payment method',
 				income_categories,
 				expense_categories,
 				accounts
@@ -144,6 +202,70 @@ async function create(req, res, next) {
 			return res.status(400).render('transaction/create', {
 				title: 'Create Transaction',
 				error: 'Amount must be greater than zero',
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
+		if (!Number.isFinite(amount)) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Invalid amount',
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
+		if (req.body.category_id && !category_id) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Invalid category',
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
+		if (req.body.subcategory_id && !subcategory_id) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Invalid subcategory',
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
+		if (transaction_type === 'transfer' && req.body.transfer_to_account_id && !transfer_to_account_id) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Invalid destination account',
 				income_categories,
 				expense_categories,
 				accounts
@@ -231,17 +353,22 @@ async function create(req, res, next) {
 async function update(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
-        const transaction_date = req.body.transaction_date || '';
-        const transaction_type = req.body.transaction_type || '';
-        const amount = Number(req.body.amount || 0);
-        const category_id = req.body.category_id ? Number(req.body.category_id) : null;
-        const subcategory_id = req.body.subcategory_id ? Number(req.body.subcategory_id) : null;
-        const account_id = req.body.account_id ? Number(req.body.account_id) : null;
-        const transfer_to_account_id = req.body.transfer_to_account_id ? Number(req.body.transfer_to_account_id) : null;
-        const payment_method = req.body.payment_method || '';
-        const description = (req.body.description || '').trim();
-        const reference_no = (req.body.reference_no || '').trim();
+        const id = parse_positive_integer(req.params.id);
+        const transaction_date = String(req.body.transaction_date || '').trim();
+        const transaction_type = String(req.body.transaction_type || '').trim();
+        const amount = parse_non_negative_number(req.body.amount);
+        const category_id = parse_positive_integer(req.body.category_id);
+        const subcategory_id = parse_positive_integer(req.body.subcategory_id);
+        const account_id = parse_positive_integer(req.body.account_id);
+        const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
+        const payment_method = String(req.body.payment_method || '').trim();
+        const description = normalize_optional_text(req.body.description, 500);
+        const reference_no = normalize_optional_text(req.body.reference_no, 100);
+
+        if (!id) {
+            req.flash('error_msg', 'Transaction not found');
+            return res.redirect('/transaction');
+        }
 
         const oldItem = await transaction.find_full_by_id(id, user_id);
 
@@ -290,8 +417,32 @@ async function update(req, res, next) {
             return renderEditError('Please fill all required fields');
         }
 
-        if (!['income', 'expense', 'transfer'].includes(transaction_type)) {
+        if (!is_valid_iso_date(transaction_date)) {
+            return renderEditError('Invalid transaction date');
+        }
+
+        if (!is_valid_enum(transaction_type, TRANSACTION_TYPES)) {
             return renderEditError('Invalid transaction type');
+        }
+
+        if (!is_valid_enum(payment_method, PAYMENT_METHODS)) {
+            return renderEditError('Invalid payment method');
+        }
+
+        if (!Number.isFinite(amount)) {
+            return renderEditError('Invalid amount');
+        }
+
+        if (req.body.category_id && !category_id) {
+            return renderEditError('Invalid category');
+        }
+
+        if (req.body.subcategory_id && !subcategory_id) {
+            return renderEditError('Invalid subcategory');
+        }
+
+        if (transaction_type === 'transfer' && req.body.transfer_to_account_id && !transfer_to_account_id) {
+            return renderEditError('Invalid destination account');
         }
 
         if (amount <= 0) {
@@ -317,17 +468,17 @@ async function update(req, res, next) {
         return res.redirect('/transaction');
     } catch (error) {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
-        const transaction_date = req.body.transaction_date || '';
-        const transaction_type = req.body.transaction_type || '';
-        const amount = Number(req.body.amount || 0);
-        const category_id = req.body.category_id ? Number(req.body.category_id) : null;
-        const subcategory_id = req.body.subcategory_id ? Number(req.body.subcategory_id) : null;
-        const account_id = req.body.account_id ? Number(req.body.account_id) : null;
-        const transfer_to_account_id = req.body.transfer_to_account_id ? Number(req.body.transfer_to_account_id) : null;
-        const payment_method = req.body.payment_method || '';
-        const description = (req.body.description || '').trim();
-        const reference_no = (req.body.reference_no || '').trim();
+        const id = parse_positive_integer(req.params.id);
+        const transaction_date = String(req.body.transaction_date || '').trim();
+        const transaction_type = String(req.body.transaction_type || '').trim();
+        const amount = parse_non_negative_number(req.body.amount);
+        const category_id = parse_positive_integer(req.body.category_id);
+        const subcategory_id = parse_positive_integer(req.body.subcategory_id);
+        const account_id = parse_positive_integer(req.body.account_id);
+        const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
+        const payment_method = String(req.body.payment_method || '').trim();
+        const description = normalize_optional_text(req.body.description, 500);
+        const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
         const [income_categories, expense_categories, accounts] = await Promise.all([
             category.get_active_by_type(user_id, 'income'),
@@ -407,7 +558,12 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
     try {
         const user_id = req.session.user.id;
-        const id = Number(req.params.id || 0);
+        const id = parse_positive_integer(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Transaction not found');
+            return res.redirect('/transaction');
+        }
 
         await transaction.delete_with_balance_update(id, user_id);
 
@@ -436,7 +592,7 @@ async function remove(req, res, next) {
 async function get_subcategories(req, res, next) {
 	try {
 		const user_id = req.session.user.id;
-		const category_id = Number(req.params.category_id || 0);
+		const category_id = parse_positive_integer(req.params.category_id);
 
 		if (!category_id) {
 			return res.status(400).json({

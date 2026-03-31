@@ -1,6 +1,12 @@
 const report = require('../models/report');
 const account = require('../models/account');
 const category = require('../models/category');
+const {
+  parse_positive_int,
+  sanitize_search,
+  sanitize_enum,
+  sanitize_date_yyyy_mm_dd
+} = require('../utils/validation');
 
 function get_default_month_range() {
   const now = new Date();
@@ -17,8 +23,8 @@ function get_default_month_range() {
 
 function normalize_range(from, to) {
   const def = get_default_month_range();
-  let from_date = from || def.from_date;
-  let to_date = to || def.to_date;
+  let from_date = sanitize_date_yyyy_mm_dd(from) || def.from_date;
+  let to_date = sanitize_date_yyyy_mm_dd(to) || def.to_date;
 
   if (from_date > to_date) {
     const temp = from_date;
@@ -46,8 +52,8 @@ async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
     const { from_date, to_date } = normalize_range(req.query.from_date, req.query.to_date);
-    const transaction_type = req.query.transaction_type || '';
-    const account_id = Number(req.query.account_id || 0);
+    const transaction_type = sanitize_enum(req.query.transaction_type, ['income', 'expense', 'transfer'], '');
+    const account_id = parse_positive_int(req.query.account_id, 0);
     const category_ids = to_number_array(req.query.category_ids);
 
     const [summary, category_summary, monthly_cashflow, accounts, categories] = await Promise.all([

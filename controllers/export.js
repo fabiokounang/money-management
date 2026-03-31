@@ -1,4 +1,9 @@
 const transaction = require('../models/transaction');
+const {
+    normalize_date_range,
+    normalize_enum,
+    normalize_positive_int
+} = require('../utils/validation');
 
 function escape_csv(value) {
     if (value === null || value === undefined) {
@@ -60,11 +65,56 @@ async function transactions_csv(req, res, next) {
     try {
         const user_id = req.session.user.id;
 
-        const from_date = req.query.from_date || '';
-        const to_date = req.query.to_date || '';
-        const transaction_type = req.query.transaction_type || '';
-        const account_id = Number(req.query.account_id || 0);
-        const category_id = Number(req.query.category_id || 0);
+        const date_range = normalize_date_range(req.query.from_date, req.query.to_date);
+
+        if (!date_range.ok) {
+            return res.status(400).json({
+                success: false,
+                message: date_range.error
+            });
+        }
+
+        const type_result = normalize_enum(req.query.transaction_type || '', [
+            '',
+            'income',
+            'expense',
+            'transfer'
+        ]);
+
+        if (!type_result.ok) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid transaction_type filter'
+            });
+        }
+
+        const account_id_result = normalize_positive_int(req.query.account_id, {
+            required: false,
+            defaultValue: 0
+        });
+        if (!account_id_result.ok) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid account_id filter'
+            });
+        }
+
+        const category_id_result = normalize_positive_int(req.query.category_id, {
+            required: false,
+            defaultValue: 0
+        });
+        if (!category_id_result.ok) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid category_id filter'
+            });
+        }
+
+        const from_date = date_range.from_date;
+        const to_date = date_range.to_date;
+        const transaction_type = type_result.value;
+        const account_id = account_id_result.value;
+        const category_id = category_id_result.value;
 
         const rows = await transaction.get_export_list(user_id, {
             from_date,

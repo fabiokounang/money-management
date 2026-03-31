@@ -1,4 +1,8 @@
 const report = require('../models/report');
+const {
+    normalize_pagination_page,
+    normalize_iso_date_range
+} = require('../utils/validation');
 
 function get_default_month_range() {
     const now = new Date();
@@ -33,11 +37,21 @@ function normalize_range(from, to) {
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
+        const page = normalize_pagination_page(req.query.page);
+        const limit = 10;
+        const offset = (page - 1) * limit;
 
-        const { from_date, to_date } = normalize_range(
-            req.query.from_date,
-            req.query.to_date
+        const range = normalize_iso_date_range(
+            req.query.from_date || '',
+            req.query.to_date || '',
+            get_default_month_range()
         );
+        if (!range.ok) {
+            req.flash('error_msg', range.message);
+            return res.redirect('/dashboard');
+        }
+
+        const { from_date, to_date } = range;
 
         const [
             summary,
