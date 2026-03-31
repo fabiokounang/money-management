@@ -9,14 +9,18 @@ const { test_connection } = require('./utils/db');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret-change-me';
+const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'mm.sid';
+const SESSION_MAX_AGE_MS = Number(process.env.SESSION_MAX_AGE_MS || 1000 * 60 * 60 * 24);
 
-if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-    throw new Error('SESSION_SECRET is required in production');
+if (IS_PRODUCTION && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32)) {
+    throw new Error('SESSION_SECRET is required in production and must be at least 32 characters');
 }
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.set('trust proxy', 1);
+app.set('trust proxy', IS_PRODUCTION ? 1 : 0);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -39,14 +43,20 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || 'dev-session-secret-change-me',
+        name: SESSION_COOKIE_NAME,
+        secret: SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
+        unset: 'destroy',
+        proxy: IS_PRODUCTION,
         cookie: {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: IS_PRODUCTION,
             sameSite: 'lax',
-            maxAge: 1000 * 60 * 60 * 24
+            path: '/',
+            maxAge: Number.isFinite(SESSION_MAX_AGE_MS) && SESSION_MAX_AGE_MS > 0
+                ? SESSION_MAX_AGE_MS
+                : 1000 * 60 * 60 * 24
         }
     })
 );
@@ -57,6 +67,9 @@ app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (IS_PRODUCTION) {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
     next();
 });
 

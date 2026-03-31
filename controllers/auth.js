@@ -31,6 +31,30 @@ function show_register(req, res) {
   });
 }
 
+function regenerate_session(req) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((error) => {
+      if (error) {
+        return reject(error);
+      }
+
+      return resolve();
+    });
+  });
+}
+
+function save_session(req) {
+  return new Promise((resolve, reject) => {
+    req.session.save((error) => {
+      if (error) {
+        return reject(error);
+      }
+
+      return resolve();
+    });
+  });
+}
+
 async function register(req, res, next) {
   try {
     const full_name = normalize_text(req.body.full_name, 100);
@@ -73,14 +97,14 @@ async function register(req, res, next) {
         error: 'Format email tidak valid',
         old
       });
+    }
+
     if (!is_safe_text(full_name)) {
       return res.status(400).render('auth/register', {
         title: 'Register',
         error: 'Nama mengandung karakter yang tidak diizinkan',
         old
       });
-    }
-
     }
 
     if (password.length < 6) {
@@ -120,11 +144,14 @@ async function register(req, res, next) {
 
     const created_user = await user.find_by_id(user_id);
 
+    await regenerate_session(req);
+
     req.session.user = {
       id: created_user.id,
       full_name: created_user.full_name,
       email: created_user.email
     };
+    await save_session(req);
 
     await seed_user_default_data(user_id);
     req.flash('success_msg', 'Register berhasil, selamat datang');
@@ -138,6 +165,10 @@ async function login(req, res, next) {
   try {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = req.body.password || '';
+    const old = {
+      email
+    };
+
     if (!is_valid_email(email)) {
       return res.status(400).render('auth/login', {
         title: 'Login',
@@ -145,11 +176,6 @@ async function login(req, res, next) {
         old
       });
     }
-
-
-    const old = {
-      email
-    };
 
     if (!email || !password) {
       return res.status(400).render('auth/login', {
@@ -187,11 +213,14 @@ async function login(req, res, next) {
       });
     }
 
+    await regenerate_session(req);
+
     req.session.user = {
       id: existing_user.id,
       full_name: existing_user.full_name,
       email: existing_user.email
     };
+    await save_session(req);
 
     req.flash('success_msg', 'Login berhasil');
     return res.redirect('/dashboard');
@@ -201,12 +230,13 @@ async function login(req, res, next) {
 }
 
 function logout(req, res, next) {
+  const cookie_name = process.env.SESSION_COOKIE_NAME || 'mm.sid';
   req.session.destroy((error) => {
     if (error) {
       return next(error);
     }
 
-    res.clearCookie('connect.sid');
+    res.clearCookie(cookie_name, { path: '/' });
     return res.redirect('/login');
   });
 }
