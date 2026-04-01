@@ -140,6 +140,10 @@ function normalize_flag_filter(value) {
 }
 
 function parse_active_filter(value, default_value = -1) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return default_value;
+  }
+
   const parsed = Number(value);
 
   if (parsed === 0) {
