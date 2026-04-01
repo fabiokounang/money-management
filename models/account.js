@@ -130,6 +130,31 @@ async function count_all(user_id, search, account_type, is_active) {
 	return rows[0]?.total || 0;
 }
 
+async function sum_current_balance(user_id, search, account_type, is_active) {
+	const sql = `
+        SELECT COALESCE(SUM(current_balance), 0) AS total_current_balance
+        FROM accounts
+        WHERE user_id = ?
+          AND (? = '' OR account_name LIKE CONCAT('%', ?, '%'))
+          AND (? = '' OR account_type = ?)
+          AND (? = -1 OR is_active = ?)
+        LIMIT ?
+    `;
+
+	const [rows] = await pool.query(sql, [
+		user_id,
+		search,
+		search,
+		account_type,
+		account_type,
+		is_active,
+		is_active,
+		1
+	]);
+
+	return Number(rows[0]?.total_current_balance || 0);
+}
+
 async function find_by_name(user_id, account_name, exclude_id) {
 	const sql = `
         SELECT
@@ -253,6 +278,7 @@ module.exports = {
 	get_active_accounts,
 	get_list,
 	count_all,
+	sum_current_balance,
 	find_by_name,
 	create,
 	update,

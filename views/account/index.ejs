@@ -26,11 +26,7 @@
             const totalRows = Number(total || 0);
             const totalPages = Number(total_pages || 1);
 
-            let totalBalance = 0;
-
-            safeAccounts.forEach((item) => {
-                totalBalance += Number(item.current_balance || 0);
-            });
+            const totalBalance = Number(total_current_balance || 0);
 
             const startRow = totalRows === 0 ? 0 : ((currentPage - 1) * perPage) + 1;
             const endRow = Math.min(currentPage * perPage, totalRows);
@@ -119,7 +115,7 @@
 					<div>
 						<p class="text-sm font-medium text-stone-500">Total Current Balance</p>
 						<h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(totalBalance) %></h3>
-						<p class="mt-2 text-xs text-emerald-600">Combined balance on this page</p>
+						<p class="mt-2 text-xs text-emerald-600">Combined balance for all filtered accounts</p>
 					</div>
 					<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-lg font-semibold text-amber-700">
 						↗

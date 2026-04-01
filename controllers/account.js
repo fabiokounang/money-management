@@ -22,9 +22,10 @@ async function index(req, res, next) {
         const account_type = parse_enum(req.query.account_type, ['cash', 'bank', 'ewallet', 'other'], '');
         const is_active = parse_active_filter(req.query.is_active);
 
-        const [accounts, total] = await Promise.all([
+        const [accounts, total, total_current_balance] = await Promise.all([
             account.get_list(user_id, limit, offset, search, account_type, is_active),
-            account.count_all(user_id, search, account_type, is_active)
+            account.count_all(user_id, search, account_type, is_active),
+            account.sum_current_balance(user_id, search, account_type, is_active)
         ]);
 
         const total_pages = Math.max(Math.ceil(total / limit), 1);
@@ -36,6 +37,7 @@ async function index(req, res, next) {
             limit,
             total,
             total_pages,
+            total_current_balance,
             filters: {
                 search,
                 account_type,
