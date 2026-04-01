@@ -223,6 +223,7 @@ async function update(req, res, next) {
             account_name,
             account_type,
             opening_balance,
+            opening_balance_delta: opening_balance - Number(item.opening_balance || 0),
             account_color,
             note,
             is_active: is_active === 0 ? 0 : 1

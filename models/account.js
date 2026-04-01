@@ -213,6 +213,7 @@ async function update(data) {
             account_name = ?,
             account_type = ?,
             opening_balance = ?,
+            current_balance = current_balance + ?,
             account_color = ?,
             note = ?,
             is_active = ?
@@ -225,6 +226,7 @@ async function update(data) {
 		data.account_name,
 		data.account_type,
 		data.opening_balance,
+		Number(data.opening_balance_delta || 0),
 		data.account_color || null,
 		data.note || null,
 		data.is_active,
