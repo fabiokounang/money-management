@@ -71,3 +71,44 @@
     background: transparent;
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach((input) => {
+      if (input.dataset.formatHintAttached === '1') {
+        return;
+      }
+
+      input.dataset.formatHintAttached = '1';
+      const existingHint = input.parentElement
+        ? input.parentElement.querySelector('.js-number-format-hint')
+        : null;
+      const hint = existingHint || document.createElement('p');
+      if (!existingHint) {
+        hint.className = 'js-number-format-hint mt-2 text-xs text-stone-500';
+        input.insertAdjacentElement('afterend', hint);
+      }
+
+      const refreshHint = () => {
+        const raw = String(input.value || '').trim();
+        if (!raw) {
+          hint.textContent = 'Format angka otomatis: 1.000.000';
+          return;
+        }
+
+        const parsed = Number(raw);
+        if (!Number.isFinite(parsed)) {
+          hint.textContent = 'Format angka tidak valid.';
+          return;
+        }
+
+        hint.textContent = `Preview: ${parsed.toLocaleString('id-ID')}`;
+      };
+
+      input.addEventListener('input', refreshHint);
+      input.addEventListener('change', refreshHint);
+      refreshHint();
+    });
+  });
+</script>

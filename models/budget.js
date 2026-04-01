@@ -336,6 +336,42 @@ async function get_totals(user_id, search, period_type, is_active) {
   };
 }
 
+async function get_totals_by_period_type(user_id, search, period_type, is_active) {
+  const sql = `
+        SELECT
+            COALESCE(SUM(CASE WHEN b.period_type = 'weekly' THEN b.amount ELSE 0 END), 0) AS weekly_budget_amount,
+            COALESCE(SUM(CASE WHEN b.period_type = 'monthly' THEN b.amount ELSE 0 END), 0) AS monthly_budget_amount,
+            COALESCE(SUM(CASE WHEN b.period_type = 'yearly' THEN b.amount ELSE 0 END), 0) AS yearly_budget_amount,
+            COALESCE(SUM(CASE WHEN b.period_type = 'custom' THEN b.amount ELSE 0 END), 0) AS custom_budget_amount
+        FROM budgets b
+        JOIN categories c
+            ON c.id = b.category_id
+        WHERE b.user_id = ?
+          AND (? = '' OR c.category_name LIKE CONCAT('%', ?, '%'))
+          AND (? = '' OR b.period_type = ?)
+          AND (? = -1 OR b.is_active = ?)
+        LIMIT ?
+    `;
+
+  const [rows] = await pool.query(sql, [
+    user_id,
+    search,
+    search,
+    period_type,
+    period_type,
+    is_active,
+    is_active,
+    1
+  ]);
+
+  return rows[0] || {
+    weekly_budget_amount: 0,
+    monthly_budget_amount: 0,
+    yearly_budget_amount: 0,
+    custom_budget_amount: 0
+  };
+}
+
 module.exports = {
   get_list,
   count_all,

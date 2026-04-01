@@ -135,6 +135,12 @@ async function index(req, res, next) {
 
     const total_pages = Math.max(Math.ceil(total / limit), 1);
 
+    const monthly_equivalent_total =
+      Number(totals.monthly_budget_amount || 0) +
+      (Number(totals.weekly_budget_amount || 0) * 4.34524) +
+      (Number(totals.yearly_budget_amount || 0) / 12) +
+      Number(totals.custom_budget_amount || 0);
+
     return res.render('budget/index', {
       title: 'Budgets',
       budgets,
@@ -145,6 +151,7 @@ async function index(req, res, next) {
         total_monthly_budget_amount: Number(totals.monthly_budget_amount || 0),
         total_yearly_budget_amount: Number(totals.yearly_budget_amount || 0),
         total_custom_budget_amount: Number(totals.custom_budget_amount || 0),
+        monthly_equivalent_total,
         total_actual_amount: Number(totals.total_actual_amount || 0),
         over_budget_count: Number(totals.over_budget_count || 0)
       },
