@@ -20,6 +20,12 @@
                 total_actual_amount: 0,
                 over_budget_count: 0
             };
+            const safePeriodTotals = period_totals || {
+                weekly_budget_amount: 0,
+                monthly_budget_amount: 0,
+                yearly_budget_amount: 0,
+                custom_budget_amount: 0
+            };
             const safeFilters = filters || {
                 search: '',
                 period_type: '',
@@ -36,6 +42,10 @@
             const totalBudgetAmount = Number(safeSummaryStats.total_budget_amount || 0);
             const totalActualAmount = Number(safeSummaryStats.total_actual_amount || 0);
             const overBudgetCount = Number(safeSummaryStats.over_budget_count || 0);
+            const totalWeeklyBudgetAmount = Number(safePeriodTotals.weekly_budget_amount || 0);
+            const totalMonthlyBudgetAmount = Number(safePeriodTotals.monthly_budget_amount || 0);
+            const totalYearlyBudgetAmount = Number(safePeriodTotals.yearly_budget_amount || 0);
+            const totalCustomBudgetAmount = Number(safePeriodTotals.custom_budget_amount || 0);
 
             function formatCurrency(value) {
                 return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
@@ -172,6 +182,28 @@
                         ▣
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Weekly Total</p>
+                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalWeeklyBudgetAmount) %></p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Monthly Total</p>
+                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalMonthlyBudgetAmount) %></p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Yearly Total</p>
+                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalYearlyBudgetAmount) %></p>
+            </div>
+
+            <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Custom Total</p>
+                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalCustomBudgetAmount) %></p>
             </div>
         </section>
 

@@ -141,6 +141,10 @@ async function index(req, res, next) {
       budget_actual_map: actual_map,
       summary_stats: {
         total_budget_amount: Number(totals.total_budget_amount || 0),
+        total_weekly_budget_amount: Number(totals.weekly_budget_amount || 0),
+        total_monthly_budget_amount: Number(totals.monthly_budget_amount || 0),
+        total_yearly_budget_amount: Number(totals.yearly_budget_amount || 0),
+        total_custom_budget_amount: Number(totals.custom_budget_amount || 0),
         total_actual_amount: Number(totals.total_actual_amount || 0),
         over_budget_count: Number(totals.over_budget_count || 0)
       },
