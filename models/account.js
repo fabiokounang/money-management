@@ -220,7 +220,7 @@ async function count_transactions_by_account(id, user_id) {
         LIMIT ?
     `;
 
-    const [rows] = await pool.execute(sql, [
+    const [rows] = await pool.query(sql, [
         user_id,
         id,
         id,
@@ -238,7 +238,7 @@ async function remove(id, user_id) {
         LIMIT ?
     `;
 
-    const [result] = await pool.execute(sql, [
+    const [result] = await pool.query(sql, [
         id,
         user_id,
         1
