@@ -46,7 +46,7 @@
             const totalYearlyBudgetAmount = Number(safeSummaryStats.total_yearly_budget_amount || 0);
             const totalCustomBudgetAmount = Number(safeSummaryStats.total_custom_budget_amount || 0);
             const monthlyEquivalentTotal = Number(safeSummaryStats.monthly_equivalent_total || 0);
-            const monthlyEquivalentTotal = Number(safePeriodTotals.monthly_equivalent_total || 0);
+            const monthlyEquivalentTotalPeriod = Number(safePeriodTotals.monthly_equivalent_total || 0);
 
             function formatCurrency(value) {
                 return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
@@ -217,7 +217,7 @@
         <section class="mt-4">
             <div class="rounded-3xl border border-emerald-200/80 bg-emerald-50/70 p-4 shadow-lg shadow-emerald-100/30">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Normalized Monthly Equivalent</p>
-                <p class="mt-2 text-2xl font-bold text-emerald-900"><%= formatCurrency(monthlyEquivalentTotal) %></p>
+                <p class="mt-2 text-2xl font-bold text-emerald-900"><%= formatCurrency(monthlyEquivalentTotalPeriod) %></p>
                 <p class="mt-1 text-xs text-emerald-700/80">
                     Weekly x 4.33, Monthly x 1, Yearly / 12, Custom prorated by days.
                 </p>
