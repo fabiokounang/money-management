@@ -22,6 +22,17 @@ if (process.env.NODE_ENV === 'production') {
 
 const pool = mysql.createPool(dbConfig);
 
+if (process.env.MYSQL_SESSION_TZ !== 'off') {
+    const sessionTz = process.env.MYSQL_SESSION_TZ || '+07:00';
+    pool.on('connection', (connection) => {
+        connection.query(`SET time_zone = ?`, [sessionTz], (err) => {
+            if (err) {
+                console.error('[db] SET time_zone failed:', err.message);
+            }
+        });
+    });
+}
+
 async function testConnection() {
     let connection;
 

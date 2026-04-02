@@ -1,13 +1,23 @@
+require('dotenv').config();
+
+if (!process.env.TZ) {
+    process.env.TZ = 'Asia/Jakarta';
+}
+
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
-require('dotenv').config();
 
 const { test_connection } = require('./utils/db');
+const displayTime = require('./utils/displayTime');
 
 const app = express();
+
+app.locals.formatDateTimeWib = displayTime.formatDateTime;
+app.locals.formatDateWib = displayTime.formatDate;
+app.locals.toDateInputValueWib = displayTime.toDateInputValue;
 const PORT = Number(process.env.PORT || 3000);
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret-change-me';

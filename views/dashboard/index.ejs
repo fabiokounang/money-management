@@ -60,23 +60,6 @@
 				return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
 			}
 
-			function formatDate(value) {
-				if (!value) {
-					return '-';
-				}
-
-				const date = new Date(value);
-				if (Number.isNaN(date.getTime())) {
-					return value;
-				}
-
-				return date.toLocaleDateString('id-ID', {
-					year: 'numeric',
-					month: 'short',
-					day: '2-digit'
-				});
-			}
-
 			function getTypeBadgeClass(type) {
 				if (type === 'income') return 'bg-emerald-100 text-emerald-700';
 				if (type === 'expense') return 'bg-rose-100 text-rose-700';
@@ -384,7 +367,7 @@
 								<div>
 									<p class="font-semibold text-stone-900"><%= item.description || item.category_name || 'No description' %></p>
 									<p class="text-sm text-stone-500">
-										<%= item.category_name || '-' %> • <%= formatDate(item.transaction_date) %> • <%= item.account_name || '-' %>
+										<%= item.category_name || '-' %> • <%= formatDateWib(item.transaction_date) %> • <%= item.account_name || '-' %>
 									</p>
 								</div>
 							</div>
