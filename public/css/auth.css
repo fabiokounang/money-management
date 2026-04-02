@@ -31,11 +31,6 @@
   filter: brightness(1.03);
 }
 
-.auth-panel-full,
-.auth-panel {
-  padding: 0 !important;
-}
-
 .auth-form-card {
   background:
     radial-gradient(circle at 100% 0%, rgba(219, 234, 254, 0.5), transparent 35%),
