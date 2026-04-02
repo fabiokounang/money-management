@@ -43,6 +43,22 @@
                 });
             }
 
+            function toDateInputValue(value) {
+                if (!value) {
+                    return '';
+                }
+
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) {
+                    return String(value).slice(0, 10);
+                }
+
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
             function getPreviewBadgeClass(type) {
                 if (type === 'income') return 'bg-emerald-100 text-emerald-700';
                 if (type === 'expense') return 'bg-rose-100 text-rose-700';
@@ -119,7 +135,7 @@
                                             id="transaction_date"
                                             name="transaction_date"
                                             class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                                            value="<%= item.transaction_date ? String(item.transaction_date).slice(0, 10) : '' %>"
+                                            value="<%= toDateInputValue(item.transaction_date) %>"
                                             required
                                         >
                                     </div>
@@ -411,7 +427,7 @@
                             <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
                                 <p class="text-xs uppercase tracking-wide text-white/60">Date</p>
                                 <p class="mt-1 text-sm font-semibold">
-                                    <%= item.transaction_date ? String(item.transaction_date).slice(0, 10) : '-' %>
+                                    <%= toDateInputValue(item.transaction_date) || '-' %>
                                 </p>
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">

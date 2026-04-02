@@ -11,6 +11,9 @@
   --app-radius-xl: 22px;
   --app-shadow-sm: 0 12px 30px rgba(41, 36, 31, 0.07);
   --app-shadow-md: 0 22px 48px rgba(41, 36, 31, 0.11);
+  --app-shadow-card: 0 14px 34px rgba(51, 44, 36, 0.08);
+  --app-pink-soft: #f8edf3;
+  --app-lilac-soft: #f1edfa;
 }
 
 .app-main {
@@ -26,7 +29,9 @@
 .topbar-shell {
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.82);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(252, 249, 244, 0.85)),
+    radial-gradient(circle at 85% 5%, rgba(241, 237, 250, 0.75), transparent 40%);
   box-shadow: var(--app-shadow-sm);
   backdrop-filter: blur(10px);
   padding: 12px 14px;
@@ -34,12 +39,13 @@
 
 .topbar-toggle {
   border: 1px solid var(--app-border);
-  background: #fff;
+  background: linear-gradient(180deg, #fff, #fbf9f4);
   color: var(--app-text);
+  box-shadow: 0 6px 16px rgba(53, 45, 37, 0.08);
 }
 
 .topbar-toggle:hover {
-  background: #f8f6f1;
+  background: linear-gradient(180deg, #fff, #f5f1e9);
 }
 
 .topbar-tip {
@@ -49,19 +55,23 @@
 
 .topbar-user {
   border: 1px solid var(--app-border);
-  background: #fff;
+  background: linear-gradient(180deg, #fff, #fdfbf7);
 }
 
 .topbar-avatar {
-  background: linear-gradient(135deg, rgba(47, 93, 80, 0.14), rgba(176, 125, 79, 0.22));
+  background: linear-gradient(135deg, rgba(47, 93, 80, 0.14), rgba(176, 125, 79, 0.22), rgba(241, 237, 250, 0.62));
   color: var(--app-primary-dark);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
 }
 
 .app-sidebar {
   border-right: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: var(--app-shadow-md);
   transition: transform 0.25s ease;
-  background: linear-gradient(180deg, #f7f3eb 0%, #f3ede3 100%);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(248, 237, 243, 0.9), transparent 32%),
+    radial-gradient(circle at 92% 95%, rgba(241, 237, 250, 0.7), transparent 35%),
+    linear-gradient(180deg, #f7f3eb 0%, #f3ede3 100%);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -112,10 +122,11 @@
 .sidebar-link:hover {
   background: rgba(255, 255, 255, 0.75);
   color: var(--app-text);
+  transform: translateX(3px);
 }
 
 .sidebar-link.active {
-  background: linear-gradient(135deg, rgba(47, 93, 80, 0.16), rgba(47, 93, 80, 0.08));
+  background: linear-gradient(135deg, rgba(47, 93, 80, 0.16), rgba(47, 93, 80, 0.08), rgba(248, 237, 243, 0.62));
   color: var(--app-primary-dark);
   box-shadow: inset 0 0 0 1px rgba(47, 93, 80, 0.15);
 }
@@ -136,7 +147,7 @@
   gap: 0.72rem;
   border: 1px solid var(--app-border);
   border-radius: 14px;
-  background: #fff;
+  background: linear-gradient(180deg, #fff, #fbf9f4);
   padding: 0.72rem 0.88rem;
   color: #3f3a34;
   font-size: 0.9rem;
@@ -147,6 +158,23 @@
 .sidebar-logout-btn:hover {
   background: #faf7f1;
   transform: translateY(-1px);
+}
+
+/* Gentle polish for main cards/buttons rendered by Tailwind classes */
+.app-main .rounded-\[32px\],
+.app-main .rounded-\[28px\],
+.app-main .rounded-3xl {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.app-main .rounded-\[32px\]:hover,
+.app-main .rounded-\[28px\]:hover,
+.app-main .rounded-3xl:hover {
+  box-shadow: var(--app-shadow-card);
+}
+
+.app-main .bg-stone-900 {
+  background-image: linear-gradient(135deg, #2e2a26, #171513);
 }
 
 input,
