@@ -2,19 +2,34 @@ const {
 	pool
 } = require('../utils/db');
 
-async function count_all(user_id) {
+async function count_all(user_id, filters = {}) {
+	const from_date = filters.from_date || null;
+	const to_date = filters.to_date || null;
+
 	const sql = `
         SELECT COUNT(*) AS total
         FROM transactions
         WHERE user_id = ?
+          AND (? IS NULL OR transaction_date >= ?)
+          AND (? IS NULL OR transaction_date <= ?)
         LIMIT ?
     `;
 
-	const [rows] = await pool.query(sql, [user_id, 1]);
+	const [rows] = await pool.query(sql, [
+		user_id,
+		from_date,
+		from_date,
+		to_date,
+		to_date,
+		1
+	]);
 	return rows[0]?.total || 0;
 }
 
-async function get_list(user_id, limit, offset) {
+async function get_list(user_id, limit, offset, filters = {}) {
+	const from_date = filters.from_date || null;
+	const to_date = filters.to_date || null;
+
 	const sql = `
         SELECT
             t.id,
@@ -37,11 +52,21 @@ async function get_list(user_id, limit, offset) {
         LEFT JOIN subcategories s
             ON s.id = t.subcategory_id
         WHERE t.user_id = ?
+          AND (? IS NULL OR t.transaction_date >= ?)
+          AND (? IS NULL OR t.transaction_date <= ?)
         ORDER BY t.transaction_date DESC, t.id DESC
         LIMIT ? OFFSET ?
     `;
 
-	const [rows] = await pool.query(sql, [user_id, limit, offset]);
+	const [rows] = await pool.query(sql, [
+		user_id,
+		from_date,
+		from_date,
+		to_date,
+		to_date,
+		limit,
+		offset
+	]);
 	return rows;
 }
 

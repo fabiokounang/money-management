@@ -29,10 +29,18 @@ async function index(req, res, next) {
 		const page = normalize_pagination_page(req.query.page);
 		const limit = 10;
 		const offset = (page - 1) * limit;
+		const raw_from_date = String(req.query.from_date || '').trim();
+		const raw_to_date = String(req.query.to_date || '').trim();
+		const from_date = raw_from_date && is_valid_iso_date(raw_from_date) ? raw_from_date : '';
+		const to_date = raw_to_date && is_valid_iso_date(raw_to_date) ? raw_to_date : '';
+		const filters = {
+			from_date,
+			to_date
+		};
 
 		const [transactions, total] = await Promise.all([
-			transaction.get_list(user_id, limit, offset),
-			transaction.count_all(user_id)
+			transaction.get_list(user_id, limit, offset, filters),
+			transaction.count_all(user_id, filters)
 		]);
 
 		const total_pages = Math.max(Math.ceil(total / limit), 1);
@@ -43,7 +51,8 @@ async function index(req, res, next) {
 			page,
 			limit,
 			total,
-			total_pages
+			total_pages,
+			filters
 		});
 	} catch (error) {
 		return next(error);

@@ -104,24 +104,24 @@
 
 						<form method="GET" action="/dashboard" class="mt-5 rounded-[28px] border border-stone-200/80 bg-white/85 p-4 shadow-sm backdrop-blur">
 							<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto_auto]">
-								<div>
+								<div class="min-w-0">
 									<label class="mb-2 block text-sm font-semibold text-stone-800">From Date</label>
 									<input
 										type="date"
 										name="from_date"
 										value="<%= safeFilters.from_date %>"
-										class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+										class="w-full min-w-0 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
 										required
 									>
 								</div>
 
-								<div>
+								<div class="min-w-0">
 									<label class="mb-2 block text-sm font-semibold text-stone-800">To Date</label>
 									<input
 										type="date"
 										name="to_date"
 										value="<%= safeFilters.to_date %>"
-										class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+										class="w-full min-w-0 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
 										required
 									>
 								</div>
@@ -345,12 +345,25 @@
 
 		const donutCtx = document.getElementById('expenseDonutChart');
 		if (donutCtx) {
+			const expensePalette = [
+				'#dc2626', // red-600
+				'#ef4444', // red-500
+				'#f97316', // orange-500
+				'#f59e0b', // amber-500
+				'#e11d48', // rose-600
+				'#be123c', // rose-700
+				'#7f1d1d'  // red-900
+			];
+
 			new Chart(donutCtx, {
 				type: 'doughnut',
 				data: {
 					labels: <%- JSON.stringify(donutLabels) %>,
 					datasets: [{
-						data: <%- JSON.stringify(donutValues) %>
+						data: <%- JSON.stringify(donutValues) %>,
+						backgroundColor: expensePalette,
+						borderColor: '#ffffff',
+						borderWidth: 2
 					}]
 				},
 				options: {
@@ -375,11 +388,19 @@
 					datasets: [
 						{
 							label: 'Income',
-							data: <%- JSON.stringify(trendIncomeValues) %>
+							data: <%- JSON.stringify(trendIncomeValues) %>,
+							backgroundColor: 'rgba(37, 99, 235, 0.85)',
+							borderColor: 'rgba(37, 99, 235, 1)',
+							borderWidth: 1,
+							borderRadius: 8
 						},
 						{
 							label: 'Expense',
-							data: <%- JSON.stringify(trendExpenseValues) %>
+							data: <%- JSON.stringify(trendExpenseValues) %>,
+							backgroundColor: 'rgba(220, 38, 38, 0.85)',
+							borderColor: 'rgba(220, 38, 38, 1)',
+							borderWidth: 1,
+							borderRadius: 8
 						}
 					]
 				},
