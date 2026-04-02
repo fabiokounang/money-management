@@ -81,6 +81,25 @@
                 return map[key] || 'bg-stone-300';
             }
 
+            function formatDateTime(value) {
+                if (!value) {
+                    return '-';
+                }
+
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) {
+                    return value;
+                }
+
+                return date.toLocaleString('id-ID', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
             const topVisibleAccount = safeAccounts.length > 0 ? safeAccounts[0].account_name : '-';
         %>
 
@@ -251,6 +270,7 @@
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Type</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Opening Balance</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Current Balance</th>
+								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Created At</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Color</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Status</th>
 								<th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
@@ -259,7 +279,7 @@
 						<tbody>
 							<% if (safeAccounts.length === 0) { %>
 							<tr>
-								<td colspan="7" class="px-6 py-12 text-center text-sm text-stone-500">
+								<td colspan="8" class="px-6 py-12 text-center text-sm text-stone-500">
 									No accounts found for the current filter.
 								</td>
 							</tr>
@@ -284,6 +304,10 @@
 
 								<td class="px-6 py-4 text-sm font-semibold text-stone-900 whitespace-nowrap">
 									<%= formatCurrency(item.current_balance) %>
+								</td>
+
+								<td class="px-6 py-4 text-sm text-stone-600 whitespace-nowrap">
+									<%= formatDateTime(item.created_at) %>
 								</td>
 
 								<td class="px-6 py-4">

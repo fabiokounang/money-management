@@ -29,6 +29,31 @@
 			const safeTopCategories = Array.isArray(top_categories) ? top_categories : [];
 			const safeMonthlyIncomeExpense = Array.isArray(monthly_income_expense) ? monthly_income_expense : [];
 			const safeExpenseByCategory = Array.isArray(expense_by_category) ? expense_by_category : [];
+			const safeWeeklyCheckin = weekly_checkin || {
+				current_week: {
+					from_date: '',
+					to_date: '',
+					total_income: 0,
+					total_expense: 0,
+					transaction_count: 0,
+					balance: 0
+				},
+				previous_week: {
+					from_date: '',
+					to_date: '',
+					total_income: 0,
+					total_expense: 0,
+					transaction_count: 0,
+					balance: 0
+				},
+				expense_delta: 0,
+				recommendation: {
+					title: 'Keep your weekly check-in',
+					message: 'Weekly insights will appear once transactions are available.',
+					cta_label: 'Open transactions',
+					cta_href: '/transaction'
+				}
+			};
 
 			function formatCurrency(value) {
 				return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
@@ -241,6 +266,59 @@
 
 				<div class="mt-6 h-[320px] rounded-[24px] border border-stone-200 bg-stone-50 p-4">
 					<canvas id="incomeExpenseBarChart"></canvas>
+				</div>
+			</div>
+		</section>
+
+		<section class="mt-6 overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50">
+			<div class="border-b border-stone-100 bg-gradient-to-r from-indigo-50 via-white to-rose-50 px-5 py-5 sm:px-7 sm:py-6">
+				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div>
+						<p class="text-base font-semibold text-stone-900">Weekly Check-In</p>
+						<p class="mt-1 text-sm text-stone-500">
+							<%= safeWeeklyCheckin.current_week.from_date %> - <%= safeWeeklyCheckin.current_week.to_date %>
+						</p>
+					</div>
+					<a
+						href="/transaction?from_date=<%= encodeURIComponent(safeWeeklyCheckin.current_week.from_date || '') %>&to_date=<%= encodeURIComponent(safeWeeklyCheckin.current_week.to_date || '') %>"
+						class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
+					>
+						Open week details
+					</a>
+				</div>
+			</div>
+
+			<div class="px-5 py-6 sm:px-7 sm:py-7">
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+					<div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+						<p class="text-xs uppercase tracking-[0.14em] text-stone-500">This Week Income</p>
+						<p class="mt-2 text-base font-bold text-blue-700 whitespace-nowrap"><%= formatCurrency(safeWeeklyCheckin.current_week.total_income) %></p>
+					</div>
+					<div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+						<p class="text-xs uppercase tracking-[0.14em] text-stone-500">This Week Expense</p>
+						<p class="mt-2 text-base font-bold text-rose-700 whitespace-nowrap"><%= formatCurrency(safeWeeklyCheckin.current_week.total_expense) %></p>
+					</div>
+					<div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+						<p class="text-xs uppercase tracking-[0.14em] text-stone-500">Weekly Balance</p>
+						<p class="mt-2 text-base font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(safeWeeklyCheckin.current_week.balance) %></p>
+					</div>
+					<div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+						<p class="text-xs uppercase tracking-[0.14em] text-stone-500">Expense vs Last Week</p>
+						<p class="mt-2 text-base font-bold <%= Number(safeWeeklyCheckin.expense_delta || 0) > 0 ? 'text-rose-700' : 'text-emerald-700' %> whitespace-nowrap">
+							<%= Number(safeWeeklyCheckin.expense_delta || 0) > 0 ? '+' : '' %><%= formatCurrency(safeWeeklyCheckin.expense_delta) %>
+						</p>
+					</div>
+				</div>
+
+				<div class="mt-5 rounded-[28px] border border-indigo-100 bg-gradient-to-r from-indigo-50/70 to-rose-50/70 p-5">
+					<p class="text-sm font-semibold text-stone-900"><%= safeWeeklyCheckin.recommendation.title %></p>
+					<p class="mt-2 text-sm leading-7 text-stone-600"><%= safeWeeklyCheckin.recommendation.message %></p>
+					<a
+						href="<%= safeWeeklyCheckin.recommendation.cta_href %>"
+						class="mt-4 inline-flex items-center justify-center rounded-2xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700"
+					>
+						<%= safeWeeklyCheckin.recommendation.cta_label %>
+					</a>
 				</div>
 			</div>
 		</section>

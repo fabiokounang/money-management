@@ -346,6 +346,34 @@ async function get_income_expense_trend_by_range(user_id, from_date, to_date) {
     return rows;
 }
 
+async function get_period_summary(user_id, from_date, to_date) {
+  const sql = `
+        SELECT
+            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense,
+            COUNT(*) AS transaction_count
+        FROM transactions
+        WHERE user_id = ?
+          AND transaction_date BETWEEN ? AND ?
+        LIMIT ?
+    `;
+
+  const [rows] = await pool.query(sql, [
+    'income',
+    'expense',
+    user_id,
+    from_date,
+    to_date,
+    1
+  ]);
+
+  return rows[0] || {
+    total_income: 0,
+    total_expense: 0,
+    transaction_count: 0
+  };
+}
+
 module.exports = {
   get_dashboard_summary,
   get_recent_transactions,
@@ -358,5 +386,6 @@ module.exports = {
   get_monthly_income_expense,
   get_expense_by_category,
   get_recent_transactions_by_range,
-  get_income_expense_trend_by_range
+  get_income_expense_trend_by_range,
+  get_period_summary
 };
