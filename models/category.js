@@ -26,6 +26,37 @@ async function get_active_by_type(user_id, category_type) {
 	return rows;
 }
 
+async function list_expense_categories_for_budget_form(user_id, ensure_category_id) {
+	const rows = await get_active_by_type(user_id, 'expense');
+
+	if (!ensure_category_id) {
+		return rows;
+	}
+
+	const id = Number(ensure_category_id);
+	if (!Number.isInteger(id) || id <= 0) {
+		return rows;
+	}
+
+	if (rows.some((r) => Number(r.id) === id)) {
+		return rows;
+	}
+
+	const extra = await find_by_id(id, user_id);
+	if (!extra || extra.category_type !== 'expense') {
+		return rows;
+	}
+
+	return [
+		{
+			id: extra.id,
+			category_name: extra.category_name,
+			category_type: extra.category_type
+		},
+		...rows
+	];
+}
+
 async function get_subcategories(category_id, user_id) {
 	const sql = `
         SELECT
@@ -248,6 +279,7 @@ async function remove(id, user_id) {
 
 module.exports = {
 	get_active_by_type,
+	list_expense_categories_for_budget_form,
 	get_subcategories,
 	get_list,
 	count_all,

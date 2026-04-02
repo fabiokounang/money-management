@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "check": "node --check index.js && node --check controllers/auth.js && node --check controllers/budget.js && node --check controllers/report.js && node --check models/budget.js && node --check models/user.js && node --check utils/seed.js && node --check routes/web.js"
+    "check": "node --check index.js && node --check controllers/auth.js && node --check controllers/budget.js && node --check controllers/report.js && node --check models/budget.js && node --check models/category.js && node --check models/user.js && node --check utils/seed.js && node --check routes/web.js"
   },
   "keywords": [],
   "author": "",

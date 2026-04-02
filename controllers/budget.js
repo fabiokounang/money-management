@@ -331,15 +331,17 @@ async function show_edit(req, res, next) {
       return res.redirect('/budget');
     }
 
-    const [item, expense_categories] = await Promise.all([
-      budget.find_by_id(id, user_id),
-      category.get_active_by_type(user_id, 'expense')
-    ]);
+    const item = await budget.find_by_id(id, user_id);
 
     if (!item) {
       req.flash('error_msg', 'Budget not found');
       return res.redirect('/budget');
     }
+
+    const expense_categories = await category.list_expense_categories_for_budget_form(
+      user_id,
+      item.category_id
+    );
 
     return res.render('budget/edit', {
       title: 'Edit Budget',
@@ -368,8 +370,6 @@ async function update(req, res, next) {
     const note = normalize_string(req.body.note, 1000);
     const is_active = Number(req.body.is_active || 1);
 
-    const expense_categories = await category.get_active_by_type(user_id, 'expense');
-
     const old = {
       id,
       category_id,
@@ -380,6 +380,11 @@ async function update(req, res, next) {
       note,
       is_active
     };
+
+    const expense_categories = await category.list_expense_categories_for_budget_form(
+      user_id,
+      category_id
+    );
 
     if (!id || !category_id || Number.isNaN(amount) || !period_type || !start_date) {
       return res.status(400).render('budget/edit', {
