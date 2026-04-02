@@ -133,7 +133,7 @@
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<p class="text-sm font-medium text-stone-500">Total Transactions</p>
-						<h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= totalRows %></h3>
+						<h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= totalRows %></h3>
 						<p class="mt-2 text-xs text-stone-500">Current page shows <%= safeTransactions.length %> rows</p>
 					</div>
 					<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">
@@ -146,7 +146,7 @@
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<p class="text-sm font-medium text-stone-500">Income on This Page</p>
-						<h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(totalIncome) %></h3>
+						<h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(totalIncome) %></h3>
 						<p class="mt-2 text-xs text-emerald-600">Based on loaded rows</p>
 					</div>
 					<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-semibold text-emerald-700">
@@ -159,7 +159,7 @@
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<p class="text-sm font-medium text-stone-500">Expense on This Page</p>
-						<h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(totalExpense) %></h3>
+						<h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(totalExpense) %></h3>
 						<p class="mt-2 text-xs text-rose-600">Based on loaded rows</p>
 					</div>
 					<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-lg font-semibold text-rose-700">
@@ -172,7 +172,7 @@
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<p class="text-sm font-medium text-stone-500">Transfer on This Page</p>
-						<h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(totalTransfer) %></h3>
+						<h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(totalTransfer) %></h3>
 						<p class="mt-2 text-xs text-stone-500">Internal account movements</p>
 					</div>
 					<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-lg font-semibold text-amber-700">
@@ -296,7 +296,7 @@
 									<%= getDisplayAccount(item) %>
 								</td>
 
-								<td class="px-6 py-4 text-right text-sm font-semibold <%= getAmountClass(item.transaction_type) %>">
+								<td class="px-6 py-4 text-right text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
 									<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
 								</td>
 
@@ -360,7 +360,7 @@
 					</div>
 
 					<div class="mt-4 flex items-center justify-between gap-4">
-						<p class="text-sm font-semibold <%= getAmountClass(item.transaction_type) %>">
+						<p class="text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
 							<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
 						</p>
 
@@ -388,7 +388,7 @@
 
 			<div class="flex flex-col gap-3 border-t border-stone-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6">
 				<p class="text-sm text-stone-500">
-					Showing <span class="font-semibold text-stone-900"><%= startRow %> - <%= endRow %></span> of <span class="font-semibold text-stone-900"><%= totalRows %></span> transactions
+					Showing <span class="font-semibold text-stone-900 whitespace-nowrap"><%= startRow %> - <%= endRow %></span> of <span class="font-semibold text-stone-900 whitespace-nowrap"><%= totalRows %></span> transactions
 				</p>
 
 				<div class="flex flex-wrap items-center gap-2">

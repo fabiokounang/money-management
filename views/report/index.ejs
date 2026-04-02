@@ -60,7 +60,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-stone-500">Total Income</p>
-            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(safeSummary.total_income) %></h3>
+            <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.total_income) %></h3>
             <p class="mt-2 text-xs text-emerald-600">Within selected period</p>
           </div>
           <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-semibold text-emerald-700">
@@ -73,7 +73,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-stone-500">Total Expense</p>
-            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(safeSummary.total_expense) %></h3>
+            <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.total_expense) %></h3>
             <p class="mt-2 text-xs text-rose-600">Within selected period</p>
           </div>
           <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-lg font-semibold text-rose-700">
@@ -86,7 +86,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-stone-500">Net Balance</p>
-            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(safeSummary.net_balance) %></h3>
+            <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.net_balance) %></h3>
             <p class="mt-2 text-xs text-amber-700">Income minus expense</p>
           </div>
           <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-lg font-semibold text-amber-700">
@@ -99,7 +99,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-stone-500">Selected Categories Total</p>
-            <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(safeSummary.selected_categories_total) %></h3>
+            <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.selected_categories_total) %></h3>
             <p class="mt-2 text-xs text-stone-500">Based on selected categories</p>
           </div>
           <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">
@@ -273,13 +273,13 @@
 
           <div class="rounded-[24px] border border-stone-200 bg-stone-50 p-4">
             <p class="text-xs uppercase tracking-[0.14em] text-stone-500">Selected Categories Total</p>
-            <p class="mt-2 text-lg font-bold text-stone-900"><%= formatCurrency(safeSummary.selected_categories_total) %></p>
+            <p class="mt-2 text-base sm:text-lg font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.selected_categories_total) %></p>
             <p class="mt-1 text-sm text-stone-500">Combined total from the selected categories.</p>
           </div>
 
           <div class="rounded-[24px] border border-stone-200 bg-stone-50 p-4">
             <p class="text-xs uppercase tracking-[0.14em] text-stone-500">Net Balance</p>
-            <p class="mt-2 text-lg font-bold text-stone-900"><%= formatCurrency(safeSummary.net_balance) %></p>
+            <p class="mt-2 text-base sm:text-lg font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.net_balance) %></p>
             <p class="mt-1 text-sm text-stone-500">Difference between total income and expense.</p>
           </div>
         </div>
@@ -314,7 +314,7 @@
             <tr class="border-b border-stone-100 last:border-b-0 hover:bg-stone-50/70">
               <td class="px-6 py-4 font-semibold text-stone-900"><%= item.category_name %></td>
               <td class="px-6 py-4 text-sm text-stone-500 capitalize"><%= item.category_type %></td>
-              <td class="px-6 py-4 text-right text-sm font-semibold text-stone-900"><%= formatCurrency(item.total) %></td>
+              <td class="px-6 py-4 text-right text-sm font-semibold text-stone-900 whitespace-nowrap"><%= formatCurrency(item.total) %></td>
             </tr>
             <% }) %>
           </tbody>

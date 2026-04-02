@@ -172,7 +172,7 @@
 						<div class="flex items-start justify-between gap-4">
 							<div>
 								<p class="text-sm font-medium text-stone-500">Total Income</p>
-								<h3 class="mt-3 text-2xl font-bold tracking-tight text-stone-900">
+								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
 									<%= formatCurrency(safeSummary.total_income) %>
 								</h3>
 								<p class="mt-2 text-xs text-emerald-600">For <%= safeFilters.from_date %> until <%= safeFilters.to_date %></p>
@@ -185,7 +185,7 @@
 						<div class="flex items-start justify-between gap-4">
 							<div>
 								<p class="text-sm font-medium text-stone-500">Total Expense</p>
-								<h3 class="mt-3 text-2xl font-bold tracking-tight text-stone-900">
+								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
 									<%= formatCurrency(safeSummary.total_expense) %>
 								</h3>
 								<p class="mt-2 text-xs text-rose-600">For <%= safeFilters.from_date %> until <%= safeFilters.to_date %></p>
@@ -198,7 +198,7 @@
 						<div class="flex items-start justify-between gap-4">
 							<div>
 								<p class="text-sm font-medium text-stone-500">Current Balance</p>
-								<h3 class="mt-3 text-2xl font-bold tracking-tight text-stone-900">
+								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
 									<%= formatCurrency(safeSummary.balance) %>
 								</h3>
 								<p class="mt-2 text-xs text-amber-700">Income minus expense</p>
@@ -211,7 +211,7 @@
 						<div class="flex items-start justify-between gap-4">
 							<div>
 								<p class="text-sm font-medium text-stone-500">Transactions</p>
-								<h3 class="mt-3 text-2xl font-bold tracking-tight text-stone-900"><%= safeSummary.transaction_count %></h3>
+								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= safeSummary.transaction_count %></h3>
 								<p class="mt-2 text-xs text-stone-500">This month activity</p>
 							</div>
 							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">▣</div>
@@ -280,7 +280,7 @@
 								</div>
 							</div>
 							<div class="sm:text-right">
-								<p class="text-sm font-semibold <%= getAmountClass(item.transaction_type) %>">
+								<p class="text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
 									<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
 								</p>
 							</div>
@@ -314,7 +314,7 @@
 					<div>
 						<div class="mb-2 flex items-center justify-between gap-4">
 							<p class="text-sm font-semibold text-stone-900"><%= item.category_name %></p>
-							<p class="text-sm text-stone-500"><%= formatCurrency(item.total) %></p>
+							<p class="text-sm text-stone-500 whitespace-nowrap"><%= formatCurrency(item.total) %></p>
 						</div>
 						<div class="h-2.5 overflow-hidden rounded-full bg-stone-100">
 							<span class="block h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" style="width: <%= percentage %>%;"></span>

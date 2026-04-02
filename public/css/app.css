@@ -18,7 +18,9 @@
 }
 
 .app-topbar {
-  top: 12px;
+  /* Keep Tailwind's `top-0` behavior on mobile.
+     We only add the extra offset on large screens. */
+  top: 0;
 }
 
 .topbar-shell {
@@ -150,5 +152,9 @@
 @media (min-width: 1024px) {
   .app-main {
     margin-left: 290px;
+  }
+
+  .app-topbar {
+    top: 12px;
   }
 }

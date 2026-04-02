@@ -136,7 +136,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="text-sm font-medium text-stone-500">Total Budgets</p>
-                        <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= totalRows %></h3>
+                        <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= totalRows %></h3>
                         <p class="mt-2 text-xs text-stone-500">Filtered budget rows</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">
@@ -149,7 +149,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="text-sm font-medium text-stone-500">Total Budget</p>
-                        <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(totalBudgetAmount) %></h3>
+                        <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(totalBudgetAmount) %></h3>
                         <p class="mt-2 text-xs text-emerald-600">Planned spending amount</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-semibold text-emerald-700">
@@ -162,7 +162,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="text-sm font-medium text-stone-500">Actual Spending</p>
-                        <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= formatCurrency(totalActualAmount) %></h3>
+                        <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= formatCurrency(totalActualAmount) %></h3>
                         <p class="mt-2 text-xs text-rose-600">Real expense inside budget periods</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-lg font-semibold text-rose-700">
@@ -175,7 +175,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="text-sm font-medium text-stone-500">Over Budget</p>
-                        <h3 class="mt-3 text-3xl font-bold tracking-tight text-stone-900"><%= overBudgetCount %></h3>
+                        <h3 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= overBudgetCount %></h3>
                         <p class="mt-2 text-xs text-stone-500">Budgets exceeding limit</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-lg font-semibold text-amber-700">
@@ -188,28 +188,28 @@
         <section class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Monthly Equivalent</p>
-                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(monthlyEquivalentTotal) %></p>
+                <p class="mt-2 text-lg sm:text-xl font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(monthlyEquivalentTotal) %></p>
                 <p class="mt-1 text-xs text-stone-500">Weekly x4.345 + Monthly + Yearly/12 + Custom</p>
             </div>
 
             <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Weekly Total</p>
-                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalWeeklyBudgetAmount) %></p>
+                <p class="mt-2 text-lg sm:text-xl font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(totalWeeklyBudgetAmount) %></p>
             </div>
 
             <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Monthly Total</p>
-                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalMonthlyBudgetAmount) %></p>
+                <p class="mt-2 text-lg sm:text-xl font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(totalMonthlyBudgetAmount) %></p>
             </div>
 
             <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Yearly Total</p>
-                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalYearlyBudgetAmount) %></p>
+                <p class="mt-2 text-lg sm:text-xl font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(totalYearlyBudgetAmount) %></p>
             </div>
 
             <div class="rounded-3xl border border-stone-200/80 bg-white/90 p-4 shadow-lg shadow-stone-200/40">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Custom Total</p>
-                <p class="mt-2 text-xl font-bold text-stone-900"><%= formatCurrency(totalCustomBudgetAmount) %></p>
+                <p class="mt-2 text-lg sm:text-xl font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(totalCustomBudgetAmount) %></p>
             </div>
         </section>
 
@@ -338,15 +338,15 @@
                                     <p class="mt-1 text-xs text-stone-500"><%= item.note || 'No note' %></p>
                                 </td>
 
-                                <td class="px-6 py-4 text-sm font-semibold text-stone-900">
+                                <td class="px-6 py-4 text-sm font-semibold text-stone-900 whitespace-nowrap">
                                     <%= formatCurrency(budgetAmount) %>
                                 </td>
 
-                                <td class="px-6 py-4 text-sm font-semibold text-stone-900">
+                                <td class="px-6 py-4 text-sm font-semibold text-stone-900 whitespace-nowrap">
                                     <%= formatCurrency(actualAmount) %>
                                 </td>
 
-                                <td class="px-6 py-4 text-sm font-semibold <%= remainingAmount < 0 ? 'text-rose-700' : 'text-emerald-700' %>">
+                                <td class="px-6 py-4 text-sm font-semibold <%= remainingAmount < 0 ? 'text-rose-700' : 'text-emerald-700' %> whitespace-nowrap">
                                     <%= formatCurrency(remainingAmount) %>
                                 </td>
 
@@ -412,7 +412,7 @@
 
             <div class="flex flex-col gap-3 border-t border-stone-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6">
                 <p class="text-sm text-stone-500">
-                    Showing <span class="font-semibold text-stone-900"><%= startRow %> - <%= endRow %></span> of <span class="font-semibold text-stone-900"><%= totalRows %></span> budgets
+                    Showing <span class="font-semibold text-stone-900 whitespace-nowrap"><%= startRow %> - <%= endRow %></span> of <span class="font-semibold text-stone-900 whitespace-nowrap"><%= totalRows %></span> budgets
                 </p>
 
                 <div class="flex flex-wrap items-center gap-2">

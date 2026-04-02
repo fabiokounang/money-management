@@ -246,7 +246,7 @@
                                         >
                                             <option value="">Select account</option>
                                             <% safeAccounts.forEach((acc) => { %>
-                                                <option value="<%= acc.id %>" <%= Number(item.account_id) === Number(acc.id) ? 'selected' : '' %>>
+                                                <option value="<%= acc.id %>" <%= Number(item.account_id) === Number(acc.id) ? 'selected' : '' %> style="white-space: nowrap;">
                                                     <%= acc.account_name %> - <%= acc.account_type %> - <%= formatCurrency(acc.current_balance) %>
                                                 </option>
                                             <% }) %>
@@ -264,7 +264,7 @@
                                         >
                                             <option value="">Select destination account</option>
                                             <% safeAccounts.forEach((acc) => { %>
-                                                <option value="<%= acc.id %>" <%= Number(item.transfer_to_account_id) === Number(acc.id) ? 'selected' : '' %>>
+                                                <option value="<%= acc.id %>" <%= Number(item.transfer_to_account_id) === Number(acc.id) ? 'selected' : '' %> style="white-space: nowrap;">
                                                     <%= acc.account_name %> - <%= acc.account_type %> - <%= formatCurrency(acc.current_balance) %>
                                                 </option>
                                             <% }) %>
@@ -416,7 +416,7 @@
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
                                 <p class="text-xs uppercase tracking-wide text-white/60">Amount</p>
-                                <p class="mt-1 text-sm font-semibold <%= getPreviewAmountClass(item.transaction_type) %>">
+                                <p class="mt-1 text-sm font-semibold <%= getPreviewAmountClass(item.transaction_type) %> whitespace-nowrap">
                                     <%= getPreviewAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
                                 </p>
                             </div>
