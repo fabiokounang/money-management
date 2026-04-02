@@ -30,3 +30,8 @@
   transform: translateY(-1px);
   filter: brightness(1.03);
 }
+
+.auth-panel-full,
+.auth-panel {
+  padding: 0 !important;
+}

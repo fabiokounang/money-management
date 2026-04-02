@@ -31,8 +31,35 @@ async function index(req, res, next) {
 		const offset = (page - 1) * limit;
 		const raw_from_date = String(req.query.from_date || '').trim();
 		const raw_to_date = String(req.query.to_date || '').trim();
-		const from_date = raw_from_date && is_valid_iso_date(raw_from_date) ? raw_from_date : '';
-		const to_date = raw_to_date && is_valid_iso_date(raw_to_date) ? raw_to_date : '';
+
+		const now = new Date();
+		const current_year = now.getFullYear();
+		const current_month = now.getMonth();
+		const month_start = new Date(current_year, current_month, 1);
+		const month_end = new Date(current_year, current_month + 1, 0);
+
+		function to_iso_date(value) {
+			const date = new Date(value);
+			if (Number.isNaN(date.getTime())) {
+				return '';
+			}
+
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+
+		const default_from_date = to_iso_date(month_start);
+		const default_to_date = to_iso_date(month_end);
+
+		const from_date = raw_from_date
+			? (is_valid_iso_date(raw_from_date) ? raw_from_date : default_from_date)
+			: default_from_date;
+		const to_date = raw_to_date
+			? (is_valid_iso_date(raw_to_date) ? raw_to_date : default_to_date)
+			: default_to_date;
+
 		const filters = {
 			from_date,
 			to_date
