@@ -121,6 +121,100 @@ function build_weekly_recommendation(current_week, previous_week) {
     };
 }
 
+function build_actionable_insights({
+    from_date,
+    to_date,
+    total_income,
+    total_expense,
+    balance,
+    top_categories,
+    monthly_income_expense
+}) {
+    const safe_top_categories = Array.isArray(top_categories) ? top_categories : [];
+    const safe_monthly = Array.isArray(monthly_income_expense) ? monthly_income_expense : [];
+    const insights = [];
+
+    const income_value = Number(total_income || 0);
+    const expense_value = Number(total_expense || 0);
+    const balance_value = Number(balance || 0);
+    const saving_rate = income_value > 0 ? (balance_value / income_value) * 100 : 0;
+
+    if (income_value <= 0 && expense_value <= 0) {
+        insights.push({
+            title: 'Start with one daily input',
+            message: 'Belum ada data pada periode ini. Coba catat minimal 1 transaksi per hari selama seminggu untuk membangun insight yang akurat.',
+            tone: 'neutral',
+            cta_label: 'Add transaction',
+            cta_href: '/transaction/create'
+        });
+    } else if (saving_rate >= 20) {
+        insights.push({
+            title: 'Healthy saving momentum',
+            message: `Saving rate kamu sekitar ${saving_rate.toFixed(1)}% untuk periode ${from_date} s/d ${to_date}. Pertahankan ritme ini dan pindahkan surplus ke tabungan prioritas.`,
+            tone: 'positive',
+            cta_label: 'Review this period',
+            cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
+        });
+    } else if (balance_value < 0) {
+        insights.push({
+            title: 'Expense is above income',
+            message: `Saldo periode ini minus Rp ${Math.abs(balance_value).toLocaleString('id-ID')}. Fokus dulu pada 1-2 kategori pengeluaran terbesar minggu ini.`,
+            tone: 'warning',
+            cta_label: 'Check transactions',
+            cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
+        });
+    } else {
+        insights.push({
+            title: 'Room to improve savings',
+            message: `Saving rate kamu ${saving_rate.toFixed(1)}%. Coba naikkan target ke 20% dengan menetapkan batas mingguan di kategori yang paling sering dipakai.`,
+            tone: 'neutral',
+            cta_label: 'Open budgets',
+            cta_href: '/budget'
+        });
+    }
+
+    if (safe_top_categories.length > 0) {
+        const top = safe_top_categories[0];
+        const top_total = Number(top.total || 0);
+        insights.push({
+            title: 'Top expense focus',
+            message: `Kategori pengeluaran terbesar saat ini adalah ${top.category_name} (Rp ${top_total.toLocaleString('id-ID')}). Bikin limit khusus untuk kategori ini agar dampaknya cepat terasa.`,
+            tone: 'warning',
+            cta_label: 'Review category spend',
+            cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
+        });
+    }
+
+    if (safe_monthly.length >= 2) {
+        const last_index = safe_monthly.length - 1;
+        const current_month = safe_monthly[last_index];
+        const previous_month = safe_monthly[last_index - 1];
+        const current_expense = Number(current_month.total_expense || 0);
+        const previous_expense = Number(previous_month.total_expense || 0);
+        const diff = current_expense - previous_expense;
+
+        if (diff > 0) {
+            insights.push({
+                title: 'Monthly expense is trending up',
+                message: `Pengeluaran bulan ini naik Rp ${diff.toLocaleString('id-ID')} dibanding bulan sebelumnya. Pertimbangkan review transaksi rutin untuk cari pengeluaran yang bisa dipangkas.`,
+                tone: 'warning',
+                cta_label: 'Inspect monthly trend',
+                cta_href: '/report'
+            });
+        } else if (diff < 0) {
+            insights.push({
+                title: 'Monthly expense is improving',
+                message: `Pengeluaran bulan ini turun Rp ${Math.abs(diff).toLocaleString('id-ID')} dari bulan lalu. Pertahankan pola belanja yang sudah membaik ini.`,
+                tone: 'positive',
+                cta_label: 'See full report',
+                cta_href: '/report'
+            });
+        }
+    }
+
+    return insights.slice(0, 3);
+}
+
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
@@ -168,6 +262,15 @@ async function index(req, res, next) {
         const total_expense = Number(summary.total_expense || 0);
         const total_transfer = Number(summary.total_transfer || 0);
         const balance = total_income - total_expense;
+        const actionable_insights = build_actionable_insights({
+            from_date,
+            to_date,
+            total_income,
+            total_expense,
+            balance,
+            top_categories,
+            monthly_income_expense
+        });
         const weekly_checkin = {
             current_week: {
                 ...current_week,
@@ -201,6 +304,7 @@ async function index(req, res, next) {
             trend_rows,
             expense_by_category,
 						monthly_income_expense,
+            actionable_insights,
             weekly_checkin,
             filters: {
                 from_date,
