@@ -10,6 +10,7 @@ const accountRoutes = require('./account');
 const budgetRoutes = require('./budget');
 const exportRoutes = require('./export');
 const recurringRoutes = require('./recurring');
+const settingsRoutes = require('./settings');
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.use('/', categoryRoutes);
 router.use('/', subCategoryRoutes);
 router.use('/', transactionRoutes);
 router.use('/', recurringRoutes);
+router.use('/', settingsRoutes);
 router.use('/', reportRoutes);
 router.use('/', accountRoutes);
 router.use('/', budgetRoutes);

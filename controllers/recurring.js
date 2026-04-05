@@ -45,6 +45,17 @@ async function index(req, res, next) {
       total_pages
     });
   } catch (err) {
+    const missing_table =
+      err.code === 'ER_NO_SUCH_TABLE' ||
+      err.errno === 1146 ||
+      (typeof err.sqlMessage === 'string' && err.sqlMessage.includes("doesn't exist"));
+
+    if (missing_table) {
+      return res.status(503).render('recurring/migration_needed', {
+        title: 'Scheduled transactions — setup required'
+      });
+    }
+
     return next(err);
   }
 }
