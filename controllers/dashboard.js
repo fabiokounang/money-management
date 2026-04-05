@@ -441,6 +441,25 @@ async function save_planned_income(req, res, next) {
         qs.set('trend_granularity', trend_granularity);
         return res.redirect(`/dashboard?${qs.toString()}`);
     } catch (err) {
+        if (err.isMigrationRequired) {
+            req.flash('error_msg', err.message);
+            const qs = new URLSearchParams();
+            const redirect_from = String(req.body.redirect_from_date || '').trim();
+            const redirect_to = String(req.body.redirect_to_date || '').trim();
+            const trend_granularity = sanitize_enum(
+                req.body.redirect_trend_granularity,
+                ['day', 'month', 'year'],
+                'month'
+            );
+            if (is_valid_iso_date(redirect_from)) {
+                qs.set('from_date', redirect_from);
+            }
+            if (is_valid_iso_date(redirect_to)) {
+                qs.set('to_date', redirect_to);
+            }
+            qs.set('trend_granularity', trend_granularity);
+            return res.redirect(`/dashboard?${qs.toString()}`);
+        }
         next(err);
     }
 }

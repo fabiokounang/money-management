@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
+    "migrate:monthly-income-plans": "node scripts/run-migration-monthly-income-plans.js",
     "check": "node --check index.js && node --check controllers/auth.js && node --check controllers/budget.js && node --check controllers/dashboard.js && node --check controllers/report.js && node --check controllers/settings.js && node --check models/budget.js && node --check models/category.js && node --check models/monthly_income_plan.js && node --check models/user.js && node --check utils/mail.js && node --check utils/seed.js && node --check routes/web.js"
   },
   "keywords": [],
