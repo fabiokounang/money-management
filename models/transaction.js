@@ -5,13 +5,25 @@ const {
 async function count_all(user_id, filters = {}) {
 	const from_date = filters.from_date || null;
 	const to_date = filters.to_date || null;
+	const transaction_type = filters.transaction_type || '';
+	const account_id = Number(filters.account_id || 0);
+	const category_id = Number(filters.category_id || 0);
+	const search = filters.search || '';
 
 	const sql = `
         SELECT COUNT(*) AS total
-        FROM transactions
-        WHERE user_id = ?
-          AND (? IS NULL OR transaction_date >= ?)
-          AND (? IS NULL OR transaction_date <= ?)
+        FROM transactions t
+        WHERE t.user_id = ?
+          AND (? IS NULL OR t.transaction_date >= ?)
+          AND (? IS NULL OR t.transaction_date <= ?)
+          AND (? = '' OR t.transaction_type = ?)
+          AND (? = 0 OR t.account_id = ? OR t.transfer_to_account_id = ?)
+          AND (? = 0 OR t.category_id = ?)
+          AND (
+            ? = ''
+            OR t.description LIKE CONCAT('%', ?, '%')
+            OR t.reference_no LIKE CONCAT('%', ?, '%')
+          )
         LIMIT ?
     `;
 
@@ -21,6 +33,16 @@ async function count_all(user_id, filters = {}) {
 		from_date,
 		to_date,
 		to_date,
+		transaction_type,
+		transaction_type,
+		account_id,
+		account_id,
+		account_id,
+		category_id,
+		category_id,
+		search,
+		search,
+		search,
 		1
 	]);
 	return rows[0]?.total || 0;
@@ -29,6 +51,10 @@ async function count_all(user_id, filters = {}) {
 async function get_list(user_id, limit, offset, filters = {}) {
 	const from_date = filters.from_date || null;
 	const to_date = filters.to_date || null;
+	const transaction_type = filters.transaction_type || '';
+	const account_id = Number(filters.account_id || 0);
+	const category_id = Number(filters.category_id || 0);
+	const search = filters.search || '';
 
 	const sql = `
         SELECT
@@ -54,6 +80,14 @@ async function get_list(user_id, limit, offset, filters = {}) {
         WHERE t.user_id = ?
           AND (? IS NULL OR t.transaction_date >= ?)
           AND (? IS NULL OR t.transaction_date <= ?)
+          AND (? = '' OR t.transaction_type = ?)
+          AND (? = 0 OR t.account_id = ? OR t.transfer_to_account_id = ?)
+          AND (? = 0 OR t.category_id = ?)
+          AND (
+            ? = ''
+            OR t.description LIKE CONCAT('%', ?, '%')
+            OR t.reference_no LIKE CONCAT('%', ?, '%')
+          )
         ORDER BY t.transaction_date DESC, t.id DESC
         LIMIT ? OFFSET ?
     `;
@@ -64,6 +98,16 @@ async function get_list(user_id, limit, offset, filters = {}) {
 		from_date,
 		to_date,
 		to_date,
+		transaction_type,
+		transaction_type,
+		account_id,
+		account_id,
+		account_id,
+		category_id,
+		category_id,
+		search,
+		search,
+		search,
 		limit,
 		offset
 	]);
@@ -736,7 +780,11 @@ async function get_export_list(user_id, filters) {
           AND (? = '' OR t.transaction_type = ?)
           AND (? = 0 OR t.account_id = ? OR t.transfer_to_account_id = ?)
           AND (? = 0 OR t.category_id = ?)
-          AND (? = '' OR t.description LIKE CONCAT('%', ?, '%'))
+          AND (
+            ? = ''
+            OR t.description LIKE CONCAT('%', ?, '%')
+            OR t.reference_no LIKE CONCAT('%', ?, '%')
+          )
         ORDER BY t.transaction_date DESC, t.id DESC
         LIMIT ?
     `;
@@ -754,6 +802,7 @@ async function get_export_list(user_id, filters) {
         account_id,
         category_id,
         category_id,
+        search,
         search,
         search,
         100000

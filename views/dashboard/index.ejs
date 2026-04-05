@@ -15,7 +15,7 @@
 		<%- include('../partials/topbar') %>
 
 		<%
-			const safeFilters = filters || { from_date: '', to_date: '' };
+			const safeFilters = filters || { from_date: '', to_date: '', trend_granularity: 'month' };
 
 			const safeSummary = summary || {
 				total_income: 0,
@@ -27,7 +27,8 @@
 
 			const safeRecentTransactions = Array.isArray(recent_transactions) ? recent_transactions : [];
 			const safeTopCategories = Array.isArray(top_categories) ? top_categories : [];
-			const safeMonthlyIncomeExpense = Array.isArray(monthly_income_expense) ? monthly_income_expense : [];
+			const safeIncomeExpenseTrend = Array.isArray(income_expense_trend) ? income_expense_trend : [];
+			const safeTrendGranularity = typeof trend_granularity === 'string' ? trend_granularity : 'month';
 			const safeExpenseByCategory = Array.isArray(expense_by_category) ? expense_by_category : [];
 			const safeWeeklyCheckin = weekly_checkin || {
 				current_week: {
@@ -55,6 +56,7 @@
 				}
 			};
 			const safeActionableInsights = Array.isArray(actionable_insights) ? actionable_insights : [];
+			const safeBudgetAlerts = budget_alerts || { near_count: 0, over_count: 0, tracked_count: 0 };
 
 			function formatCurrency(value) {
 				return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
@@ -85,10 +87,47 @@
 			const donutLabels = safeExpenseByCategory.map((item) => item.category_name);
 			const donutValues = safeExpenseByCategory.map((item) => Number(item.total || 0));
 
-			const trendLabels = safeMonthlyIncomeExpense.map((item) => item.month_label);
-			const trendIncomeValues = safeMonthlyIncomeExpense.map((item) => Number(item.total_income || 0));
-			const trendExpenseValues = safeMonthlyIncomeExpense.map((item) => Number(item.total_expense || 0));
+			const trendLabels = safeIncomeExpenseTrend.map((item) => item.period_label);
+			const trendIncomeValues = safeIncomeExpenseTrend.map((item) => Number(item.total_income || 0));
+			const trendExpenseValues = safeIncomeExpenseTrend.map((item) => Number(item.total_expense || 0));
+
+			let trendSubtitle = 'Dikelompokkan per bulan untuk rentang tanggal yang dipilih.';
+			if (safeTrendGranularity === 'day') {
+				trendSubtitle = 'Dikelompokkan per hari untuk rentang tanggal yang dipilih.';
+			}
+			if (safeTrendGranularity === 'year') {
+				trendSubtitle = 'Dikelompokkan per tahun untuk rentang tanggal yang dipilih.';
+			}
 		%>
+
+		<% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+		<div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+			<%= success_msg[0] %>
+		</div>
+		<% } %>
+
+		<% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+		<div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+			<%= error_msg[0] %>
+		</div>
+		<% } %>
+
+		<% if (safeBudgetAlerts.over_count > 0 || safeBudgetAlerts.near_count > 0) { %>
+		<div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+			<p class="font-semibold text-amber-900">Budget reminder</p>
+			<p class="mt-1 leading-relaxed text-amber-900/90">
+				<% if (safeBudgetAlerts.over_count > 0) { %>
+					<span class="font-medium text-rose-700"><%= safeBudgetAlerts.over_count %> over limit</span>
+				<% } %>
+				<% if (safeBudgetAlerts.over_count > 0 && safeBudgetAlerts.near_count > 0) { %> · <% } %>
+				<% if (safeBudgetAlerts.near_count > 0) { %>
+					<span class="font-medium text-amber-800"><%= safeBudgetAlerts.near_count %> at ≥80% of limit</span>
+				<% } %>
+				<span class="text-amber-800/90"> (active budgets covering today).</span>
+				<a href="/budget" class="ml-1 font-semibold text-pine underline decoration-pine/40 underline-offset-2">Review budgets</a>
+			</p>
+		</div>
+		<% } %>
 
 		<section class="mt-6 overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50">
 			<div class="relative overflow-hidden border-b border-stone-100 bg-gradient-to-r from-emerald-50 via-white to-amber-50 px-5 py-6 sm:px-7 sm:py-7">
@@ -110,50 +149,10 @@
 							sampai
 							<span class="font-semibold text-stone-800"><%= safeFilters.to_date %></span>.
 						</p>
-
-						<form method="GET" action="/dashboard" class="mt-5 rounded-[28px] border border-stone-200/80 bg-white/85 p-4 shadow-sm backdrop-blur">
-							<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto_auto]">
-								<div class="min-w-0">
-									<label class="mb-2 block text-sm font-semibold text-stone-800">From Date</label>
-									<input
-										type="date"
-										name="from_date"
-										value="<%= safeFilters.from_date %>"
-										class="w-full min-w-0 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-										required
-									>
-								</div>
-
-								<div class="min-w-0">
-									<label class="mb-2 block text-sm font-semibold text-stone-800">To Date</label>
-									<input
-										type="date"
-										name="to_date"
-										value="<%= safeFilters.to_date %>"
-										class="w-full min-w-0 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-										required
-									>
-								</div>
-
-								<div class="flex items-end">
-									<a
-										href="/dashboard"
-										class="inline-flex h-[50px] w-full items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 md:w-auto"
-									>
-										Clear Filter
-									</a>
-								</div>
-
-								<div class="flex items-end">
-									<button
-										type="submit"
-										class="inline-flex h-[50px] w-full items-center justify-center rounded-2xl bg-stone-900 px-5 text-sm font-semibold text-white shadow-lg shadow-stone-300/30 transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
-									>
-										Apply Filter
-									</button>
-								</div>
-							</div>
-						</form>
+						<p class="mt-3 text-sm text-stone-600">
+							<a href="#dashboard-filters" class="font-semibold text-emerald-700 underline decoration-emerald-700/30 underline-offset-2 hover:text-emerald-800">Ubah periode &amp; grafik</a>
+							<span class="text-stone-500"> — form ada di bawah, tepat di atas angka ringkasan.</span>
+						</p>
 					</div>
 
 					<!-- <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:w-[360px]">
@@ -176,7 +175,67 @@
 			</div>
 
 			<div class="px-5 py-5 sm:px-7 sm:py-6">
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+				<div id="dashboard-filters" class="scroll-mt-24 rounded-[28px] border-2 border-emerald-200/80 bg-emerald-50/40 p-4 shadow-sm sm:p-5">
+					<p class="text-base font-semibold text-stone-900">Filter periode</p>
+					<p class="mt-1 text-sm text-stone-600">Pilih tanggal lalu tekan <span class="font-medium text-stone-800">Terapkan filter</span> (wajib supaya data di halaman ini ikut berubah).</p>
+					<form method="GET" action="/dashboard" class="mt-4">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto_auto] xl:items-end">
+							<div class="min-w-0">
+								<label class="mb-2 block text-sm font-semibold text-stone-800">Dari tanggal</label>
+								<input
+									type="date"
+									name="from_date"
+									value="<%= safeFilters.from_date %>"
+									class="w-full min-w-0 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+									required
+								>
+							</div>
+
+							<div class="min-w-0">
+								<label class="mb-2 block text-sm font-semibold text-stone-800">Sampai tanggal</label>
+								<input
+									type="date"
+									name="to_date"
+									value="<%= safeFilters.to_date %>"
+									class="w-full min-w-0 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+									required
+								>
+							</div>
+
+							<div class="min-w-0">
+								<label class="mb-2 block text-sm font-semibold text-stone-800">Grafik trend</label>
+								<select
+									name="trend_granularity"
+									class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+								>
+									<option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>Per hari</option>
+									<option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>Per bulan</option>
+									<option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>Per tahun</option>
+								</select>
+							</div>
+
+							<div class="flex md:col-span-2 xl:col-span-1">
+								<a
+									href="/dashboard"
+									class="inline-flex h-[50px] w-full items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
+								>
+									Reset periode
+								</a>
+							</div>
+
+							<div class="flex md:col-span-2 xl:col-span-1">
+								<button
+									type="submit"
+									class="inline-flex h-[50px] w-full min-w-[140px] items-center justify-center rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+								>
+									Terapkan filter
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+
+				<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 					<div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
 						<div class="flex items-start justify-between gap-4">
 							<div>
@@ -243,9 +302,25 @@
 			</div>
 
 			<div class="overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/50 sm:p-6 2xl:col-span-2">
-				<div>
-					<p class="text-base font-semibold text-stone-900">Income vs Expense Trend</p>
-					<p class="mt-1 text-sm text-stone-500">Last 6 months from real transaction data</p>
+				<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+					<div>
+						<p class="text-base font-semibold text-stone-900">Income vs Expense Trend</p>
+						<p class="mt-1 text-sm text-stone-500"><%= trendSubtitle %></p>
+						<p class="mt-2">
+							<a href="#dashboard-filters" class="text-sm font-semibold text-emerald-700 underline decoration-emerald-700/30 underline-offset-2 hover:text-emerald-800">Ubah periode (tanggal) di filter atas</a>
+						</p>
+					</div>
+					<div class="min-w-[200px]">
+						<label for="trend-granularity-quick" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">Kelompokkan</label>
+						<select
+							id="trend-granularity-quick"
+							class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+						>
+							<option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>Per hari</option>
+							<option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>Per bulan</option>
+							<option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>Per tahun</option>
+						</select>
+					</div>
 				</div>
 
 				<div class="mt-6 h-[320px] rounded-[24px] border border-stone-200 bg-stone-50 p-4">
@@ -500,6 +575,15 @@
 					responsive: true,
 					maintainAspectRatio: false
 				}
+			});
+		}
+
+		const trendQuick = document.getElementById('trend-granularity-quick');
+		if (trendQuick) {
+			trendQuick.addEventListener('change', () => {
+				const nextUrl = new URL(window.location.href);
+				nextUrl.searchParams.set('trend_granularity', trendQuick.value);
+				window.location.assign(nextUrl.toString());
 			});
 		}
 	</script>

@@ -372,6 +372,64 @@ async function get_totals_by_period_type(user_id, search, period_type, is_active
   };
 }
 
+async function get_active_period_usage_rows(user_id) {
+  const sql = `
+        SELECT
+            b.id,
+            b.amount,
+            COALESCE(SUM(
+                CASE
+                    WHEN t.transaction_type = ? THEN t.amount
+                    ELSE 0
+                END
+            ), 0) AS actual_amount
+        FROM budgets b
+        LEFT JOIN transactions t
+            ON t.user_id = b.user_id
+           AND t.category_id = b.category_id
+           AND t.transaction_type = ?
+           AND t.transaction_date BETWEEN b.start_date AND b.end_date
+        WHERE b.user_id = ?
+          AND b.is_active = ?
+          AND CURDATE() BETWEEN b.start_date AND b.end_date
+        GROUP BY b.id, b.amount
+        LIMIT ?
+    `;
+
+  const [rows] = await pool.query(sql, ['expense', 'expense', user_id, 1, 500]);
+  return rows;
+}
+
+async function get_active_period_alert_counts(user_id) {
+  const rows = await get_active_period_usage_rows(user_id);
+  let near_count = 0;
+  let over_count = 0;
+
+  rows.forEach((row) => {
+    const budget_amount = Number(row.amount || 0);
+    const actual = Number(row.actual_amount || 0);
+
+    if (budget_amount <= 0) {
+      return;
+    }
+
+    if (actual > budget_amount) {
+      over_count += 1;
+      return;
+    }
+
+    if (actual >= budget_amount * 0.8) {
+      near_count += 1;
+    }
+  });
+
+  return {
+    near_count,
+    over_count,
+    tracked_count: rows.length
+  };
+}
+
 module.exports = {
   get_list,
   count_all,
@@ -383,5 +441,7 @@ module.exports = {
   remove,
   get_actual_amount_by_budget_ids,
   get_totals,
-  get_totals_by_period_type
+  get_totals_by_period_type,
+  get_active_period_usage_rows,
+  get_active_period_alert_counts
 };

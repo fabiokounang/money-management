@@ -238,6 +238,61 @@ async function get_monthly_cashflow(user_id, month_limit) {
   return rows.reverse();
 }
 
+function trend_date_format_expression(granularity) {
+  if (granularity === 'day') {
+    return "DATE_FORMAT(transaction_date, '%Y-%m-%d')";
+  }
+
+  if (granularity === 'year') {
+    return "DATE_FORMAT(transaction_date, '%Y')";
+  }
+
+  return "DATE_FORMAT(transaction_date, '%Y-%m')";
+}
+
+async function get_income_expense_trend(
+  user_id,
+  from_date,
+  to_date,
+  granularity,
+  transaction_type,
+  account_id,
+  max_buckets = 800
+) {
+  const bucket_expr = trend_date_format_expression(granularity);
+
+  const sql = `
+        SELECT
+            ${bucket_expr} AS period_label,
+            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
+        FROM transactions
+        WHERE user_id = ?
+          AND transaction_date BETWEEN ? AND ?
+          AND (? = '' OR transaction_type = ?)
+          AND (? = 0 OR account_id = ? OR transfer_to_account_id = ?)
+        GROUP BY ${bucket_expr}
+        ORDER BY period_label ASC
+        LIMIT ?
+    `;
+
+  const [rows] = await pool.query(sql, [
+    'income',
+    'expense',
+    user_id,
+    from_date,
+    to_date,
+    transaction_type,
+    transaction_type,
+    account_id,
+    account_id,
+    account_id,
+    max_buckets
+  ]);
+
+  return rows;
+}
+
 async function get_monthly_income_expense(user_id, month_limit) {
     const sql = `
         SELECT
@@ -383,6 +438,7 @@ module.exports = {
   get_category_summary,
   get_selected_categories_total,
   get_monthly_cashflow,
+  get_income_expense_trend,
   get_monthly_income_expense,
   get_expense_by_category,
   get_recent_transactions_by_range,

@@ -28,9 +28,19 @@
           <span>Dashboard</span>
         </a>
 
-        <a href="/transaction" class="sidebar-link <%= current_path.startsWith('/transaction') ? 'active' : '' %>">
+        <a href="/transaction" class="sidebar-link <%= current_path.startsWith('/transaction') && !current_path.startsWith('/transaction/import') ? 'active' : '' %>">
           <span class="sidebar-icon">↔</span>
           <span>Transactions</span>
+        </a>
+
+        <a href="/transaction/import" class="sidebar-link <%= current_path.startsWith('/transaction/import') ? 'active' : '' %>">
+          <span class="sidebar-icon">⤓</span>
+          <span>Import CSV</span>
+        </a>
+
+        <a href="/recurring" class="sidebar-link <%= current_path.startsWith('/recurring') ? 'active' : '' %>">
+          <span class="sidebar-icon">↻</span>
+          <span>Scheduled</span>
         </a>
 
         <a href="/category" class="sidebar-link <%= current_path.startsWith('/category') ? 'active' : '' %>">

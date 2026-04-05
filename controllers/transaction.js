@@ -1,15 +1,20 @@
 const transaction = require('../models/transaction');
 const category = require('../models/category');
 const account = require('../models/account');
+const recurring_schedule = require('../models/recurring_schedule');
+const displayTime = require('../utils/displayTime');
+const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
 const {
     is_valid_iso_date,
     parse_positive_integer,
     normalize_pagination_page,
-    normalize_flag_filter,
-    normalize_trimmed_text,
     normalize_optional_text,
     parse_non_negative_number,
-    is_valid_enum
+    is_valid_enum,
+    normalize_date_range,
+    normalize_search,
+    normalize_positive_int,
+    parse_enum
 } = require('../utils/validation');
 
 const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer']);
@@ -23,54 +28,103 @@ const PAYMENT_METHODS = new Set([
     'other'
 ]);
 
+function default_month_range() {
+    const now = new Date();
+    const current_year = now.getFullYear();
+    const current_month = now.getMonth();
+    const month_start = new Date(current_year, current_month, 1);
+    const month_end = new Date(current_year, current_month + 1, 0);
+
+    function to_iso_date(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return '';
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    return {
+        from_date: to_iso_date(month_start),
+        to_date: to_iso_date(month_end)
+    };
+}
+
+function build_transaction_filter_query(filters) {
+    const qs = new URLSearchParams();
+    if (filters.from_date) qs.set('from_date', filters.from_date);
+    if (filters.to_date) qs.set('to_date', filters.to_date);
+    if (filters.transaction_type) qs.set('transaction_type', filters.transaction_type);
+    if (filters.account_id) qs.set('account_id', String(filters.account_id));
+    if (filters.category_id) qs.set('category_id', String(filters.category_id));
+    if (filters.search) qs.set('search', filters.search);
+    return qs.toString();
+}
+
 async function index(req, res, next) {
 	try {
 		const user_id = req.session.user.id;
+		await apply_due_recurring_for_user(user_id);
+
 		const page = normalize_pagination_page(req.query.page);
 		const limit = 10;
 		const offset = (page - 1) * limit;
-		const raw_from_date = String(req.query.from_date || '').trim();
-		const raw_to_date = String(req.query.to_date || '').trim();
 
-		const now = new Date();
-		const current_year = now.getFullYear();
-		const current_month = now.getMonth();
-		const month_start = new Date(current_year, current_month, 1);
-		const month_end = new Date(current_year, current_month + 1, 0);
-
-		function to_iso_date(value) {
-			const date = new Date(value);
-			if (Number.isNaN(date.getTime())) {
-				return '';
-			}
-
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, '0');
-			const day = String(date.getDate()).padStart(2, '0');
-			return `${year}-${month}-${day}`;
+		const dr = normalize_date_range(req.query.from_date, req.query.to_date, default_month_range());
+		if (!dr.ok) {
+			req.flash('error_msg', dr.error);
+			return res.redirect('/transaction');
 		}
 
-		const default_from_date = to_iso_date(month_start);
-		const default_to_date = to_iso_date(month_end);
+		const raw_type = String(req.query.transaction_type || '').trim();
+		const transaction_type = parse_enum(raw_type, ['', 'income', 'expense', 'transfer'], '');
+		if (raw_type !== '' && transaction_type === '') {
+			req.flash('error_msg', 'Invalid transaction type filter');
+			return res.redirect('/transaction');
+		}
 
-		const from_date = raw_from_date
-			? (is_valid_iso_date(raw_from_date) ? raw_from_date : default_from_date)
-			: default_from_date;
-		const to_date = raw_to_date
-			? (is_valid_iso_date(raw_to_date) ? raw_to_date : default_to_date)
-			: default_to_date;
+		const account_id_result = normalize_positive_int(req.query.account_id, {
+			required: false,
+			defaultValue: 0
+		});
+		if (!account_id_result.ok) {
+			req.flash('error_msg', 'Invalid account filter');
+			return res.redirect('/transaction');
+		}
+
+		const category_id_result = normalize_positive_int(req.query.category_id, {
+			required: false,
+			defaultValue: 0
+		});
+		if (!category_id_result.ok) {
+			req.flash('error_msg', 'Invalid category filter');
+			return res.redirect('/transaction');
+		}
+
+		const search = normalize_search(req.query.search, 100);
 
 		const filters = {
-			from_date,
-			to_date
+			from_date: dr.from_date,
+			to_date: dr.to_date,
+			transaction_type,
+			account_id: account_id_result.value,
+			category_id: category_id_result.value,
+			search
 		};
 
-		const [transactions, total] = await Promise.all([
+		const [transactions, total, income_categories, expense_categories, accounts] = await Promise.all([
 			transaction.get_list(user_id, limit, offset, filters),
-			transaction.count_all(user_id, filters)
+			transaction.count_all(user_id, filters),
+			category.get_active_by_type(user_id, 'income'),
+			category.get_active_by_type(user_id, 'expense'),
+			account.get_active_accounts(user_id)
 		]);
 
 		const total_pages = Math.max(Math.ceil(total / limit), 1);
+		const filter_query = build_transaction_filter_query(filters);
 
 		return res.render('transaction/index', {
 			title: 'Transactions',
@@ -79,7 +133,10 @@ async function index(req, res, next) {
 			limit,
 			total,
 			total_pages,
-			filters
+			filters,
+			filter_query,
+			filter_categories: [...income_categories, ...expense_categories],
+			accounts
 		});
 	} catch (error) {
 		return next(error);
@@ -96,12 +153,35 @@ async function show_create(req, res, next) {
 			account.get_active_accounts(user_id)
 		]);
 
+		let prefill = null;
+		const from_id = parse_positive_integer(req.query.from_id);
+
+		if (from_id) {
+			const src = await transaction.find_full_by_id(from_id, user_id);
+
+			if (src) {
+				prefill = {
+					transaction_date: displayTime.toDateInputValue(src.transaction_date),
+					transaction_type: src.transaction_type,
+					amount: String(Number(src.amount || 0)),
+					category_id: src.category_id ? Number(src.category_id) : null,
+					subcategory_id: src.subcategory_id ? Number(src.subcategory_id) : null,
+					account_id: src.account_id ? Number(src.account_id) : null,
+					transfer_to_account_id: src.transfer_to_account_id ? Number(src.transfer_to_account_id) : null,
+					payment_method: src.payment_method,
+					description: src.description || '',
+					reference_no: src.reference_no || ''
+				};
+			}
+		}
+
 		return res.render('transaction/create', {
 			title: 'Create Transaction',
 			error: null,
 			income_categories,
 			expense_categories,
-			accounts
+			accounts,
+			prefill
 		});
 	} catch (error) {
 		return next(error);
@@ -321,6 +401,42 @@ async function create(req, res, next) {
 			description,
 			reference_no
 		});
+
+		if (String(req.body.enable_monthly_schedule || '').trim() === '1') {
+			const schedule_next = String(req.body.schedule_next_due_date || '').trim();
+			const interval_raw = parse_positive_integer(req.body.schedule_interval_months);
+			const interval = interval_raw && interval_raw >= 1 && interval_raw <= 60 ? interval_raw : 1;
+
+			if (is_valid_iso_date(schedule_next) && schedule_next > transaction_date) {
+				const label_raw = normalize_optional_text(req.body.schedule_label, 200);
+				const label = label_raw || (description ? String(description).slice(0, 200) : null);
+
+				try {
+					await recurring_schedule.create({
+						user_id,
+						label,
+						interval_months: interval,
+						next_due_date: schedule_next,
+						is_active: 1,
+						transaction_type,
+						amount,
+						account_id,
+						transfer_to_account_id,
+						category_id,
+						subcategory_id,
+						payment_method,
+						description,
+						reference_no
+					});
+					req.flash('success_msg', 'Transaction created and monthly schedule saved');
+					return res.redirect('/transaction');
+				} catch (schedule_err) {
+					console.error('[recurring] create from transaction form', schedule_err.message || schedule_err);
+					req.flash('success_msg', 'Transaction created (schedule could not be saved — check database migration)');
+					return res.redirect('/transaction');
+				}
+			}
+		}
 
 		req.flash('success_msg', 'Transaction created successfully');
 		return res.redirect('/transaction');

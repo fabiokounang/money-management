@@ -67,6 +67,7 @@
                       type="date"
                       id="transaction_date"
                       name="transaction_date"
+                      value="<%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_date) ? prefill.transaction_date : '' %>"
                       class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                       required
                     >
@@ -83,9 +84,9 @@
                       required
                     >
                       <option value="">Select type</option>
-                      <option value="income">Income</option>
-                      <option value="expense">Expense</option>
-                      <option value="transfer">Transfer</option>
+                      <option value="income" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'income') ? 'selected' : '' %>>Income</option>
+                      <option value="expense" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'expense') ? 'selected' : '' %>>Expense</option>
+                      <option value="transfer" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'transfer') ? 'selected' : '' %>>Transfer</option>
                     </select>
                   </div>
 
@@ -100,6 +101,7 @@
                       data-thousands-hint="true"
                       class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                       placeholder="Enter amount"
+                      value="<%= (typeof prefill !== 'undefined' && prefill && prefill.amount) ? prefill.amount : '' %>"
                       min="1"
                       step="0.01"
                       required
@@ -120,13 +122,13 @@
                       required
                     >
                       <option value="">Select payment method</option>
-                      <option value="cash">Cash</option>
-                      <option value="bank_transfer">Bank Transfer</option>
-                      <option value="debit_card">Debit Card</option>
-                      <option value="credit_card">Credit Card</option>
-                      <option value="qris">QRIS</option>
-                      <option value="ewallet">E-Wallet</option>
-                      <option value="other">Other</option>
+                      <option value="cash" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'cash') ? 'selected' : '' %>>Cash</option>
+                      <option value="bank_transfer" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'bank_transfer') ? 'selected' : '' %>>Bank Transfer</option>
+                      <option value="debit_card" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'debit_card') ? 'selected' : '' %>>Debit Card</option>
+                      <option value="credit_card" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'credit_card') ? 'selected' : '' %>>Credit Card</option>
+                      <option value="qris" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'qris') ? 'selected' : '' %>>QRIS</option>
+                      <option value="ewallet" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'ewallet') ? 'selected' : '' %>>E-Wallet</option>
+                      <option value="other" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'other') ? 'selected' : '' %>>Other</option>
                     </select>
                   </div>
                 </div>
@@ -186,7 +188,7 @@
                     >
                       <option value="">Select account</option>
                       <% (accounts || []).forEach((item) => { %>
-                      <option value="<%= item.id %>">
+                      <option value="<%= item.id %>" <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.account_id) === Number(item.id)) ? 'selected' : '' %>>
                         <%= item.account_name %> - <%= item.account_type %> - Rp <%= Number(item.current_balance || 0).toLocaleString('id-ID') %>
                       </option>
                       <% }) %>
@@ -204,7 +206,7 @@
                     >
                       <option value="">Select destination account</option>
                       <% (accounts || []).forEach((item) => { %>
-                      <option value="<%= item.id %>">
+                      <option value="<%= item.id %>" <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.transfer_to_account_id) === Number(item.id)) ? 'selected' : '' %>>
                         <%= item.account_name %> - <%= item.account_type %> - Rp <%= Number(item.current_balance || 0).toLocaleString('id-ID') %>
                       </option>
                       <% }) %>
@@ -237,7 +239,7 @@
                       rows="4"
                       placeholder="Example: Lunch at cafe, freelance payment, electricity bill..."
                       class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-4 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                    ></textarea>
+                    ><%= (typeof prefill !== 'undefined' && prefill && prefill.description) ? prefill.description : '' %></textarea>
                   </div>
 
                   <div>
@@ -248,8 +250,67 @@
                       type="text"
                       id="reference_no"
                       name="reference_no"
+                      value="<%= (typeof prefill !== 'undefined' && prefill && prefill.reference_no) ? prefill.reference_no : '' %>"
                       class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                       placeholder="Optional reference number"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[28px] border border-indigo-200/90 bg-indigo-50/50 p-5 sm:p-6">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-lg text-indigo-700">
+                    ↻
+                  </div>
+                  <div>
+                    <h2 class="text-base font-semibold text-stone-900">Monthly schedule (optional)</h2>
+                    <p class="mt-1 text-sm text-stone-600">
+                      After this transaction is saved, the same amount and accounts can repeat automatically on the next due date (processed when you open the app).
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-5 space-y-4">
+                  <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-indigo-200 bg-white px-4 py-3">
+                    <input type="checkbox" name="enable_monthly_schedule" value="1" class="mt-1 h-4 w-4 rounded border-stone-300 text-indigo-600">
+                    <span class="text-sm text-stone-800">Also create a monthly recurring schedule from this template</span>
+                  </label>
+
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label for="schedule_next_due_date" class="mb-2 block text-sm font-semibold text-stone-800">First scheduled posting date</label>
+                      <input
+                        type="date"
+                        id="schedule_next_due_date"
+                        name="schedule_next_due_date"
+                        class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                      >
+                      <p class="mt-1 text-xs text-stone-500">Must be after the transaction date above.</p>
+                    </div>
+                    <div>
+                      <label for="schedule_interval_months" class="mb-2 block text-sm font-semibold text-stone-800">Every (months)</label>
+                      <select
+                        id="schedule_interval_months"
+                        name="schedule_interval_months"
+                        class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                      >
+                        <% for (let m = 1; m <= 12; m += 1) { %>
+                        <option value="<%= m %>" <%= m === 1 ? 'selected' : '' %>><%= m %> month<%= m > 1 ? 's' : '' %></option>
+                        <% } %>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label for="schedule_label" class="mb-2 block text-sm font-semibold text-stone-800">Schedule label (optional)</label>
+                    <input
+                      type="text"
+                      id="schedule_label"
+                      name="schedule_label"
+                      maxlength="200"
+                      class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                      placeholder="e.g. Netflix, Gym membership"
                     >
                   </div>
                 </div>
@@ -356,6 +417,8 @@
       </div>
     </section>
   </main>
+
+  <script type="application/json" id="tx-prefill-json"><%- JSON.stringify(typeof prefill !== 'undefined' ? prefill : null) %></script>
 
   <script>
     const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -491,6 +554,39 @@
         await loadSubcategories(categoryField.value);
       });
     }
+
+    (async function applyPrefill() {
+      const el = document.getElementById('tx-prefill-json');
+      if (!el) {
+        return;
+      }
+
+      let prefill = null;
+
+      try {
+        prefill = JSON.parse(el.textContent || 'null');
+      } catch (e) {
+        return;
+      }
+
+      if (!prefill || !transactionType) {
+        return;
+      }
+
+      if (prefill.transaction_type) {
+        transactionType.value = prefill.transaction_type;
+        updateTransactionFormState();
+
+        if (prefill.category_id && categoryField && (prefill.transaction_type === 'income' || prefill.transaction_type === 'expense')) {
+          categoryField.value = String(prefill.category_id);
+          await loadSubcategories(String(prefill.category_id));
+
+          if (prefill.subcategory_id && subcategoryField) {
+            subcategoryField.value = String(prefill.subcategory_id);
+          }
+        }
+      }
+    })();
   </script>
 </body>
 

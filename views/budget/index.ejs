@@ -356,8 +356,8 @@
                                             <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= getUsageStatusClass(actualAmount, budgetAmount) %>">
                                                 <%= getUsageStatus(actualAmount, budgetAmount) %>
                                             </span>
-                                            <span class="text-xs text-stone-500">
-                                                <%= Math.round((budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0)) %>%
+                                            <span class="text-xs <%= actualAmount > budgetAmount ? 'font-semibold text-rose-700' : 'text-stone-500' %>">
+                                                <%= Math.round((budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0)) %>%<% if (actualAmount > budgetAmount) { %> over<% } %>
                                             </span>
                                         </div>
 

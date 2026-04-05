@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/app_head') %>
+</head>
+<body class="min-h-screen bg-stone-50 text-stone-800">
+  <%- include('../partials/sidebar') %>
+  <div id="app-overlay" class="app-overlay lg:hidden"></div>
+
+  <main class="app-main px-4 py-4 sm:px-6 sm:py-6">
+    <%- include('../partials/topbar') %>
+
+    <section class="mt-6 max-w-4xl">
+      <div class="overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 shadow-xl shadow-stone-200/50">
+        <div class="border-b border-stone-100 bg-gradient-to-r from-indigo-50 via-white to-emerald-50 px-5 py-5 sm:px-7 sm:py-6">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-stone-900 sm:text-3xl">New scheduled transaction</h1>
+              <p class="mt-2 text-sm text-stone-600">No transaction is posted today — the first posting happens on the next due date.</p>
+            </div>
+            <a href="/recurring" class="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 shadow-sm hover:border-indigo-200">← Back</a>
+          </div>
+        </div>
+
+        <div class="px-5 py-6 sm:px-7 sm:py-7">
+          <% if (typeof error !== 'undefined' && error) { %>
+          <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><%= error %></div>
+          <% } %>
+
+          <% const o = old || {}; %>
+
+          <form action="/recurring" method="POST" class="space-y-8">
+            <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
+              <h2 class="text-base font-semibold text-stone-900">Schedule</h2>
+              <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Label (optional)</label>
+                  <input type="text" name="label" value="<%= o.label || '' %>" maxlength="200" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Next due date *</label>
+                  <input type="date" name="next_due_date" value="<%= o.next_due_date || '' %>" required class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Every (months) *</label>
+                  <select name="interval_months" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                    <% for (let m = 1; m <= 12; m += 1) { %>
+                    <option value="<%= m %>" <%= Number(o.interval_months || 1) === m ? 'selected' : '' %>><%= m %></option>
+                    <% } %>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-[28px] border border-stone-200 bg-stone-50/70 p-5 sm:p-6">
+              <h2 class="text-base font-semibold text-stone-900">Transaction template</h2>
+              <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Type *</label>
+                  <select id="transaction_type" name="transaction_type" required class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                    <option value="">Select</option>
+                    <option value="income" <%= o.transaction_type === 'income' ? 'selected' : '' %>>Income</option>
+                    <option value="expense" <%= o.transaction_type === 'expense' ? 'selected' : '' %>>Expense</option>
+                    <option value="transfer" <%= o.transaction_type === 'transfer' ? 'selected' : '' %>>Transfer</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Amount *</label>
+                  <input type="number" name="amount" value="<%= o.amount != null ? o.amount : '' %>" min="0.01" step="0.01" required class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Payment method *</label>
+                  <select name="payment_method" required class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                    <option value="cash" <%= o.payment_method === 'cash' ? 'selected' : '' %>>Cash</option>
+                    <option value="bank_transfer" <%= !o.payment_method || o.payment_method === 'bank_transfer' ? 'selected' : '' %>>Bank transfer</option>
+                    <option value="debit_card" <%= o.payment_method === 'debit_card' ? 'selected' : '' %>>Debit</option>
+                    <option value="credit_card" <%= o.payment_method === 'credit_card' ? 'selected' : '' %>>Credit</option>
+                    <option value="qris" <%= o.payment_method === 'qris' ? 'selected' : '' %>>QRIS</option>
+                    <option value="ewallet" <%= o.payment_method === 'ewallet' ? 'selected' : '' %>>E-wallet</option>
+                    <option value="other" <%= o.payment_method === 'other' ? 'selected' : '' %>>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Category</label>
+                  <select id="category_id" name="category_id" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm"
+                    data-income-categories='<%- JSON.stringify(income_categories || []) %>'
+                    data-expense-categories='<%- JSON.stringify(expense_categories || []) %>'>
+                    <option value="">—</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">Subcategory</label>
+                  <select id="subcategory_id" name="subcategory_id" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                    <option value="">—</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">From account *</label>
+                  <select id="account_id" name="account_id" required class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                    <option value="">Select</option>
+                    <% (accounts || []).forEach((item) => { %>
+                    <option value="<%= item.id %>" <%= Number(o.account_id) === Number(item.id) ? 'selected' : '' %>><%= item.account_name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div id="transfer-account-wrapper" class="hidden">
+                  <label class="mb-2 block text-sm font-semibold text-stone-800">To account *</label>
+                  <select id="transfer_to_account_id" name="transfer_to_account_id" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                    <option value="">Select</option>
+                    <% (accounts || []).forEach((item) => { %>
+                    <option value="<%= item.id %>" <%= Number(o.transfer_to_account_id) === Number(item.id) ? 'selected' : '' %>><%= item.account_name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-4">
+                <label class="mb-2 block text-sm font-semibold text-stone-800">Description</label>
+                <textarea name="description" rows="3" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm"><%= o.description || '' %></textarea>
+              </div>
+              <div class="mt-4">
+                <label class="mb-2 block text-sm font-semibold text-stone-800">Reference</label>
+                <input type="text" name="reference_no" value="<%= o.reference_no || '' %>" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+              </div>
+            </div>
+
+            <div class="flex gap-3 justify-end border-t border-stone-200 pt-6">
+              <a href="/recurring" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700">Cancel</a>
+              <button type="submit" class="rounded-2xl bg-stone-900 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700">Save schedule</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('app-sidebar');
+    const overlay = document.getElementById('app-overlay');
+    if (sidebarToggle && sidebar && overlay) {
+      sidebarToggle.addEventListener('click', () => { sidebar.classList.toggle('show'); overlay.classList.toggle('show'); });
+      overlay.addEventListener('click', () => { sidebar.classList.remove('show'); overlay.classList.remove('show'); });
+    }
+
+    const transactionType = document.getElementById('transaction_type');
+    const transferAccountWrapper = document.getElementById('transfer-account-wrapper');
+    const categoryField = document.getElementById('category_id');
+    const subcategoryField = document.getElementById('subcategory_id');
+
+    function resetSubcategoryOptions() {
+      if (!subcategoryField) return;
+      subcategoryField.innerHTML = '<option value="">—</option>';
+    }
+
+    function fillCategoryOptions(type) {
+      if (!categoryField) return;
+      const incomeCategories = JSON.parse(categoryField.dataset.incomeCategories || '[]');
+      const expenseCategories = JSON.parse(categoryField.dataset.expenseCategories || '[]');
+      let options = [];
+      if (type === 'income') options = incomeCategories;
+      if (type === 'expense') options = expenseCategories;
+      categoryField.innerHTML = '<option value="">—</option>';
+      options.forEach((item) => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.category_name;
+        categoryField.appendChild(option);
+      });
+    }
+
+    async function loadSubcategories(categoryId) {
+      resetSubcategoryOptions();
+      if (!categoryId) return;
+      try {
+        const response = await fetch(`/transaction/subcategories/${categoryId}`, { headers: { Accept: 'application/json' } });
+        const result = await response.json();
+        if (!result.success || !Array.isArray(result.data)) return;
+        result.data.forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = item.subcategory_name;
+          subcategoryField.appendChild(option);
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    function updateTransactionFormState() {
+      if (!transactionType || !transferAccountWrapper || !categoryField || !subcategoryField) return;
+      if (transactionType.value === 'transfer') {
+        transferAccountWrapper.classList.remove('hidden');
+        categoryField.disabled = true;
+        subcategoryField.disabled = true;
+        categoryField.innerHTML = '<option value="">—</option>';
+        resetSubcategoryOptions();
+        return;
+      }
+      transferAccountWrapper.classList.add('hidden');
+      categoryField.disabled = false;
+      subcategoryField.disabled = false;
+      fillCategoryOptions(transactionType.value);
+      resetSubcategoryOptions();
+    }
+
+    const savedCat = <%= (o.category_id != null && String(o.category_id).trim() !== '') ? Number(o.category_id) : 'null' %>;
+    const savedSub = <%= (o.subcategory_id != null && String(o.subcategory_id).trim() !== '') ? Number(o.subcategory_id) : 'null' %>;
+
+    if (transactionType) {
+      transactionType.addEventListener('change', () => updateTransactionFormState());
+      updateTransactionFormState();
+      if (savedCat && (transactionType.value === 'income' || transactionType.value === 'expense')) {
+        categoryField.value = String(savedCat);
+        loadSubcategories(savedCat).then(() => {
+          if (savedSub) subcategoryField.value = String(savedSub);
+        });
+      }
+    }
+
+    if (categoryField) {
+      categoryField.addEventListener('change', async () => { await loadSubcategories(categoryField.value); });
+    }
+  </script>
+</body>
+</html>

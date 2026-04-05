@@ -2,7 +2,8 @@ const transaction = require('../models/transaction');
 const {
     normalize_date_range,
     normalize_positive_int,
-    parse_enum
+    parse_enum,
+    normalize_search
 } = require('../utils/validation');
 
 function escape_csv(value) {
@@ -115,13 +116,15 @@ async function transactions_csv(req, res, next) {
         const to_date = date_range.to_date;
         const account_id = account_id_result.value;
         const category_id = category_id_result.value;
+        const search = normalize_search(req.query.search, 100);
 
         const rows = await transaction.get_export_list(user_id, {
             from_date,
             to_date,
             transaction_type,
             account_id,
-            category_id
+            category_id,
+            search
         });
 
         const csv = build_csv(rows);

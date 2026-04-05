@@ -55,11 +55,12 @@ async function index(req, res, next) {
     const transaction_type = sanitize_enum(req.query.transaction_type, ['income', 'expense', 'transfer'], '');
     const account_id = parse_positive_int(req.query.account_id, 0);
     const category_ids = to_number_array(req.query.category_ids);
+    const trend_granularity = sanitize_enum(req.query.trend_granularity, ['day', 'month', 'year'], 'month');
 
-    const [summary, category_summary, monthly_cashflow, accounts, categories] = await Promise.all([
+    const [summary, category_summary, income_expense_trend, accounts, categories] = await Promise.all([
       report.get_summary(user_id, from_date, to_date, transaction_type, account_id),
       report.get_category_summary(user_id, from_date, to_date, transaction_type, account_id),
-      report.get_monthly_cashflow(user_id, 6),
+      report.get_income_expense_trend(user_id, from_date, to_date, trend_granularity, transaction_type, account_id),
       account.get_active_accounts(user_id),
       Promise.all([
         category.get_active_by_type(user_id, 'income'),
@@ -93,13 +94,15 @@ async function index(req, res, next) {
       accounts,
       categories,
       category_summary,
-      monthly_cashflow,
+      income_expense_trend,
+      trend_granularity,
       filters: {
         from_date,
         to_date,
         transaction_type,
         account_id,
-        category_ids
+        category_ids,
+        trend_granularity
       }
     });
   } catch (error) {

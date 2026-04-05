@@ -26,13 +26,15 @@
       const safeAccounts = Array.isArray(accounts) ? accounts : [];
       const safeCategories = Array.isArray(categories) ? categories : [];
       const safeCategorySummary = Array.isArray(category_summary) ? category_summary : [];
-      const safeMonthlyCashflow = Array.isArray(monthly_cashflow) ? monthly_cashflow : [];
+      const safeIncomeExpenseTrend = Array.isArray(income_expense_trend) ? income_expense_trend : [];
+      const safeTrendGranularity = typeof trend_granularity === 'string' ? trend_granularity : 'month';
       const safeFilters = filters || {
         from_date: '',
         to_date: '',
         transaction_type: '',
         account_id: 0,
-        category_ids: []
+        category_ids: [],
+        trend_granularity: 'month'
       };
 
       function formatCurrency(value) {
@@ -50,9 +52,17 @@
       const barLabels = safeCategorySummary.map((item) => item.category_name);
       const barValues = safeCategorySummary.map((item) => Number(item.total || 0));
 
-      const lineLabels = safeMonthlyCashflow.map((item) => item.month_label);
-      const lineIncomeValues = safeMonthlyCashflow.map((item) => Number(item.total_income || 0));
-      const lineExpenseValues = safeMonthlyCashflow.map((item) => Number(item.total_expense || 0));
+      const lineLabels = safeIncomeExpenseTrend.map((item) => item.period_label);
+      const lineIncomeValues = safeIncomeExpenseTrend.map((item) => Number(item.total_income || 0));
+      const lineExpenseValues = safeIncomeExpenseTrend.map((item) => Number(item.total_expense || 0));
+
+      let trendSubtitle = 'Grouped by month for the selected date range (same filters as the report).';
+      if (safeTrendGranularity === 'day') {
+        trendSubtitle = 'Grouped by day for the selected date range (same filters as the report).';
+      }
+      if (safeTrendGranularity === 'year') {
+        trendSubtitle = 'Grouped by year for the selected date range (same filters as the report).';
+      }
     %>
 
     <section class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-4">
@@ -183,6 +193,19 @@
             </select>
           </div>
 
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-stone-800">Income vs expense chart</label>
+            <select
+              name="trend_granularity"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+            >
+              <option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>Per hari</option>
+              <option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>Per bulan</option>
+              <option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>Per tahun</option>
+            </select>
+            <p class="mt-2 text-xs text-stone-500">Mengikuti From / To dan filter tipe &amp; akun di atas.</p>
+          </div>
+
           <div class="xl:col-span-2">
             <label class="mb-2 block text-sm font-semibold text-stone-800">Selected Categories</label>
             <select
@@ -246,9 +269,22 @@
 
     <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
       <div class="overflow-hidden rounded-[32px] border border-stone-200/80 bg-white/90 p-5 shadow-xl shadow-stone-200/50 sm:p-6 xl:col-span-2">
-        <div>
-          <p class="text-base font-semibold text-stone-900">Income vs Expense Trend</p>
-          <p class="mt-1 text-sm text-stone-500">Last 6 months from real transaction data</p>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-base font-semibold text-stone-900">Income vs Expense Trend</p>
+            <p class="mt-1 text-sm text-stone-500"><%= trendSubtitle %></p>
+          </div>
+          <div class="min-w-[200px]">
+            <label for="trend-granularity-quick" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">Kelompokkan</label>
+            <select
+              id="trend-granularity-quick"
+              class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+            >
+              <option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>Per hari</option>
+              <option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>Per bulan</option>
+              <option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>Per tahun</option>
+            </select>
+          </div>
         </div>
 
         <div class="mt-6 h-[340px] rounded-[24px] border border-stone-200 bg-stone-50 p-4">
@@ -390,12 +426,16 @@
             {
               label: 'Income',
               data: <%- JSON.stringify(lineIncomeValues) %>,
-              tension: 0.35
+              tension: 0.35,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.15)'
             },
             {
               label: 'Expense',
               data: <%- JSON.stringify(lineExpenseValues) %>,
-              tension: 0.35
+              tension: 0.35,
+              borderColor: 'rgb(244, 63, 94)',
+              backgroundColor: 'rgba(244, 63, 94, 0.12)'
             }
           ]
         },
@@ -403,6 +443,15 @@
           responsive: true,
           maintainAspectRatio: false
         }
+      });
+    }
+
+    const trendQuick = document.getElementById('trend-granularity-quick');
+    if (trendQuick) {
+      trendQuick.addEventListener('change', () => {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('trend_granularity', trendQuick.value);
+        window.location.assign(nextUrl.toString());
       });
     }
   </script>

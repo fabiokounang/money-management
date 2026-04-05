@@ -1,7 +1,10 @@
 const report = require('../models/report');
+const budget = require('../models/budget');
+const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
 const {
     normalize_pagination_page,
-    normalize_iso_date_range
+    normalize_date_range,
+    sanitize_enum
 } = require('../utils/validation');
 
 function get_default_month_range() {
@@ -17,21 +20,6 @@ function get_default_month_range() {
         from_date: first.toISOString().slice(0, 10),
         to_date: last.toISOString().slice(0, 10)
     };
-}
-
-function normalize_range(from, to) {
-    const def = get_default_month_range();
-
-    let from_date = from || def.from_date;
-    let to_date = to || def.to_date;
-
-    if (from_date > to_date) {
-        const temp = from_date;
-        from_date = to_date;
-        to_date = temp;
-    }
-
-    return { from_date, to_date };
 }
 
 function to_iso_date(value) {
@@ -218,21 +206,24 @@ function build_actionable_insights({
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
+        await apply_due_recurring_for_user(user_id);
+
         const page = normalize_pagination_page(req.query.page);
         const limit = 10;
         const offset = (page - 1) * limit;
 
-        const range = normalize_iso_date_range(
-            req.query.from_date || '',
-            req.query.to_date || '',
+        const range = normalize_date_range(
+            req.query.from_date,
+            req.query.to_date,
             get_default_month_range()
         );
         if (!range.ok) {
-            req.flash('error_msg', range.message);
+            req.flash('error_msg', range.error);
             return res.redirect('/dashboard');
         }
 
         const { from_date, to_date } = range;
+        const trend_granularity = sanitize_enum(req.query.trend_granularity, ['day', 'month', 'year'], 'month');
         const current_week = get_current_week_range();
         const previous_week = get_previous_week_range(current_week);
 
@@ -241,21 +232,23 @@ async function index(req, res, next) {
             recent_transactions,
             top_categories,
             transaction_count,
-            trend_rows,
+            income_expense_trend,
             expense_by_category,
-						monthly_income_expense,
+            monthly_income_expense,
             current_week_summary,
-            previous_week_summary
+            previous_week_summary,
+            budget_alerts
         ] = await Promise.all([
             report.get_dashboard_summary(user_id, from_date, to_date),
             report.get_recent_transactions_by_range(user_id, from_date, to_date, 5),
             report.get_top_expense_categories(user_id, from_date, to_date, 5),
             report.count_transactions_in_period(user_id, from_date, to_date),
-            report.get_income_expense_trend_by_range(user_id, from_date, to_date),
+            report.get_income_expense_trend(user_id, from_date, to_date, trend_granularity, '', 0),
             report.get_expense_by_category(user_id, from_date, to_date, 6),
-						report.get_monthly_income_expense(user_id, 24),
+            report.get_monthly_income_expense(user_id, 24),
             report.get_period_summary(user_id, current_week.from_date, current_week.to_date),
-            report.get_period_summary(user_id, previous_week.from_date, previous_week.to_date)
+            report.get_period_summary(user_id, previous_week.from_date, previous_week.to_date),
+            budget.get_active_period_alert_counts(user_id)
         ]);
 
         const total_income = Number(summary.total_income || 0);
@@ -301,14 +294,16 @@ async function index(req, res, next) {
             },
             recent_transactions,
             top_categories,
-            trend_rows,
+            income_expense_trend,
             expense_by_category,
-						monthly_income_expense,
+            trend_granularity,
             actionable_insights,
             weekly_checkin,
+            budget_alerts,
             filters: {
                 from_date,
-                to_date
+                to_date,
+                trend_granularity
             }
         });
     } catch (err) {
