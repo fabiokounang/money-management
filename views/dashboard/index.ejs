@@ -57,6 +57,21 @@
 			};
 			const safeActionableInsights = Array.isArray(actionable_insights) ? actionable_insights : [];
 			const safeBudgetAlerts = budget_alerts || { near_count: 0, over_count: 0, tracked_count: 0 };
+			const safePlanVsActual = plan_vs_actual && typeof plan_vs_actual === 'object' ? plan_vs_actual : {
+				plan_month: '',
+				plan_month_label: '',
+				range_spans_multiple_months: false,
+				planned_income: 0,
+				planned_expense_total: 0,
+				actual_income: 0,
+				actual_expense: 0,
+				net_planned: 0,
+				net_actual: 0,
+				variance_income: 0,
+				variance_expense: 0,
+				variance_net: 0,
+				expense_pct_of_planned: null
+			};
 
 			function formatCurrency(value) {
 				return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
@@ -286,6 +301,105 @@
 						</div>
 					</div>
 				</div>
+
+				<% if (safePlanVsActual.plan_month) { %>
+				<div class="mt-6 overflow-hidden rounded-[28px] border border-teal-200/80 bg-gradient-to-br from-teal-50/90 via-white to-stone-50/80 p-5 shadow-sm sm:p-6">
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+						<div>
+							<p class="text-base font-semibold text-stone-900">Plan vs actual (period)</p>
+							<p class="mt-1 text-sm text-stone-600">
+								Expense plan = sum of active <span class="font-medium text-stone-800">expense</span> budget limits overlapping
+								<span class="font-medium text-stone-800"><%= safeFilters.from_date %></span>–<span class="font-medium text-stone-800"><%= safeFilters.to_date %></span>.
+								Income target is for <span class="font-medium text-stone-800"><%= safePlanVsActual.plan_month_label %></span>.
+							</p>
+							<% if (safePlanVsActual.range_spans_multiple_months) { %>
+							<p class="mt-2 text-xs text-amber-800">
+								Period spans multiple months — the income target still applies only to <span class="font-semibold"><%= safePlanVsActual.plan_month_label %></span> (month of the start date).
+							</p>
+							<% } %>
+						</div>
+						<a href="/budget/recap?from_date=<%= encodeURIComponent(safeFilters.from_date) %>&to_date=<%= encodeURIComponent(safeFilters.to_date) %>" class="shrink-0 text-sm font-semibold text-teal-800 underline decoration-teal-600/40 underline-offset-2 hover:text-teal-950">Open recap</a>
+					</div>
+
+					<div class="mt-5 overflow-x-auto rounded-2xl border border-stone-200/80 bg-white/90">
+						<table class="min-w-[520px] w-full border-collapse text-sm">
+							<thead>
+								<tr class="border-b border-stone-200 bg-stone-50/90 text-left text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+									<th class="px-4 py-3"></th>
+									<th class="px-4 py-3 text-right">Planned</th>
+									<th class="px-4 py-3 text-right">Actual</th>
+									<th class="px-4 py-3 text-right">Variance</th>
+								</tr>
+							</thead>
+							<tbody class="text-stone-800">
+								<tr class="border-b border-stone-100">
+									<td class="px-4 py-3 font-medium">Income</td>
+									<td class="px-4 py-3 text-right tabular-nums text-emerald-800"><%= formatCurrency(safePlanVsActual.planned_income) %></td>
+									<td class="px-4 py-3 text-right tabular-nums font-semibold text-emerald-700"><%= formatCurrency(safePlanVsActual.actual_income) %></td>
+									<td class="px-4 py-3 text-right tabular-nums <%= Number(safePlanVsActual.variance_income || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700' %>">
+										<%= Number(safePlanVsActual.variance_income || 0) >= 0 ? '+' : '' %><%= formatCurrency(safePlanVsActual.variance_income) %>
+									</td>
+								</tr>
+								<tr class="border-b border-stone-100">
+									<td class="px-4 py-3 font-medium">Expense</td>
+									<td class="px-4 py-3 text-right tabular-nums text-rose-800/90"><%= formatCurrency(safePlanVsActual.planned_expense_total) %></td>
+									<td class="px-4 py-3 text-right tabular-nums font-semibold text-rose-700"><%= formatCurrency(safePlanVsActual.actual_expense) %></td>
+									<td class="px-4 py-3 text-right tabular-nums <%= Number(safePlanVsActual.variance_expense || 0) <= 0 ? 'text-emerald-700' : 'text-rose-700' %>">
+										<%= Number(safePlanVsActual.variance_expense || 0) > 0 ? '+' : '' %><%= formatCurrency(safePlanVsActual.variance_expense) %>
+									</td>
+								</tr>
+								<tr>
+									<td class="px-4 py-3 font-semibold text-stone-900">Net (income − expense)</td>
+									<td class="px-4 py-3 text-right tabular-nums font-medium text-stone-800"><%= formatCurrency(safePlanVsActual.net_planned) %></td>
+									<td class="px-4 py-3 text-right tabular-nums font-bold text-stone-900"><%= formatCurrency(safePlanVsActual.net_actual) %></td>
+									<td class="px-4 py-3 text-right tabular-nums font-semibold <%= Number(safePlanVsActual.variance_net || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700' %>">
+										<%= Number(safePlanVsActual.variance_net || 0) >= 0 ? '+' : '' %><%= formatCurrency(safePlanVsActual.variance_net) %>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<% if (safePlanVsActual.planned_expense_total > 0 && safePlanVsActual.expense_pct_of_planned !== null) { %>
+					<div class="mt-4">
+						<div class="flex items-center justify-between text-xs font-medium text-stone-600">
+							<span>Actual expense vs planned budgets (sum)</span>
+							<span class="tabular-nums text-stone-800"><%= safePlanVsActual.expense_pct_of_planned %>%</span>
+						</div>
+						<div class="mt-2 h-2.5 overflow-hidden rounded-full bg-stone-200">
+							<div
+								class="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all"
+								style="width: <%= Math.min(100, Number(safePlanVsActual.expense_pct_of_planned || 0)) %>%"
+							></div>
+						</div>
+					</div>
+					<% } %>
+
+					<form method="POST" action="/dashboard/planned-income" class="mt-5 flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white/95 p-4 sm:flex-row sm:flex-wrap sm:items-end">
+						<div class="min-w-[200px] flex-1">
+							<label for="planned_income_input" class="mb-1.5 block text-xs font-semibold uppercase tracking-[0.1em] text-stone-500">Planned income (<%= safePlanVsActual.plan_month_label %>)</label>
+							<input
+								type="number"
+								name="planned_income"
+								id="planned_income_input"
+								min="0"
+								step="0.01"
+								value="<%= safePlanVsActual.planned_income %>"
+								class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
+								placeholder="0"
+							>
+						</div>
+						<input type="hidden" name="plan_month" value="<%= safePlanVsActual.plan_month %>">
+						<input type="hidden" name="redirect_from_date" value="<%= safeFilters.from_date %>">
+						<input type="hidden" name="redirect_to_date" value="<%= safeFilters.to_date %>">
+						<input type="hidden" name="redirect_trend_granularity" value="<%= safeTrendGranularity %>">
+						<button type="submit" class="inline-flex h-[50px] items-center justify-center rounded-2xl bg-teal-700 px-6 text-sm font-semibold text-white shadow-md shadow-teal-700/20 transition hover:-translate-y-0.5 hover:bg-teal-800">
+							Save income target
+						</button>
+					</form>
+					<p class="mt-3 text-xs text-stone-500">Transfers are excluded from income and expense totals. Set your expected take-home (or similar) for the calendar month above.</p>
+				</div>
+				<% } %>
 			</div>
 		</section>
 

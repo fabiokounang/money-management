@@ -1,10 +1,13 @@
 const report = require('../models/report');
 const budget = require('../models/budget');
+const monthly_income_plan = require('../models/monthly_income_plan');
 const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
 const {
     normalize_pagination_page,
     normalize_date_range,
-    sanitize_enum
+    sanitize_enum,
+    is_valid_iso_date,
+    parse_non_negative_decimal
 } = require('../utils/validation');
 
 function get_default_month_range() {
@@ -17,8 +20,8 @@ function get_default_month_range() {
     const last = new Date(year, month + 1, 0);
 
     return {
-        from_date: first.toISOString().slice(0, 10),
-        to_date: last.toISOString().slice(0, 10)
+        from_date: to_iso_date(first),
+        to_date: to_iso_date(last)
     };
 }
 
@@ -32,6 +35,73 @@ function to_iso_date(value) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function plan_month_key_from_range_start(from_date) {
+    if (!from_date || typeof from_date !== 'string' || from_date.length < 7) {
+        return '';
+    }
+
+    return `${from_date.slice(0, 7)}-01`;
+}
+
+function format_plan_month_label(plan_month) {
+    const parts = String(plan_month || '').split('-');
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    if (!y || !m) {
+        return plan_month || '';
+    }
+
+    const d = new Date(y, m - 1, 1);
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function normalize_plan_month_input(value) {
+    const s = String(value || '').trim();
+    if (!is_valid_iso_date(s) || !s.endsWith('-01')) {
+        return null;
+    }
+
+    return s;
+}
+
+function build_plan_vs_actual({
+    from_date,
+    to_date,
+    planned_income,
+    planned_expense_total,
+    actual_income,
+    actual_expense
+}) {
+    const plan_month = plan_month_key_from_range_start(from_date);
+    const range_spans_multiple_months = Boolean(
+        from_date && to_date && from_date.slice(0, 7) !== to_date.slice(0, 7)
+    );
+
+    const pi = Number(planned_income || 0);
+    const pe = Number(planned_expense_total || 0);
+    const ai = Number(actual_income || 0);
+    const ae = Number(actual_expense || 0);
+
+    const net_planned = pi - pe;
+    const net_actual = ai - ae;
+
+    return {
+        plan_month,
+        plan_month_label: format_plan_month_label(plan_month),
+        range_spans_multiple_months,
+        planned_income: pi,
+        planned_expense_total: pe,
+        actual_income: ai,
+        actual_expense: ae,
+        net_planned: net_planned,
+        net_actual: net_actual,
+        variance_income: ai - pi,
+        variance_expense: ae - pe,
+        variance_net: net_actual - net_planned,
+        expense_pct_of_planned: pe > 0 ? Math.min(999, Math.round((ae / pe) * 1000) / 10) : null
+    };
 }
 
 function get_current_week_range() {
@@ -227,6 +297,8 @@ async function index(req, res, next) {
         const current_week = get_current_week_range();
         const previous_week = get_previous_week_range(current_week);
 
+        const plan_month = plan_month_key_from_range_start(from_date);
+
         const [
             summary,
             recent_transactions,
@@ -237,7 +309,9 @@ async function index(req, res, next) {
             monthly_income_expense,
             current_week_summary,
             previous_week_summary,
-            budget_alerts
+            budget_alerts,
+            planned_expense_total,
+            stored_planned_income
         ] = await Promise.all([
             report.get_dashboard_summary(user_id, from_date, to_date),
             report.get_recent_transactions_by_range(user_id, from_date, to_date, 5),
@@ -248,13 +322,24 @@ async function index(req, res, next) {
             report.get_monthly_income_expense(user_id, 24),
             report.get_period_summary(user_id, current_week.from_date, current_week.to_date),
             report.get_period_summary(user_id, previous_week.from_date, previous_week.to_date),
-            budget.get_active_period_alert_counts(user_id)
+            budget.get_active_period_alert_counts(user_id),
+            budget.sum_planned_expense_budgets_overlap(user_id, from_date, to_date),
+            plan_month ? monthly_income_plan.get_planned_income(user_id, plan_month) : Promise.resolve(0)
         ]);
 
         const total_income = Number(summary.total_income || 0);
         const total_expense = Number(summary.total_expense || 0);
         const total_transfer = Number(summary.total_transfer || 0);
         const balance = total_income - total_expense;
+
+        const plan_vs_actual = build_plan_vs_actual({
+            from_date,
+            to_date,
+            planned_income: stored_planned_income,
+            planned_expense_total,
+            actual_income: total_income,
+            actual_expense: total_expense
+        });
         const actionable_insights = build_actionable_insights({
             from_date,
             to_date,
@@ -300,6 +385,7 @@ async function index(req, res, next) {
             actionable_insights,
             weekly_checkin,
             budget_alerts,
+            plan_vs_actual,
             filters: {
                 from_date,
                 to_date,
@@ -311,4 +397,52 @@ async function index(req, res, next) {
     }
 }
 
-module.exports = { index };
+async function save_planned_income(req, res, next) {
+    try {
+        const user_id = req.session.user.id;
+        const plan_month = normalize_plan_month_input(req.body.plan_month);
+        const parsed_income = parse_non_negative_decimal(req.body.planned_income);
+        const redirect_from = String(req.body.redirect_from_date || '').trim();
+        const redirect_to = String(req.body.redirect_to_date || '').trim();
+        const trend_granularity = sanitize_enum(
+            req.body.redirect_trend_granularity,
+            ['day', 'month', 'year'],
+            'month'
+        );
+
+        if (!plan_month) {
+            req.flash('error_msg', 'Invalid plan month.');
+            return res.redirect('/dashboard');
+        }
+
+        if (parsed_income === null) {
+            req.flash('error_msg', 'Planned income must be a valid non-negative number.');
+            const qs = new URLSearchParams();
+            if (is_valid_iso_date(redirect_from)) {
+                qs.set('from_date', redirect_from);
+            }
+            if (is_valid_iso_date(redirect_to)) {
+                qs.set('to_date', redirect_to);
+            }
+            qs.set('trend_granularity', trend_granularity);
+            return res.redirect(`/dashboard?${qs.toString()}`);
+        }
+
+        await monthly_income_plan.upsert_planned_income(user_id, plan_month, parsed_income);
+        req.flash('success_msg', `Planned income for ${format_plan_month_label(plan_month)} saved.`);
+
+        const qs = new URLSearchParams();
+        if (is_valid_iso_date(redirect_from)) {
+            qs.set('from_date', redirect_from);
+        }
+        if (is_valid_iso_date(redirect_to)) {
+            qs.set('to_date', redirect_to);
+        }
+        qs.set('trend_granularity', trend_granularity);
+        return res.redirect(`/dashboard?${qs.toString()}`);
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { index, save_planned_income };

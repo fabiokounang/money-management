@@ -5,6 +5,7 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS budgets;
+DROP TABLE IF EXISTS monthly_income_plans;
 DROP TABLE IF EXISTS recurring_schedules;
 DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS subcategories;
@@ -175,4 +176,18 @@ CREATE TABLE budgets (
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_budgets_category FOREIGN KEY (category_id) REFERENCES categories (id)
         ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE monthly_income_plans (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id INT UNSIGNED NOT NULL,
+    plan_month DATE NOT NULL COMMENT 'First day of calendar month (YYYY-MM-01)',
+    planned_income DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_monthly_income_user_month (user_id, plan_month),
+    KEY idx_monthly_income_user (user_id),
+    CONSTRAINT fk_monthly_income_user FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -495,6 +495,34 @@ async function get_recap_by_date_range(user_id, range_from, range_to) {
   return rows;
 }
 
+/**
+ * Sum of active expense budget limits whose period overlaps [range_from, range_to] (inclusive).
+ */
+async function sum_planned_expense_budgets_overlap(user_id, range_from, range_to) {
+  const sql = `
+        SELECT COALESCE(SUM(b.amount), 0) AS total
+        FROM budgets b
+        INNER JOIN categories c
+            ON c.id = b.category_id
+        WHERE b.user_id = ?
+          AND c.category_type = ?
+          AND b.is_active = 1
+          AND b.start_date <= ?
+          AND b.end_date >= ?
+        LIMIT ?
+    `;
+
+  const [rows] = await pool.query(sql, [
+    user_id,
+    'expense',
+    range_to,
+    range_from,
+    1
+  ]);
+
+  return Number(rows[0]?.total || 0);
+}
+
 module.exports = {
   get_list,
   count_all,
@@ -509,5 +537,6 @@ module.exports = {
   get_totals_by_period_type,
   get_active_period_usage_rows,
   get_active_period_alert_counts,
-  get_recap_by_date_range
+  get_recap_by_date_range,
+  sum_planned_expense_budgets_overlap
 };
