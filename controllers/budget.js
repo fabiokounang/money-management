@@ -22,9 +22,11 @@ function get_default_month_range() {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
 
+  // Use calendar dates in the server local TZ — toISOString() is UTC and shifts
+  // the day for timezones ahead of UTC (e.g. WIB: month end becomes yesterday).
   return {
-    from_date: first.toISOString().slice(0, 10),
-    to_date: last.toISOString().slice(0, 10)
+    from_date: to_date_string(first),
+    to_date: to_date_string(last)
   };
 }
 

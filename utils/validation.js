@@ -232,6 +232,14 @@ function parse_iso_date(value) {
   return new Date(Number(year_raw), Number(month_raw) - 1, Number(day_raw));
 }
 
+// YYYY-MM-DD in local calendar (avoid UTC toISOString day shift on WIB, etc.).
+function local_calendar_iso_date(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function sanitize_date_yyyy_mm_dd(value, default_value = '') {
   const normalized = to_trimmed_string(value);
   if (!normalized) {
@@ -263,7 +271,7 @@ function normalize_range(from_input, to_input, default_range) {
 }
 
 function normalize_date_range(from_input, to_input, default_range = null) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = local_calendar_iso_date();
   const fallback = default_range && default_range.from_date && default_range.to_date
     ? default_range
     : { from_date: today, to_date: today };
