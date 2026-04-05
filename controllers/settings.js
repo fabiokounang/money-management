@@ -12,14 +12,14 @@ async function send_test_email(req, res, next) {
     if (!is_mail_configured()) {
       req.flash(
         'error_msg',
-        'Gmail belum disetel. Tambahkan GMAIL_USER dan GMAIL_APP_PASSWORD di environment (lihat petunjuk di halaman ini).'
+        'Gmail is not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD in the environment (see instructions on this page).'
       );
       return res.redirect('/settings/email');
     }
 
     const to = String(req.session.user?.email || '').trim();
     if (!to) {
-      req.flash('error_msg', 'Akun tidak punya alamat email.');
+      req.flash('error_msg', 'This account has no email address.');
       return res.redirect('/settings/email');
     }
 
@@ -27,14 +27,14 @@ async function send_test_email(req, res, next) {
     await send_mail({
       to,
       subject: '[Money Management] Test email',
-      text: `Ini email percobaan dari Money Management.\n\nWaktu server: ${when}\n\nKalau kamu terima ini, Nodemailer + Gmail sudah jalan.`,
-      html: `<p>Ini email percobaan dari <strong>Money Management</strong>.</p><p>Waktu server: <code>${when}</code></p><p>Kalau kamu terima ini, Nodemailer + Gmail sudah jalan.</p>`
+      text: `This is a test email from Money Management.\n\nServer time: ${when}\n\nIf you received this, Nodemailer + Gmail are working.`,
+      html: `<p>This is a test email from <strong>Money Management</strong>.</p><p>Server time: <code>${when}</code></p><p>If you received this, Nodemailer + Gmail are working.</p>`
     });
 
-    req.flash('success_msg', `Email tes terkirim ke ${to}. Cek inbox (dan folder spam).`);
+    req.flash('success_msg', `Test email sent to ${to}. Check inbox (and spam).`);
     return res.redirect('/settings/email');
   } catch (err) {
-    req.flash('error_msg', err.message || 'Gagal mengirim email.');
+    req.flash('error_msg', err.message || 'Failed to send email.');
     return res.redirect('/settings/email');
   }
 }

@@ -70,7 +70,7 @@ async function register(req, res, next) {
     if (!full_name || !email || !password || !confirm_password) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Semua field wajib diisi',
+        error: 'All fields are required',
         old
       });
     }
@@ -78,7 +78,7 @@ async function register(req, res, next) {
     if (full_name.length > 100) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Nama terlalu panjang',
+        error: 'Name is too long',
         old
       });
     }
@@ -86,7 +86,7 @@ async function register(req, res, next) {
     if (email.length > 150) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Email terlalu panjang',
+        error: 'Email is too long',
         old
       });
     }
@@ -94,7 +94,7 @@ async function register(req, res, next) {
     if (!is_valid_email(email)) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Format email tidak valid',
+        error: 'Invalid email format',
         old
       });
     }
@@ -102,7 +102,7 @@ async function register(req, res, next) {
     if (!is_safe_text(full_name)) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Nama mengandung karakter yang tidak diizinkan',
+        error: 'Name contains invalid characters',
         old
       });
     }
@@ -110,7 +110,7 @@ async function register(req, res, next) {
     if (password.length < 6) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Password minimal 6 karakter',
+        error: 'Password must be at least 6 characters',
         old
       });
     }
@@ -118,7 +118,7 @@ async function register(req, res, next) {
     if (password !== confirm_password) {
       return res.status(400).render('auth/register', {
         title: 'Register',
-        error: 'Konfirmasi password tidak sama',
+        error: 'Password confirmation does not match',
         old
       });
     }
@@ -128,7 +128,7 @@ async function register(req, res, next) {
     if (existing_user) {
       return res.status(409).render('auth/register', {
         title: 'Register',
-        error: 'Email sudah terdaftar',
+        error: 'Email is already registered',
         old
       });
     }
@@ -154,7 +154,7 @@ async function register(req, res, next) {
     await save_session(req);
 
     await seed_user_default_data(user_id);
-    req.flash('success_msg', 'Register berhasil, selamat datang');
+    req.flash('success_msg', 'Registration successful — welcome');
     return res.redirect('/dashboard');
   } catch (error) {
     return next(error);
@@ -172,7 +172,7 @@ async function login(req, res, next) {
     if (!is_valid_email(email)) {
       return res.status(400).render('auth/login', {
         title: 'Login',
-        error: 'Format email tidak valid',
+        error: 'Invalid email format',
         old
       });
     }
@@ -180,7 +180,7 @@ async function login(req, res, next) {
     if (!email || !password) {
       return res.status(400).render('auth/login', {
         title: 'Login',
-        error: 'Email dan password wajib diisi',
+        error: 'Email and password are required',
         old
       });
     }
@@ -190,7 +190,7 @@ async function login(req, res, next) {
     if (!existing_user) {
       return res.status(401).render('auth/login', {
         title: 'Login',
-        error: 'Email atau password salah',
+        error: 'Invalid email or password',
         old
       });
     }
@@ -198,7 +198,7 @@ async function login(req, res, next) {
     if (Number(existing_user.is_active) !== 1) {
       return res.status(403).render('auth/login', {
         title: 'Login',
-        error: 'Akun tidak aktif',
+        error: 'Account is inactive',
         old
       });
     }
@@ -208,7 +208,7 @@ async function login(req, res, next) {
     if (!is_password_match) {
       return res.status(401).render('auth/login', {
         title: 'Login',
-        error: 'Email atau password salah',
+        error: 'Invalid email or password',
         old
       });
     }
@@ -222,7 +222,7 @@ async function login(req, res, next) {
     };
     await save_session(req);
 
-    req.flash('success_msg', 'Login berhasil');
+    req.flash('success_msg', 'Signed in successfully');
     return res.redirect('/dashboard');
   } catch (error) {
     return next(error);

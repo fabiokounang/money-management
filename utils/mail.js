@@ -16,7 +16,7 @@ function is_mail_configured() {
 function create_transport() {
   const { user, pass } = mail_credentials();
   if (!user || !pass) {
-    throw new Error('Email belum dikonfigurasi: set GMAIL_USER dan GMAIL_APP_PASSWORD di environment.');
+    throw new Error('Email is not configured: set GMAIL_USER and GMAIL_APP_PASSWORD in the environment.');
   }
 
   return nodemailer.createTransport({
@@ -34,7 +34,7 @@ function create_transport() {
 async function send_mail(opts) {
   const { to, subject, text, html } = opts;
   if (!to || !subject) {
-    throw new Error('Parameter to dan subject wajib diisi.');
+    throw new Error('Parameters "to" and "subject" are required.');
   }
 
   const { from_address } = mail_credentials();

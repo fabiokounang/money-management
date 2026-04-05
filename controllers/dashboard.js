@@ -77,7 +77,7 @@ function build_weekly_recommendation(current_week, previous_week) {
     if (tx_count === 0) {
         return {
             title: 'Start your weekly rhythm',
-            message: 'Belum ada transaksi minggu ini. Coba catat minimal 1 pengeluaran hari ini supaya tracking tetap konsisten.',
+            message: 'No transactions yet this week. Log at least one expense today to keep tracking consistent.',
             cta_label: 'Add first transaction',
             cta_href: '/transaction/create'
         };
@@ -86,7 +86,7 @@ function build_weekly_recommendation(current_week, previous_week) {
     if (expense_delta > 0) {
         return {
             title: 'Expense is trending up',
-            message: `Pengeluaran minggu ini naik Rp ${expense_delta.toLocaleString('id-ID')} dibanding minggu lalu. Cek 3 transaksi teratas dan tentukan 1 batas belanja mingguan.`,
+            message: `This week’s spending is up Rp ${expense_delta.toLocaleString('id-ID')} vs last week. Review your top few transactions and set one weekly spending cap.`,
             cta_label: 'Review this week expenses',
             cta_href: `/transaction?from_date=${current_week.from_date}&to_date=${current_week.to_date}`
         };
@@ -95,7 +95,7 @@ function build_weekly_recommendation(current_week, previous_week) {
     if (current_income > current_expense) {
         return {
             title: 'Great weekly balance',
-            message: 'Pemasukan minggu ini masih lebih besar dari pengeluaran. Pertahankan pola ini dan sisihkan ke tabungan/budget prioritas.',
+            message: 'Income is still higher than spending this week. Keep it up and move any surplus to savings or priority budgets.',
             cta_label: 'View this week transactions',
             cta_href: `/transaction?from_date=${current_week.from_date}&to_date=${current_week.to_date}`
         };
@@ -103,7 +103,7 @@ function build_weekly_recommendation(current_week, previous_week) {
 
     return {
         title: 'Keep your weekly check-in',
-        message: 'Cek ulang kategori belanja minggu ini dan tentukan 1 pengeluaran yang bisa dikurangi minggu depan.',
+        message: 'Review this week’s spending categories and pick one expense to trim next week.',
         cta_label: 'Open weekly transactions',
         cta_href: `/transaction?from_date=${current_week.from_date}&to_date=${current_week.to_date}`
     };
@@ -130,7 +130,7 @@ function build_actionable_insights({
     if (income_value <= 0 && expense_value <= 0) {
         insights.push({
             title: 'Start with one daily input',
-            message: 'Belum ada data pada periode ini. Coba catat minimal 1 transaksi per hari selama seminggu untuk membangun insight yang akurat.',
+            message: 'No data in this period yet. Try logging at least one transaction per day for a week to build useful insights.',
             tone: 'neutral',
             cta_label: 'Add transaction',
             cta_href: '/transaction/create'
@@ -138,7 +138,7 @@ function build_actionable_insights({
     } else if (saving_rate >= 20) {
         insights.push({
             title: 'Healthy saving momentum',
-            message: `Saving rate kamu sekitar ${saving_rate.toFixed(1)}% untuk periode ${from_date} s/d ${to_date}. Pertahankan ritme ini dan pindahkan surplus ke tabungan prioritas.`,
+            message: `Your saving rate is about ${saving_rate.toFixed(1)}% for ${from_date} to ${to_date}. Keep the rhythm and move surplus to priority savings.`,
             tone: 'positive',
             cta_label: 'Review this period',
             cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
@@ -146,7 +146,7 @@ function build_actionable_insights({
     } else if (balance_value < 0) {
         insights.push({
             title: 'Expense is above income',
-            message: `Saldo periode ini minus Rp ${Math.abs(balance_value).toLocaleString('id-ID')}. Fokus dulu pada 1-2 kategori pengeluaran terbesar minggu ini.`,
+            message: `Period balance is negative by Rp ${Math.abs(balance_value).toLocaleString('id-ID')}. Focus on your 1–2 largest spending categories this week.`,
             tone: 'warning',
             cta_label: 'Check transactions',
             cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
@@ -154,7 +154,7 @@ function build_actionable_insights({
     } else {
         insights.push({
             title: 'Room to improve savings',
-            message: `Saving rate kamu ${saving_rate.toFixed(1)}%. Coba naikkan target ke 20% dengan menetapkan batas mingguan di kategori yang paling sering dipakai.`,
+            message: `Your saving rate is ${saving_rate.toFixed(1)}%. Try moving toward 20% with weekly caps on your most-used categories.`,
             tone: 'neutral',
             cta_label: 'Open budgets',
             cta_href: '/budget'
@@ -166,7 +166,7 @@ function build_actionable_insights({
         const top_total = Number(top.total || 0);
         insights.push({
             title: 'Top expense focus',
-            message: `Kategori pengeluaran terbesar saat ini adalah ${top.category_name} (Rp ${top_total.toLocaleString('id-ID')}). Bikin limit khusus untuk kategori ini agar dampaknya cepat terasa.`,
+            message: `Your top spending category is ${top.category_name} (Rp ${top_total.toLocaleString('id-ID')}). Set a dedicated limit there to feel the impact quickly.`,
             tone: 'warning',
             cta_label: 'Review category spend',
             cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
@@ -184,7 +184,7 @@ function build_actionable_insights({
         if (diff > 0) {
             insights.push({
                 title: 'Monthly expense is trending up',
-                message: `Pengeluaran bulan ini naik Rp ${diff.toLocaleString('id-ID')} dibanding bulan sebelumnya. Pertimbangkan review transaksi rutin untuk cari pengeluaran yang bisa dipangkas.`,
+                message: `This month’s spending is up Rp ${diff.toLocaleString('id-ID')} vs last month. Review recurring transactions for cuts.`,
                 tone: 'warning',
                 cta_label: 'Inspect monthly trend',
                 cta_href: '/report'
@@ -192,7 +192,7 @@ function build_actionable_insights({
         } else if (diff < 0) {
             insights.push({
                 title: 'Monthly expense is improving',
-                message: `Pengeluaran bulan ini turun Rp ${Math.abs(diff).toLocaleString('id-ID')} dari bulan lalu. Pertahankan pola belanja yang sudah membaik ini.`,
+                message: `This month’s spending is down Rp ${Math.abs(diff).toLocaleString('id-ID')} from last month. Keep the improved pattern.`,
                 tone: 'positive',
                 cta_label: 'See full report',
                 cta_href: '/report'

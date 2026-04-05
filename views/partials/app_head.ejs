@@ -95,13 +95,13 @@
       const refreshHint = () => {
         const raw = String(input.value || '').trim();
         if (!raw) {
-          hint.textContent = 'Format angka otomatis: 1.000.000';
+          hint.textContent = 'Auto-formats numbers like 1.000.000';
           return;
         }
 
         const parsed = Number(raw);
         if (!Number.isFinite(parsed)) {
-          hint.textContent = 'Format angka tidak valid.';
+          hint.textContent = 'Invalid number format.';
           return;
         }
 

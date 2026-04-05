@@ -212,32 +212,32 @@ async function recap(req, res, next) {
 
     const insights = [];
     if (recap_rows.length === 0) {
-      insights.push('Tidak ada budget yang berpotong periode ini. Buat budget di halaman Budgets atau ubah rentang tanggal.');
+      insights.push('No budgets overlap this date range. Add budgets on the Budgets page or change the range.');
     } else {
       if (over_count === 0 && near_count === 0) {
-        insights.push('Semua kategori masih di bawah 80% limit budget (untuk transaksi di periode yang dipilih).');
+        insights.push('All categories are still below 80% of their limits (for spending in the selected range).');
       } else {
         if (over_count > 0) {
-          insights.push(`${over_count} budget melebihi limit untuk transaksi di rentang ini.`);
+          insights.push(`${over_count} budget(s) are over limit for spending in this range.`);
         }
         if (near_count > 0) {
-          insights.push(`${near_count} budget sudah memakai ≥80% limit — pantau sisa periode.`);
+          insights.push(`${near_count} budget(s) are at ≥80% of limit — watch the rest of the period.`);
         }
       }
 
       if (total_remaining >= 0) {
         insights.push(
-          `Total sisa gabungan (jumlah limit − aktual pada potongan periode): Rp ${total_remaining.toLocaleString('id-ID')}.`
+          `Combined headroom (sum of limits minus actual in the overlap): Rp ${total_remaining.toLocaleString('id-ID')}.`
         );
       } else {
         insights.push(
-          `Secara agregat, aktual melebihi total limit sekitar Rp ${Math.abs(total_remaining).toLocaleString('id-ID')} — fokus ke baris “Over budget”.`
+          `In aggregate, actual exceeds total limits by about Rp ${Math.abs(total_remaining).toLocaleString('id-ID')} — check the “Over budget” rows.`
         );
       }
     }
 
     return res.render('budget/recap', {
-      title: 'Budget recap',
+      title: 'Recap',
       recap_rows,
       summary: {
         over_count,

@@ -87,7 +87,7 @@ async function seed_user_default_data(user_id) {
 
     const [categoryResult] = await connection.query(insertCategorySql, [categoryValues]);
 
-    // ambil id yang baru diinsert
+    // get id of newly inserted row
     const insertedCategoryIds = [];
     let startId = categoryResult.insertId;
 

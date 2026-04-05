@@ -91,12 +91,12 @@
 			const trendIncomeValues = safeIncomeExpenseTrend.map((item) => Number(item.total_income || 0));
 			const trendExpenseValues = safeIncomeExpenseTrend.map((item) => Number(item.total_expense || 0));
 
-			let trendSubtitle = 'Dikelompokkan per bulan untuk rentang tanggal yang dipilih.';
+			let trendSubtitle = 'Grouped by month for the selected date range.';
 			if (safeTrendGranularity === 'day') {
-				trendSubtitle = 'Dikelompokkan per hari untuk rentang tanggal yang dipilih.';
+				trendSubtitle = 'Grouped by day for the selected date range.';
 			}
 			if (safeTrendGranularity === 'year') {
-				trendSubtitle = 'Dikelompokkan per tahun untuk rentang tanggal yang dipilih.';
+				trendSubtitle = 'Grouped by year for the selected date range.';
 			}
 		%>
 
@@ -144,14 +144,14 @@
 						</h1>
 
 						<p class="mt-2 text-sm leading-7 text-stone-600">
-							Ringkasan keuanganmu untuk periode
+							Your summary for
 							<span class="font-semibold text-stone-800"><%= safeFilters.from_date %></span>
-							sampai
+							through
 							<span class="font-semibold text-stone-800"><%= safeFilters.to_date %></span>.
 						</p>
 						<p class="mt-3 text-sm text-stone-600">
-							<a href="#dashboard-filters" class="font-semibold text-emerald-700 underline decoration-emerald-700/30 underline-offset-2 hover:text-emerald-800">Ubah periode &amp; grafik</a>
-							<span class="text-stone-500"> — form ada di bawah, tepat di atas angka ringkasan.</span>
+							<a href="#dashboard-filters" class="font-semibold text-emerald-700 underline decoration-emerald-700/30 underline-offset-2 hover:text-emerald-800">Change period &amp; chart</a>
+							<span class="text-stone-500"> — use the form below, above the summary figures.</span>
 						</p>
 					</div>
 
@@ -176,12 +176,12 @@
 
 			<div class="px-5 py-5 sm:px-7 sm:py-6">
 				<div id="dashboard-filters" class="scroll-mt-24 rounded-[28px] border-2 border-emerald-200/80 bg-emerald-50/40 p-4 shadow-sm sm:p-5">
-					<p class="text-base font-semibold text-stone-900">Filter periode</p>
-					<p class="mt-1 text-sm text-stone-600">Pilih tanggal lalu tekan <span class="font-medium text-stone-800">Terapkan filter</span> (wajib supaya data di halaman ini ikut berubah).</p>
+					<p class="text-base font-semibold text-stone-900">Period filter</p>
+					<p class="mt-1 text-sm text-stone-600">Pick dates then click <span class="font-medium text-stone-800">Apply filter</span> to refresh this page.</p>
 					<form method="GET" action="/dashboard" class="mt-4">
 						<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto_auto] xl:items-end">
 							<div class="min-w-0">
-								<label class="mb-2 block text-sm font-semibold text-stone-800">Dari tanggal</label>
+								<label class="mb-2 block text-sm font-semibold text-stone-800">From date</label>
 								<input
 									type="date"
 									name="from_date"
@@ -192,7 +192,7 @@
 							</div>
 
 							<div class="min-w-0">
-								<label class="mb-2 block text-sm font-semibold text-stone-800">Sampai tanggal</label>
+								<label class="mb-2 block text-sm font-semibold text-stone-800">To date</label>
 								<input
 									type="date"
 									name="to_date"
@@ -203,14 +203,14 @@
 							</div>
 
 							<div class="min-w-0">
-								<label class="mb-2 block text-sm font-semibold text-stone-800">Grafik trend</label>
+								<label class="mb-2 block text-sm font-semibold text-stone-800">Trend chart</label>
 								<select
 									name="trend_granularity"
 									class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
 								>
-									<option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>Per hari</option>
-									<option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>Per bulan</option>
-									<option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>Per tahun</option>
+									<option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>By day</option>
+									<option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>By month</option>
+									<option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>By year</option>
 								</select>
 							</div>
 
@@ -219,7 +219,7 @@
 									href="/dashboard"
 									class="inline-flex h-[50px] w-full items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
 								>
-									Reset periode
+									Reset period
 								</a>
 							</div>
 
@@ -228,7 +228,7 @@
 									type="submit"
 									class="inline-flex h-[50px] w-full min-w-[140px] items-center justify-center rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:-translate-y-0.5 hover:bg-emerald-700"
 								>
-									Terapkan filter
+									Apply filter
 								</button>
 							</div>
 						</div>
@@ -307,18 +307,18 @@
 						<p class="text-base font-semibold text-stone-900">Income vs Expense Trend</p>
 						<p class="mt-1 text-sm text-stone-500"><%= trendSubtitle %></p>
 						<p class="mt-2">
-							<a href="#dashboard-filters" class="text-sm font-semibold text-emerald-700 underline decoration-emerald-700/30 underline-offset-2 hover:text-emerald-800">Ubah periode (tanggal) di filter atas</a>
+							<a href="#dashboard-filters" class="text-sm font-semibold text-emerald-700 underline decoration-emerald-700/30 underline-offset-2 hover:text-emerald-800">Change period (dates) in the filter above</a>
 						</p>
 					</div>
 					<div class="min-w-[200px]">
-						<label for="trend-granularity-quick" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">Kelompokkan</label>
+						<label for="trend-granularity-quick" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">Group by</label>
 						<select
 							id="trend-granularity-quick"
 							class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
 						>
-							<option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>Per hari</option>
-							<option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>Per bulan</option>
-							<option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>Per tahun</option>
+							<option value="day" <%= safeTrendGranularity === 'day' ? 'selected' : '' %>>By day</option>
+							<option value="month" <%= safeTrendGranularity === 'month' ? 'selected' : '' %>>By month</option>
+							<option value="year" <%= safeTrendGranularity === 'year' ? 'selected' : '' %>>By year</option>
 						</select>
 					</div>
 				</div>

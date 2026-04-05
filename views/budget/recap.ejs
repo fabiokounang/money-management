@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <%- include('../partials/app_head') %>
 </head>
@@ -63,14 +63,14 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div class="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 shadow-sm">
-              Budget recap
+              Recap
             </div>
             <h1 class="mt-4 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">
-              Ringkasan vs budget
+              Budget performance
             </h1>
             <p class="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600">
-              Bandingkan pengeluaran aktual dengan limit budget untuk rentang tanggal yang kamu pilih (misalnya satu bulan penuh di akhir bulan).
-              Hanya transaksi <span class="font-semibold text-stone-800">expense</span> di kategori yang sama, pada irisan periode budget dan rentang filter.
+              Compare actual spending to each budget limit for the dates you choose (for example a full month at month-end).
+              Only <span class="font-semibold text-stone-800">expense</span> transactions in the same category count, dated inside the overlap of the budget window and your filter range.
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -84,14 +84,14 @@
               href="/report?from_date=<%= encodeURIComponent(safeFilters.from_date) %>&to_date=<%= encodeURIComponent(safeFilters.to_date) %>"
               class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 shadow-sm transition hover:border-stone-300"
             >
-              Laporan keuangan
+              Financial report
             </a>
           </div>
         </div>
 
         <form method="GET" action="/budget/recap" class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
           <div>
-            <label class="mb-2 block text-sm font-semibold text-stone-800">Dari tanggal</label>
+            <label class="mb-2 block text-sm font-semibold text-stone-800">From date</label>
             <input
               type="date"
               name="from_date"
@@ -101,7 +101,7 @@
             >
           </div>
           <div>
-            <label class="mb-2 block text-sm font-semibold text-stone-800">Sampai tanggal</label>
+            <label class="mb-2 block text-sm font-semibold text-stone-800">To date</label>
             <input
               type="date"
               name="to_date"
@@ -115,20 +115,20 @@
               type="submit"
               class="inline-flex h-[50px] items-center justify-center rounded-2xl bg-stone-900 px-6 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
             >
-              Terapkan periode
+              Apply range
             </button>
             <a
               href="/budget/recap"
               class="inline-flex h-[50px] items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm hover:border-stone-300"
             >
-              Bulan ini
+              This month
             </a>
           </div>
         </form>
       </div>
 
       <div class="border-b border-stone-100 bg-stone-50/50 px-5 py-5 sm:px-7">
-        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Ringkas</p>
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Summary</p>
         <ul class="mt-3 space-y-2 text-sm text-stone-700">
           <% safeInsights.forEach((line) => { %>
           <li class="flex gap-2">
@@ -141,7 +141,7 @@
 
       <div class="grid grid-cols-2 gap-3 border-b border-stone-100 px-5 py-5 sm:grid-cols-3 sm:px-7 lg:grid-cols-6">
         <div class="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Budget baris</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Budget rows</p>
           <p class="mt-1 text-xl font-bold text-stone-900"><%= safeSummary.total_rows %></p>
         </div>
         <div class="rounded-2xl border border-rose-100 bg-rose-50/60 p-4 shadow-sm">
@@ -153,15 +153,15 @@
           <p class="mt-1 text-xl font-bold text-amber-900"><%= safeSummary.near_count %></p>
         </div>
         <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 shadow-sm">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800">Aman</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800">On track</p>
           <p class="mt-1 text-xl font-bold text-emerald-900"><%= safeSummary.ok_count %></p>
         </div>
         <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">Tanpa transaksi</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">No spending</p>
           <p class="mt-1 text-xl font-bold text-slate-800"><%= safeSummary.quiet_count %></p>
         </div>
         <div class="col-span-2 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:col-span-3 lg:col-span-1">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Aktual total (baris ini)</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Actual total</p>
           <p class="mt-1 text-lg font-bold text-stone-900 whitespace-nowrap"><%= formatCurrency(safeSummary.total_spent) %></p>
           <p class="mt-1 text-xs text-stone-500">Limit total: <%= formatCurrency(safeSummary.total_cap) %></p>
         </div>
@@ -169,17 +169,17 @@
 
       <div class="overflow-x-auto px-5 py-6 sm:px-7">
         <% if (safeRows.length === 0) { %>
-        <p class="py-12 text-center text-sm text-stone-500">Belum ada data untuk ditampilkan.</p>
+        <p class="py-12 text-center text-sm text-stone-500">No rows to show for this range.</p>
         <% } else { %>
         <table class="min-w-full border-collapse text-left text-sm">
           <thead>
             <tr class="border-b border-stone-200 text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
-              <th class="px-3 py-3">Kategori</th>
-              <th class="px-3 py-3">Periode budget</th>
+              <th class="px-3 py-3">Category</th>
+              <th class="px-3 py-3">Budget period</th>
               <th class="px-3 py-3 text-right">Limit</th>
-              <th class="px-3 py-3 text-right">Aktual (filter)</th>
-              <th class="px-3 py-3 text-right">Sisa</th>
-              <th class="px-3 py-3 text-right">% pakai</th>
+              <th class="px-3 py-3 text-right">Actual (range)</th>
+              <th class="px-3 py-3 text-right">Remaining</th>
+              <th class="px-3 py-3 text-right">% used</th>
               <th class="px-3 py-3">Status</th>
             </tr>
           </thead>
@@ -197,7 +197,7 @@
                 <br>
                 <span class="text-xs text-stone-500"><%= row.budget_start %> → <%= row.budget_end %></span>
                 <br>
-                <span class="text-[11px] text-violet-700">Potongan: <%= row.slice_from %> … <%= row.slice_to %></span>
+                <span class="text-[11px] text-violet-700">Counted: <%= row.slice_from %> … <%= row.slice_to %></span>
               </td>
               <td class="px-3 py-3 text-right font-medium whitespace-nowrap"><%= formatCurrency(row.cap) %></td>
               <td class="px-3 py-3 text-right font-medium whitespace-nowrap"><%= formatCurrency(row.spent) %></td>
