@@ -5,6 +5,7 @@ const budget = require('../controllers/budget');
 const router = express.Router();
 
 router.get('/budget', auth, budget.index);
+router.get('/budget/recap', auth, budget.recap);
 router.get('/budget/create', auth, budget.show_create);
 router.post('/budget', auth, budget.create);
 router.get('/budget/:id/edit', auth, budget.show_edit);

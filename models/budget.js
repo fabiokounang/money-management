@@ -430,6 +430,71 @@ async function get_active_period_alert_counts(user_id) {
   };
 }
 
+/**
+ * Budgets whose period overlaps [range_from, range_to], with expense total
+ * only for transactions in the intersection of budget window and report range.
+ */
+async function get_recap_by_date_range(user_id, range_from, range_to) {
+  const sql = `
+        SELECT
+            b.id,
+            b.category_id,
+            b.amount AS budget_amount,
+            b.period_type,
+            b.start_date AS budget_start,
+            b.end_date AS budget_end,
+            b.is_active,
+            b.note,
+            c.category_name,
+            GREATEST(b.start_date, ?) AS slice_from,
+            LEAST(b.end_date, ?) AS slice_to,
+            COALESCE(SUM(
+                CASE
+                    WHEN t.transaction_type = ? THEN t.amount
+                    ELSE 0
+                END
+            ), 0) AS spent
+        FROM budgets b
+        INNER JOIN categories c
+            ON c.id = b.category_id
+        LEFT JOIN transactions t
+            ON t.user_id = b.user_id
+           AND t.category_id = b.category_id
+           AND t.transaction_type = ?
+           AND t.transaction_date >= GREATEST(b.start_date, ?)
+           AND t.transaction_date <= LEAST(b.end_date, ?)
+        WHERE b.user_id = ?
+          AND b.start_date <= ?
+          AND b.end_date >= ?
+        GROUP BY
+            b.id,
+            b.category_id,
+            b.amount,
+            b.period_type,
+            b.start_date,
+            b.end_date,
+            b.is_active,
+            b.note,
+            c.category_name
+        ORDER BY
+            c.category_name ASC
+    `;
+
+  const [rows] = await pool.query(sql, [
+    range_from,
+    range_to,
+    'expense',
+    'expense',
+    range_from,
+    range_to,
+    user_id,
+    range_to,
+    range_from
+  ]);
+
+  return rows;
+}
+
 module.exports = {
   get_list,
   count_all,
@@ -443,5 +508,6 @@ module.exports = {
   get_totals,
   get_totals_by_period_type,
   get_active_period_usage_rows,
-  get_active_period_alert_counts
+  get_active_period_alert_counts,
+  get_recap_by_date_range
 };

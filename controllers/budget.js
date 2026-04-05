@@ -8,10 +8,24 @@ const {
   normalize_string,
   normalize_enum,
   parse_iso_date,
-  is_valid_iso_date
+  is_valid_iso_date,
+  normalize_date_range
 } = require('../utils/validation');
 
 const PERIOD_TYPES = new Set(['weekly', 'monthly', 'yearly', 'custom']);
+
+function get_default_month_range() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+
+  return {
+    from_date: first.toISOString().slice(0, 10),
+    to_date: last.toISOString().slice(0, 10)
+  };
+}
 
 function format_date_for_input(value) {
   if (!value) {
@@ -106,6 +120,144 @@ function normalize_period_range(period_type, start_date_input, end_date_input) {
     ok: false,
     message: 'Invalid period type'
   };
+}
+
+async function recap(req, res, next) {
+  try {
+    const user_id = req.session.user.id;
+    const range = normalize_date_range(
+      req.query.from_date,
+      req.query.to_date,
+      get_default_month_range()
+    );
+
+    if (!range.ok) {
+      req.flash('error_msg', range.error);
+      return res.redirect('/budget/recap');
+    }
+
+    const { from_date, to_date } = range;
+    const raw_rows = await budget.get_recap_by_date_range(user_id, from_date, to_date);
+
+    const recap_rows = raw_rows.map((r) => {
+      const cap = Number(r.budget_amount || 0);
+      const spent = Number(r.spent || 0);
+      const remaining = cap - spent;
+      const pct_used = cap > 0 ? Math.min(999, Math.round((spent / cap) * 1000) / 10) : 0;
+
+      let status_key = 'ok';
+      let status_label = 'Within budget';
+      if (cap <= 0) {
+        status_key = 'na';
+        status_label = '—';
+      } else if (spent > cap) {
+        status_key = 'over';
+        status_label = 'Over budget';
+      } else if (spent >= cap * 0.8) {
+        status_key = 'near';
+        status_label = 'Near limit (≥80%)';
+      } else if (spent <= 0) {
+        status_key = 'quiet';
+        status_label = 'No spending';
+      }
+
+      return {
+        ...r,
+        spent,
+        cap,
+        remaining,
+        pct_used,
+        status_key,
+        status_label
+      };
+    });
+
+    recap_rows.sort((a, b) => {
+      function rank(row) {
+        if (row.status_key === 'over') return 0;
+        if (row.status_key === 'near') return 1;
+        if (row.status_key === 'ok') return 2;
+        if (row.status_key === 'quiet') return 3;
+        return 4;
+      }
+
+      const d = rank(a) - rank(b);
+      if (d !== 0) {
+        return d;
+      }
+
+      return String(a.category_name).localeCompare(String(b.category_name));
+    });
+
+    let over_count = 0;
+    let near_count = 0;
+    let ok_count = 0;
+    let quiet_count = 0;
+
+    recap_rows.forEach((row) => {
+      if (row.status_key === 'over') {
+        over_count += 1;
+      } else if (row.status_key === 'near') {
+        near_count += 1;
+      } else if (row.status_key === 'ok') {
+        ok_count += 1;
+      } else if (row.status_key === 'quiet') {
+        quiet_count += 1;
+      }
+    });
+
+    const total_cap = recap_rows.reduce((sum, r) => sum + r.cap, 0);
+    const total_spent = recap_rows.reduce((sum, r) => sum + r.spent, 0);
+    const total_remaining = total_cap - total_spent;
+
+    const insights = [];
+    if (recap_rows.length === 0) {
+      insights.push('Tidak ada budget yang berpotong periode ini. Buat budget di halaman Budgets atau ubah rentang tanggal.');
+    } else {
+      if (over_count === 0 && near_count === 0) {
+        insights.push('Semua kategori masih di bawah 80% limit budget (untuk transaksi di periode yang dipilih).');
+      } else {
+        if (over_count > 0) {
+          insights.push(`${over_count} budget melebihi limit untuk transaksi di rentang ini.`);
+        }
+        if (near_count > 0) {
+          insights.push(`${near_count} budget sudah memakai ≥80% limit — pantau sisa periode.`);
+        }
+      }
+
+      if (total_remaining >= 0) {
+        insights.push(
+          `Total sisa gabungan (jumlah limit − aktual pada potongan periode): Rp ${total_remaining.toLocaleString('id-ID')}.`
+        );
+      } else {
+        insights.push(
+          `Secara agregat, aktual melebihi total limit sekitar Rp ${Math.abs(total_remaining).toLocaleString('id-ID')} — fokus ke baris “Over budget”.`
+        );
+      }
+    }
+
+    return res.render('budget/recap', {
+      title: 'Budget recap',
+      recap_rows,
+      summary: {
+        over_count,
+        near_count,
+        ok_count,
+        quiet_count,
+        total_rows: recap_rows.length,
+        total_cap,
+        total_spent,
+        total_remaining
+      },
+      insights,
+      filters: {
+        from_date,
+        to_date
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function index(req, res, next) {
@@ -532,6 +684,7 @@ async function remove(req, res, next) {
 }
 
 module.exports = {
+  recap,
   index,
   show_create,
   create,

@@ -28,14 +28,9 @@
           <span>Dashboard</span>
         </a>
 
-        <a href="/transaction" class="sidebar-link <%= current_path.startsWith('/transaction') && !current_path.startsWith('/transaction/import') ? 'active' : '' %>">
+        <a href="/transaction" class="sidebar-link <%= current_path.startsWith('/transaction') ? 'active' : '' %>">
           <span class="sidebar-icon">↔</span>
           <span>Transactions</span>
-        </a>
-
-        <a href="/transaction/import" class="sidebar-link <%= current_path.startsWith('/transaction/import') ? 'active' : '' %>">
-          <span class="sidebar-icon">⤓</span>
-          <span>Import CSV</span>
         </a>
 
         <a href="/category" class="sidebar-link <%= current_path.startsWith('/category') ? 'active' : '' %>">
@@ -53,9 +48,14 @@
           <span>Accounts</span>
         </a>
 
-        <a href="/budget" class="sidebar-link <%= current_path.startsWith('/budget') ? 'active' : '' %>">
+        <a href="/budget" class="sidebar-link <%= current_path.startsWith('/budget') && !current_path.startsWith('/budget/recap') ? 'active' : '' %>">
           <span class="sidebar-icon">▣</span>
           <span>Budgets</span>
+        </a>
+
+        <a href="/budget/recap" class="sidebar-link <%= current_path.startsWith('/budget/recap') ? 'active' : '' %>">
+          <span class="sidebar-icon">▤</span>
+          <span>Budget recap</span>
         </a>
       </div>
 
