@@ -1,5 +1,6 @@
 const budget = require('../models/budget');
 const category = require('../models/category');
+const displayTime = require('../utils/displayTime');
 const {
   normalize_page,
   normalize_is_active_filter,
@@ -139,6 +140,11 @@ async function recap(req, res, next) {
     const { from_date, to_date } = range;
     const raw_rows = await budget.get_recap_by_date_range(user_id, from_date, to_date);
 
+    function format_recap_calendar_date(value) {
+      const s = displayTime.toDateInputValue(value);
+      return s || '—';
+    }
+
     const recap_rows = raw_rows.map((r) => {
       const cap = Number(r.budget_amount || 0);
       const spent = Number(r.spent || 0);
@@ -163,6 +169,12 @@ async function recap(req, res, next) {
 
       return {
         ...r,
+        budget_start: format_recap_calendar_date(r.budget_start),
+        budget_end: format_recap_calendar_date(r.budget_end),
+        slice_from: format_recap_calendar_date(r.slice_from),
+        slice_to: format_recap_calendar_date(r.slice_to),
+        budget_period_label: displayTime.formatRecapDateRangeEn(r.budget_start, r.budget_end),
+        counted_period_label: displayTime.formatRecapDateRangeEn(r.slice_from, r.slice_to),
         spent,
         cap,
         remaining,

@@ -88,10 +88,69 @@ function toDateInputValue(value) {
     }).format(d);
 }
 
+/**
+ * Compact English range for budget recap, wall calendar in Asia/Jakarta (WIB).
+ * Examples: "1–30 April 2026", "1 April – 1 May 2026", "30 Dec 2025 – 15 Jan 2026".
+ */
+function formatRecapDateRangeEn(startVal, endVal) {
+    const d1 = toInstant(startVal);
+    const d2 = toInstant(endVal);
+    if (!d1 || !d2) {
+        return '—';
+    }
+
+    const yearFmt = new Intl.DateTimeFormat('en', {
+        timeZone: DISPLAY_TZ,
+        year: 'numeric'
+    });
+    const monthNumFmt = new Intl.DateTimeFormat('en', {
+        timeZone: DISPLAY_TZ,
+        month: 'numeric'
+    });
+    const dayFmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: DISPLAY_TZ,
+        day: 'numeric'
+    });
+    const monthLongFmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: DISPLAY_TZ,
+        month: 'long'
+    });
+    const dayMonthLongFmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: DISPLAY_TZ,
+        day: 'numeric',
+        month: 'long'
+    });
+    const fullFmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: DISPLAY_TZ,
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    const y1 = Number(yearFmt.format(d1));
+    const y2 = Number(yearFmt.format(d2));
+    const m1 = Number(monthNumFmt.format(d1));
+    const m2 = Number(monthNumFmt.format(d2));
+
+    if (y1 === y2 && m1 === m2) {
+        const day1 = dayFmt.format(d1);
+        const day2 = dayFmt.format(d2);
+        const mon = monthLongFmt.format(d1);
+        return `${day1}–${day2} ${mon} ${y1}`;
+    }
+
+    if (y1 === y2) {
+        return `${dayMonthLongFmt.format(d1)} – ${dayMonthLongFmt.format(d2)} ${y1}`;
+    }
+
+    return `${fullFmt.format(d1)} – ${fullFmt.format(d2)}`;
+}
+
 module.exports = {
     DISPLAY_TZ,
     toInstant,
     formatDateTime,
     formatDate,
-    toDateInputValue
+    toDateInputValue,
+    formatRecapDateRangeEn
 };
