@@ -10,9 +10,10 @@ const migrationScripts = [
   'run-migration-usernames.js',
   'run-migration-recurring-schedules.js',
   'run-migration-transaction-dashboard-flag.js',
+  'run-migration-loans-module.js',
   'run-migration-add-time-fields.js',
   'run-migration-monthly-income-plans.js',
-  'run-migration-loans-module.js'
+  
 ];
 
 function runScript(scriptName) {

@@ -35,6 +35,20 @@ async function main() {
     ...(ssl ? { ssl } : {})
   });
   try {
+    async function tableExists(tableName) {
+      const [rows] = await conn.query(
+        `
+          SELECT COUNT(*) AS total
+          FROM INFORMATION_SCHEMA.TABLES
+          WHERE TABLE_SCHEMA = ?
+            AND TABLE_NAME = ?
+          LIMIT 1
+        `,
+        [database, tableName]
+      );
+      return Number(rows[0]?.total || 0) > 0;
+    }
+
     async function ensureColumn(tableName, columnName, ddl) {
       const [rows] = await conn.query(
         `
@@ -53,16 +67,21 @@ async function main() {
       }
     }
 
-    await ensureColumn(
-      'transactions',
-      'transaction_time',
-      "ALTER TABLE transactions ADD COLUMN transaction_time TIME NOT NULL DEFAULT '00:00:00' AFTER transaction_date"
-    );
-    await ensureColumn(
-      'loan_payments',
-      'payment_time',
-      "ALTER TABLE loan_payments ADD COLUMN payment_time TIME NOT NULL DEFAULT '00:00:00' AFTER payment_date"
-    );
+    if (await tableExists('transactions')) {
+      await ensureColumn(
+        'transactions',
+        'transaction_time',
+        "ALTER TABLE transactions ADD COLUMN transaction_time TIME NOT NULL DEFAULT '00:00:00' AFTER transaction_date"
+      );
+    }
+
+    if (await tableExists('loan_payments')) {
+      await ensureColumn(
+        'loan_payments',
+        'payment_time',
+        "ALTER TABLE loan_payments ADD COLUMN payment_time TIME NOT NULL DEFAULT '00:00:00' AFTER payment_date"
+      );
+    }
 
     console.log('Migration add_time_fields: OK');
   } finally {
