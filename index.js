@@ -5,6 +5,7 @@ if (!process.env.TZ) {
 }
 
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const flash = require('connect-flash');
@@ -12,6 +13,12 @@ const methodOverride = require('method-override');
 
 const { test_connection } = require('./utils/db');
 const displayTime = require('./utils/displayTime');
+const {
+    create_rate_limiter,
+    enforce_request_payload_safety,
+    enforce_same_origin_for_unsafe_methods,
+    enforce_csrf_token
+} = require('./middleware/security');
 
 const app = express();
 
@@ -79,14 +86,55 @@ app.use(
 
 app.use(flash());
 
+const unsafe_method_limiter = create_rate_limiter({
+    name: 'unsafe-methods',
+    windowMs: 60 * 1000,
+    max: 180,
+    message: 'Too many write requests in a short time. Please wait and try again.',
+    keyGenerator(req) {
+        const user_id = req.session && req.session.user ? req.session.user.id : 0;
+        return `${req.ip}:${user_id}:${req.method}`;
+    }
+});
+
 app.use((req, res, next) => {
+    if (req.session && !req.session.csrf_token) {
+        req.session.csrf_token = crypto.randomBytes(24).toString('hex');
+    }
+
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-XSS-Protection', '0');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    res.setHeader(
+        'Content-Security-Policy',
+        [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com data:",
+            "img-src 'self' data: https:",
+            "connect-src 'self'",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'"
+        ].join('; ')
+    );
     if (IS_PRODUCTION) {
         res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     }
     next();
+});
+
+app.use(enforce_request_payload_safety);
+app.use(enforce_same_origin_for_unsafe_methods);
+app.use(enforce_csrf_token);
+app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(req.method || '').toUpperCase())) {
+        return unsafe_method_limiter(req, res, next);
+    }
+    return next();
 });
 
 app.use((req, res, next) => {
@@ -95,6 +143,7 @@ app.use((req, res, next) => {
     res.locals.old = {};
     res.locals.current_path = req.path;
     res.locals.user = req.session.user || null;
+    res.locals.csrf_token = req.session?.csrf_token || '';
     next();
 });
 

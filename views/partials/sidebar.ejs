@@ -15,6 +15,7 @@
         <div class="mt-4 rounded-2xl border border-stone-200/80 bg-stone-50/80 px-3 py-2">
           <p class="text-[11px] uppercase tracking-[0.14em] text-muted">Signed in as</p>
           <p class="mt-1 text-sm font-semibold text-cocoa"><%= user ? user.full_name : 'User' %></p>
+          <p class="text-xs text-muted"><%= user && user.username ? '@' + user.username : '-' %></p>
           <p class="text-xs text-muted"><%= user ? user.email : '-' %></p>
         </div>
       </div>

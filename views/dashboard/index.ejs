@@ -22,7 +22,9 @@
 				total_expense: 0,
 				total_transfer: 0,
 				balance: 0,
-				transaction_count: 0
+				transaction_count: 0,
+				transaction_included_count: 0,
+				transaction_excluded_count: 0
 			};
 
 			const safeRecentTransactions = Array.isArray(recent_transactions) ? recent_transactions : [];
@@ -295,7 +297,18 @@
 							<div>
 								<p class="text-sm font-medium text-stone-500">Transactions</p>
 								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= safeSummary.transaction_count %></h3>
-								<p class="mt-2 text-xs text-stone-500">This month activity</p>
+								<div class="mt-2 space-y-1 text-[11px] leading-4">
+									<div class="flex items-center gap-2 text-stone-500">
+										<span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+										<span>Included</span>
+										<span class="font-semibold text-emerald-700"><%= safeSummary.transaction_included_count %></span>
+									</div>
+									<div class="flex items-center gap-2 text-stone-500">
+										<span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+										<span>Excluded</span>
+										<span class="font-semibold text-amber-700"><%= safeSummary.transaction_excluded_count %></span>
+									</div>
+								</div>
 							</div>
 							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">▣</div>
 						</div>

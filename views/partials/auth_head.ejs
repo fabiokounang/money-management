@@ -4,6 +4,7 @@
 
 <meta name="description" content="Login and register to access your cozy money management dashboard.">
 <meta name="theme-color" content="#f7f3ec">
+<meta name="csrf-token" content="<%= csrf_token || '' %>">
 
 <%- include('pwa_meta') %>
 
@@ -75,3 +76,6 @@
     background: transparent;
   }
 </style>
+
+<script src="/js/global-loader.js" defer></script>
+<script src="/js/csrf-protect.js" defer></script>

@@ -11,6 +11,7 @@ async function get_dashboard_summary(user_id, from_date, to_date) {
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
+          AND include_in_dashboard = 1
         LIMIT ?
     `;
 
@@ -96,6 +97,7 @@ async function count_transactions_in_period(user_id, from_date, to_date) {
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
+          AND include_in_dashboard = 1
         LIMIT ?
     `;
 
@@ -107,6 +109,32 @@ async function count_transactions_in_period(user_id, from_date, to_date) {
   ]);
 
   return rows[0]?.total || 0;
+}
+
+async function count_transactions_by_dashboard_flag(user_id, from_date, to_date) {
+  const sql = `
+        SELECT
+            COUNT(*) AS total,
+            COALESCE(SUM(CASE WHEN include_in_dashboard = 1 THEN 1 ELSE 0 END), 0) AS included_count,
+            COALESCE(SUM(CASE WHEN include_in_dashboard = 0 THEN 1 ELSE 0 END), 0) AS excluded_count
+        FROM transactions
+        WHERE user_id = ?
+          AND transaction_date BETWEEN ? AND ?
+        LIMIT ?
+    `;
+
+  const [rows] = await pool.query(sql, [
+    user_id,
+    from_date,
+    to_date,
+    1
+  ]);
+
+  return rows[0] || {
+    total: 0,
+    included_count: 0,
+    excluded_count: 0
+  };
 }
 
 async function get_summary(user_id, from_date, to_date, transaction_type, account_id) {
@@ -434,6 +462,7 @@ module.exports = {
   get_recent_transactions,
   get_top_expense_categories,
   count_transactions_in_period,
+  count_transactions_by_dashboard_flag,
   get_summary,
   get_category_summary,
   get_selected_categories_total,

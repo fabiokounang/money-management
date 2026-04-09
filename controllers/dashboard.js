@@ -303,7 +303,7 @@ async function index(req, res, next) {
             summary,
             recent_transactions,
             top_categories,
-            transaction_count,
+            transaction_counts,
             income_expense_trend,
             expense_by_category,
             monthly_income_expense,
@@ -316,7 +316,7 @@ async function index(req, res, next) {
             report.get_dashboard_summary(user_id, from_date, to_date),
             report.get_recent_transactions_by_range(user_id, from_date, to_date, 5),
             report.get_top_expense_categories(user_id, from_date, to_date, 5),
-            report.count_transactions_in_period(user_id, from_date, to_date),
+            report.count_transactions_by_dashboard_flag(user_id, from_date, to_date),
             report.get_income_expense_trend(user_id, from_date, to_date, trend_granularity, '', 0),
             report.get_expense_by_category(user_id, from_date, to_date, 6),
             report.get_monthly_income_expense(user_id, 24),
@@ -375,7 +375,9 @@ async function index(req, res, next) {
                 total_expense,
                 total_transfer,
                 balance,
-                transaction_count
+                transaction_count: Number(transaction_counts.total || 0),
+                transaction_included_count: Number(transaction_counts.included_count || 0),
+                transaction_excluded_count: Number(transaction_counts.excluded_count || 0)
             },
             recent_transactions,
             top_categories,

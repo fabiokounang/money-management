@@ -169,6 +169,7 @@ async function show_create(req, res, next) {
 					account_id: src.account_id ? Number(src.account_id) : null,
 					transfer_to_account_id: src.transfer_to_account_id ? Number(src.transfer_to_account_id) : null,
 					payment_method: src.payment_method,
+                    include_in_dashboard: Number(src.include_in_dashboard || 0) === 1 ? 1 : 0,
 					description: src.description || '',
 					reference_no: src.reference_no || ''
 				};
@@ -241,6 +242,7 @@ async function create(req, res, next) {
 		const account_id = parse_positive_integer(req.body.account_id);
 		const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
 		const payment_method = String(req.body.payment_method || '').trim();
+        const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
 		const description = normalize_optional_text(req.body.description, 500);
 		const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
@@ -398,6 +400,7 @@ async function create(req, res, next) {
 			account_id,
 			transfer_to_account_id,
 			payment_method,
+            include_in_dashboard,
 			description,
 			reference_no
 		});
@@ -514,6 +517,7 @@ async function update(req, res, next) {
         const account_id = parse_positive_integer(req.body.account_id);
         const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
         const payment_method = String(req.body.payment_method || '').trim();
+        const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
         const description = normalize_optional_text(req.body.description, 500);
         const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
@@ -555,6 +559,7 @@ async function update(req, res, next) {
                     account_id,
                     transfer_to_account_id,
                     payment_method,
+                    include_in_dashboard,
                     description,
                     reference_no
                 },
@@ -612,6 +617,7 @@ async function update(req, res, next) {
             account_id,
             transfer_to_account_id,
             payment_method,
+            include_in_dashboard,
             description,
             reference_no
         });
@@ -629,6 +635,7 @@ async function update(req, res, next) {
         const account_id = parse_positive_integer(req.body.account_id);
         const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
         const payment_method = String(req.body.payment_method || '').trim();
+        const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
         const description = normalize_optional_text(req.body.description, 500);
         const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
@@ -696,6 +703,7 @@ async function update(req, res, next) {
                 account_id,
                 transfer_to_account_id,
                 payment_method,
+                include_in_dashboard,
                 description,
                 reference_no
             },

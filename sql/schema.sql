@@ -18,12 +18,14 @@ SET FOREIGN_KEY_CHECKS = 1;
 CREATE TABLE users (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     full_name VARCHAR(100) NOT NULL,
+    username VARCHAR(30) NOT NULL,
     email VARCHAR(150) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    UNIQUE KEY uq_users_username (username),
     UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -96,6 +98,7 @@ CREATE TABLE transactions (
         'ewallet',
         'other'
     ) NOT NULL,
+    include_in_dashboard TINYINT(1) NOT NULL DEFAULT 1,
     description VARCHAR(500) NULL,
     reference_no VARCHAR(100) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

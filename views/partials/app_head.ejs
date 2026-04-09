@@ -4,6 +4,7 @@
 
 <meta name="description" content="Modern and cozy money management app to track income, expense, and financial clarity.">
 <meta name="theme-color" content="#f4f1ea">
+<meta name="csrf-token" content="<%= csrf_token || '' %>">
 
 <%- include('pwa_meta') %>
 
@@ -114,3 +115,6 @@
     });
   });
 </script>
+
+<script src="/js/global-loader.js" defer></script>
+<script src="/js/csrf-protect.js" defer></script>
