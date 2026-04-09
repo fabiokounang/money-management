@@ -5,6 +5,8 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS budgets;
+DROP TABLE IF EXISTS loan_payments;
+DROP TABLE IF EXISTS loan_records;
 DROP TABLE IF EXISTS monthly_income_plans;
 DROP TABLE IF EXISTS recurring_schedules;
 DROP TABLE IF EXISTS transactions;
@@ -83,6 +85,7 @@ CREATE TABLE transactions (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id INT UNSIGNED NOT NULL,
     transaction_date DATE NOT NULL,
+    transaction_time TIME NOT NULL DEFAULT '00:00:00',
     transaction_type ENUM('income', 'expense', 'transfer') NOT NULL,
     amount DECIMAL(18, 2) NOT NULL,
     category_id INT UNSIGNED NULL,
@@ -191,4 +194,37 @@ CREATE TABLE monthly_income_plans (
     PRIMARY KEY (id),
     UNIQUE KEY uq_monthly_income_user_month (user_id, plan_month),
     KEY idx_monthly_income_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE loan_records (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED NOT NULL,
+    loan_type ENUM('receivable', 'payable') NOT NULL,
+    counterparty_name VARCHAR(120) NOT NULL,
+    principal_amount DECIMAL(18, 2) NOT NULL,
+    outstanding_amount DECIMAL(18, 2) NOT NULL,
+    start_date DATE NOT NULL,
+    due_date DATE NULL,
+    status ENUM('open', 'settled', 'overdue') NOT NULL DEFAULT 'open',
+    reminder_days INT UNSIGNED NOT NULL DEFAULT 0,
+    note VARCHAR(500) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_loans_user_status_due (user_id, status, due_date),
+    KEY idx_loans_user_type (user_id, loan_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE loan_payments (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    loan_id INT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    payment_date DATE NOT NULL,
+    payment_time TIME NOT NULL DEFAULT '00:00:00',
+    amount DECIMAL(18, 2) NOT NULL,
+    note VARCHAR(300) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_loan_payments_loan_date (loan_id, payment_date),
+    KEY idx_loan_payments_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

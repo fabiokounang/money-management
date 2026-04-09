@@ -60,6 +60,7 @@ async function get_list(user_id, limit, offset, filters = {}) {
         SELECT
             t.id,
             t.transaction_date,
+            t.transaction_time,
             t.transaction_type,
             t.amount,
             t.include_in_dashboard,
@@ -89,7 +90,7 @@ async function get_list(user_id, limit, offset, filters = {}) {
             OR t.description LIKE CONCAT('%', ?, '%')
             OR t.reference_no LIKE CONCAT('%', ?, '%')
           )
-        ORDER BY t.transaction_date DESC, t.id DESC
+        ORDER BY t.transaction_date DESC, t.transaction_time DESC, t.id DESC
         LIMIT ? OFFSET ?
     `;
 
@@ -121,6 +122,7 @@ async function find_by_id(id, user_id) {
             id,
             user_id,
             transaction_date,
+            transaction_time,
             transaction_type,
             amount,
             category_id,
@@ -224,6 +226,7 @@ async function create_with_balance_update(data) {
             INSERT INTO transactions (
                 user_id,
                 transaction_date,
+                transaction_time,
                 transaction_type,
                 amount,
                 category_id,
@@ -234,12 +237,13 @@ async function create_with_balance_update(data) {
                 include_in_dashboard,
                 description,
                 reference_no
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
 		const [insert_result] = await connection.query(insert_sql, [
 			data.user_id,
 			data.transaction_date,
+            data.transaction_time || '00:00:00',
 			data.transaction_type,
 			data.amount,
 			data.category_id || null,
@@ -337,6 +341,7 @@ async function find_full_by_id(id, user_id) {
             id,
             user_id,
             transaction_date,
+            transaction_time,
             transaction_type,
             amount,
             category_id,
@@ -370,6 +375,7 @@ async function update_with_balance_update(data) {
                 id,
                 user_id,
                 transaction_date,
+                transaction_time,
                 transaction_type,
                 amount,
                 category_id,
@@ -565,6 +571,7 @@ async function update_with_balance_update(data) {
             UPDATE transactions
             SET
                 transaction_date = ?,
+                transaction_time = ?,
                 transaction_type = ?,
                 amount = ?,
                 category_id = ?,
@@ -582,6 +589,7 @@ async function update_with_balance_update(data) {
 
 		const [update_result] = await connection.query(update_transaction_sql, [
 			data.transaction_date,
+            data.transaction_time || '00:00:00',
 			data.transaction_type,
 			data.amount,
 			data.category_id || null,
@@ -764,6 +772,7 @@ async function get_export_list(user_id, filters) {
         SELECT
             t.id,
             t.transaction_date,
+            t.transaction_time,
             t.transaction_type,
             t.amount,
             t.payment_method,
@@ -793,7 +802,7 @@ async function get_export_list(user_id, filters) {
             OR t.description LIKE CONCAT('%', ?, '%')
             OR t.reference_no LIKE CONCAT('%', ?, '%')
           )
-        ORDER BY t.transaction_date DESC, t.id DESC
+        ORDER BY t.transaction_date DESC, t.transaction_time DESC, t.id DESC
         LIMIT ?
     `;
 

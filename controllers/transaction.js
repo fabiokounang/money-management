@@ -28,6 +28,20 @@ const PAYMENT_METHODS = new Set([
     'other'
 ]);
 
+function normalize_time_input(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(raw)) return `${raw}:00`;
+    if (/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/.test(raw)) return raw;
+    return '';
+}
+
+function to_time_input_value(value) {
+    const raw = String(value || '').trim();
+    const match = raw.match(/^([01]\d|2[0-3]):([0-5]\d)/);
+    return match ? `${match[1]}:${match[2]}` : '';
+}
+
 function default_month_range() {
     const now = new Date();
     const current_year = now.getFullYear();
@@ -162,6 +176,7 @@ async function show_create(req, res, next) {
 			if (src) {
 				prefill = {
 					transaction_date: displayTime.toDateInputValue(src.transaction_date),
+                    transaction_time: to_time_input_value(src.transaction_time),
 					transaction_type: src.transaction_type,
 					amount: String(Number(src.amount || 0)),
 					category_id: src.category_id ? Number(src.category_id) : null,
@@ -235,6 +250,7 @@ async function create(req, res, next) {
 	try {
 		const user_id = req.session.user.id;
 		const transaction_date = String(req.body.transaction_date || '').trim();
+        const transaction_time = normalize_time_input(req.body.transaction_time);
 		const transaction_type = String(req.body.transaction_type || '').trim();
 		const amount = parse_non_negative_number(req.body.amount);
 		const category_id = parse_positive_integer(req.body.category_id);
@@ -246,7 +262,7 @@ async function create(req, res, next) {
 		const description = normalize_optional_text(req.body.description, 500);
 		const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
-		if (!transaction_date || !transaction_type || !amount || !account_id || !payment_method) {
+		if (!transaction_date || !transaction_time || !transaction_type || !amount || !account_id || !payment_method) {
 			const [income_categories, expense_categories, accounts] = await Promise.all([
 				category.get_active_by_type(user_id, 'income'),
 				category.get_active_by_type(user_id, 'expense'),
@@ -393,6 +409,7 @@ async function create(req, res, next) {
 		await transaction.create_with_balance_update({
 			user_id,
 			transaction_date,
+            transaction_time,
 			transaction_type,
 			amount,
 			category_id,
@@ -510,6 +527,7 @@ async function update(req, res, next) {
         const user_id = req.session.user.id;
         const id = parse_positive_integer(req.params.id);
         const transaction_date = String(req.body.transaction_date || '').trim();
+        const transaction_time = normalize_time_input(req.body.transaction_time);
         const transaction_type = String(req.body.transaction_type || '').trim();
         const amount = parse_non_negative_number(req.body.amount);
         const category_id = parse_positive_integer(req.body.category_id);
@@ -552,6 +570,7 @@ async function update(req, res, next) {
                 transaction_item: {
                     id,
                     transaction_date,
+                    transaction_time,
                     transaction_type,
                     amount,
                     category_id,
@@ -570,7 +589,7 @@ async function update(req, res, next) {
             });
         }
 
-        if (!transaction_date || !transaction_type || !amount || !account_id || !payment_method) {
+        if (!transaction_date || !transaction_time || !transaction_type || !amount || !account_id || !payment_method) {
             return renderEditError('Please fill all required fields');
         }
 
@@ -610,6 +629,7 @@ async function update(req, res, next) {
             id,
             user_id,
             transaction_date,
+            transaction_time,
             transaction_type,
             amount,
             category_id,
@@ -628,6 +648,7 @@ async function update(req, res, next) {
         const user_id = req.session.user.id;
         const id = parse_positive_integer(req.params.id);
         const transaction_date = String(req.body.transaction_date || '').trim();
+        const transaction_time = normalize_time_input(req.body.transaction_time);
         const transaction_type = String(req.body.transaction_type || '').trim();
         const amount = parse_non_negative_number(req.body.amount);
         const category_id = parse_positive_integer(req.body.category_id);
@@ -696,6 +717,7 @@ async function update(req, res, next) {
             transaction_item: {
                 id,
                 transaction_date,
+                transaction_time,
                 transaction_type,
                 amount,
                 category_id,

@@ -27,6 +27,7 @@ router.post(
   auth,
   allow_body_fields([
     'transaction_date',
+    'transaction_time',
     'transaction_type',
     'amount',
     'category_id',
@@ -49,6 +50,7 @@ router.put(
   auth,
   allow_body_fields([
     'transaction_date',
+    'transaction_time',
     'transaction_type',
     'amount',
     'category_id',

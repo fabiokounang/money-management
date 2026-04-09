@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/app_head') %>
+</head>
+<body class="min-h-screen bg-stone-50 text-stone-800">
+  <%- include('../partials/sidebar') %>
+  <div id="app-overlay" class="app-overlay lg:hidden"></div>
+
+  <main class="app-main px-4 py-4 sm:px-6 sm:py-6">
+    <%- include('../partials/topbar') %>
+    <%
+      const safeRows = Array.isArray(loans) ? loans : [];
+      const safeSummary = summary || {};
+      const safeFilters = filters || { search: '', loan_type: '', status: '' };
+      function money(v) { return 'Rp ' + Number(v || 0).toLocaleString('id-ID'); }
+      function typeLabel(t) { return t === 'receivable' ? 'Receivable' : 'Payable'; }
+      function typeClass(t) { return t === 'receivable' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'; }
+      function statusClass(s) { if (s === 'overdue') return 'bg-rose-100 text-rose-700'; if (s === 'settled') return 'bg-stone-100 text-stone-600'; return 'bg-blue-100 text-blue-700'; }
+      function toDateTimeValue(dateValue) {
+        if (!dateValue) return '';
+        return `${String(dateValue).slice(0, 10)} 00:00:00`;
+      }
+    %>
+
+    <section class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
+        <p class="text-sm text-stone-500">Receivable outstanding</p>
+        <p class="mt-2 text-2xl font-bold text-emerald-700 whitespace-nowrap"><%= money(safeSummary.receivable_outstanding) %></p>
+      </div>
+      <div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
+        <p class="text-sm text-stone-500">Payable outstanding</p>
+        <p class="mt-2 text-2xl font-bold text-amber-700 whitespace-nowrap"><%= money(safeSummary.payable_outstanding) %></p>
+      </div>
+      <div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
+        <p class="text-sm text-stone-500">Open entries</p>
+        <p class="mt-2 text-2xl font-bold text-stone-900"><%= Number(safeSummary.open_count || 0) %></p>
+      </div>
+      <div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
+        <p class="text-sm text-stone-500">Overdue</p>
+        <p class="mt-2 text-2xl font-bold text-rose-700"><%= Number(safeSummary.overdue_count || 0) %></p>
+      </div>
+    </section>
+
+    <section class="mt-6 overflow-hidden rounded-[32px] border border-stone-200/80 bg-white shadow-xl shadow-stone-200/50">
+      <div class="border-b border-stone-100 px-5 py-5 sm:px-7 sm:py-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-stone-900">Receivable / Payable</h1>
+          <p class="mt-1 text-sm text-stone-600">Track counterparty, due date, outstanding, and payment history.</p>
+        </div>
+        <a href="/loan/create" class="inline-flex items-center justify-center rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700">+ New entry</a>
+      </div>
+
+      <div class="px-5 py-5 sm:px-7">
+        <form method="GET" action="/loan" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <input name="search" value="<%= safeFilters.search || '' %>" placeholder="Search counterparty..." class="rounded-2xl border border-stone-200 px-4 py-3 text-sm" />
+          <select name="loan_type" class="rounded-2xl border border-stone-200 px-4 py-3 text-sm">
+            <option value="">All type</option>
+            <option value="receivable" <%= safeFilters.loan_type === 'receivable' ? 'selected' : '' %>>Receivable</option>
+            <option value="payable" <%= safeFilters.loan_type === 'payable' ? 'selected' : '' %>>Payable</option>
+          </select>
+          <select name="status" class="rounded-2xl border border-stone-200 px-4 py-3 text-sm">
+            <option value="">All status</option>
+            <option value="open" <%= safeFilters.status === 'open' ? 'selected' : '' %>>Open</option>
+            <option value="overdue" <%= safeFilters.status === 'overdue' ? 'selected' : '' %>>Overdue</option>
+            <option value="settled" <%= safeFilters.status === 'settled' ? 'selected' : '' %>>Settled</option>
+          </select>
+          <div class="flex gap-2">
+            <button class="rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white">Apply</button>
+            <a href="/loan" class="rounded-2xl border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-700">Reset</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="px-5 pb-6 sm:px-7">
+        <% if (safeRows.length === 0) { %>
+          <p class="py-10 text-center text-sm text-stone-500">No entries yet.</p>
+        <% } else { %>
+          <div class="space-y-3">
+            <% safeRows.forEach((item) => { %>
+              <a href="/loan/<%= item.id %>" class="block rounded-2xl border border-stone-200 bg-white p-4 hover:bg-stone-50">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-stone-900 break-words"><%= item.counterparty_name %></p>
+                    <p class="mt-1 text-xs text-stone-500">
+                      Start <%= formatDateTimeWib(toDateTimeValue(item.start_date)) %> ·
+                      Due <%= item.due_date ? formatDateTimeWib(toDateTimeValue(item.due_date)) : '-' %>
+                    </p>
+                  </div>
+                  <div class="flex gap-2 shrink-0">
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= typeClass(item.loan_type) %>"><%= typeLabel(item.loan_type) %></span>
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= statusClass(item.status) %>"><%= item.status %></span>
+                  </div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <div><span class="text-stone-500">Principal</span><p class="font-semibold text-stone-900"><%= money(item.principal_amount) %></p></div>
+                  <div><span class="text-stone-500">Outstanding</span><p class="font-semibold <%= Number(item.outstanding_amount) > 0 ? 'text-rose-700' : 'text-emerald-700' %>"><%= money(item.outstanding_amount) %></p></div>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('app-sidebar');
+    const overlay = document.getElementById('app-overlay');
+    if (sidebarToggle && sidebar && overlay) {
+      sidebarToggle.addEventListener('click', () => { sidebar.classList.toggle('show'); overlay.classList.toggle('show'); });
+      overlay.addEventListener('click', () => { sidebar.classList.remove('show'); overlay.classList.remove('show'); });
+    }
+  </script>
+</body>
+</html>

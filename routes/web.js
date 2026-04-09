@@ -9,6 +9,7 @@ const subCategoryRoutes = require('./subcategory');
 const accountRoutes = require('./account');
 const budgetRoutes = require('./budget');
 const exportRoutes = require('./export');
+const loanRoutes = require('./loan');
 // const recurringRoutes = require('./recurring');
 // const settingsRoutes = require('./settings');
 
@@ -25,6 +26,7 @@ router.use('/', reportRoutes);
 router.use('/', accountRoutes);
 router.use('/', budgetRoutes);
 router.use('/', exportRoutes);
+router.use('/', loanRoutes);
 
 router.get('/', (req, res) => {
 	if (req.session.user) return res.redirect('/dashboard');

@@ -10,8 +10,10 @@
     "migrate:usernames": "node scripts/run-migration-usernames.js",
     "migrate:recurring-schedules": "node scripts/run-migration-recurring-schedules.js",
     "migrate:transaction-dashboard-flag": "node scripts/run-migration-transaction-dashboard-flag.js",
+    "migrate:add-time-fields": "node scripts/run-migration-add-time-fields.js",
     "migrate:monthly-income-plans": "node scripts/run-migration-monthly-income-plans.js",
-    "check": "node --check index.js && node --check controllers/auth.js && node --check controllers/budget.js && node --check controllers/dashboard.js && node --check controllers/report.js && node --check controllers/settings.js && node --check models/budget.js && node --check models/category.js && node --check models/monthly_income_plan.js && node --check models/user.js && node --check utils/mail.js && node --check utils/seed.js && node --check routes/web.js"
+    "migrate:loans-module": "node scripts/run-migration-loans-module.js",
+    "check": "node --check index.js && node --check controllers/auth.js && node --check controllers/budget.js && node --check controllers/dashboard.js && node --check controllers/loan.js && node --check controllers/report.js && node --check controllers/settings.js && node --check models/budget.js && node --check models/category.js && node --check models/loan.js && node --check models/monthly_income_plan.js && node --check models/user.js && node --check utils/mail.js && node --check utils/seed.js && node --check routes/web.js && node --check routes/loan.js"
   },
   "keywords": [],
   "author": "",

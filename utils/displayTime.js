@@ -43,21 +43,25 @@ function formatDateTime(value) {
         return '-';
     }
 
-    const datePart = new Intl.DateTimeFormat('en-GB', {
+    const parts = new Intl.DateTimeFormat('en-GB', {
         timeZone: DISPLAY_TZ,
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-    }).format(d);
-
-    const timePart = new Intl.DateTimeFormat('en-US', {
-        timeZone: DISPLAY_TZ,
-        hour: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true
-    }).format(d);
+        second: '2-digit',
+        hour12: false
+    }).formatToParts(d);
 
-    return `${datePart} ${timePart}`;
+    const map = {};
+    parts.forEach((p) => {
+        if (p.type !== 'literal') {
+            map[p.type] = p.value;
+        }
+    });
+
+    return `${map.day || '00'}/${map.month || '00'}/${map.year || '0000'} ${map.hour || '00'}:${map.minute || '00'}:${map.second || '00'}`;
 }
 
 function formatDate(value) {

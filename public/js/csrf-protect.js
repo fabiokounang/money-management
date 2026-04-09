@@ -11,6 +11,8 @@
     const forms = document.querySelectorAll('form');
     forms.forEach((form) => {
       if (form.hasAttribute('data-no-csrf')) return;
+      const method = String(form.getAttribute('method') || 'GET').toUpperCase();
+      if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return;
 
       let input = form.querySelector('input[name="_csrf"]');
       if (!input) {
