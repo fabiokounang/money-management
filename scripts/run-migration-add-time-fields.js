@@ -1,6 +1,18 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 
+function getSslConfig() {
+  const mode = String(process.env.DB_SSL_MODE || '').trim().toLowerCase();
+  const force = String(process.env.DB_SSL || '').trim() === '1';
+  if (force || mode === 'require' || mode === 'verify-ca' || mode === 'verify-identity' || process.env.NODE_ENV === 'production') {
+    return {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: mode === 'verify-ca' || mode === 'verify-identity'
+    };
+  }
+  return undefined;
+}
+
 async function main() {
   const host = process.env.DB_HOST;
   const user = process.env.DB_USER;
@@ -12,7 +24,16 @@ async function main() {
     throw new Error('Missing DB_HOST, DB_USER, or DB_NAME in .env');
   }
 
-  const conn = await mysql.createConnection({ host, port, user, password, database, multipleStatements: false });
+  const ssl = getSslConfig();
+  const conn = await mysql.createConnection({
+    host,
+    port,
+    user,
+    password,
+    database,
+    multipleStatements: false,
+    ...(ssl ? { ssl } : {})
+  });
   try {
     async function ensureColumn(tableName, columnName, ddl) {
       const [rows] = await conn.query(

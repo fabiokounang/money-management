@@ -8,6 +8,18 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
+function getSslConfig() {
+  const mode = String(process.env.DB_SSL_MODE || '').trim().toLowerCase();
+  const force = String(process.env.DB_SSL || '').trim() === '1';
+  if (force || mode === 'require' || mode === 'verify-ca' || mode === 'verify-identity' || process.env.NODE_ENV === 'production') {
+    return {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: mode === 'verify-ca' || mode === 'verify-identity'
+    };
+  }
+  return undefined;
+}
+
 async function main() {
   const host = process.env.DB_HOST;
   const user = process.env.DB_USER;
@@ -30,13 +42,15 @@ async function main() {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
+  const ssl = getSslConfig();
   const conn = await mysql.createConnection({
     host,
     port,
     user,
     password,
     database,
-    multipleStatements: false
+    multipleStatements: false,
+    ...(ssl ? { ssl } : {})
   });
 
   try {
