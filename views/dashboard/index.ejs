@@ -75,6 +75,10 @@
 				expense_pct_of_planned: null
 			};
 
+			const safeWhatIf = typeof what_if !== 'undefined' && what_if && typeof what_if === 'object'
+				? what_if
+				: { accounts_total: 0, period_income: 0, period_expense: 0, period_net: 0 };
+
 			function formatCurrency(value) {
 				return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
 			}
@@ -313,6 +317,86 @@
 							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">▣</div>
 						</div>
 					</div>
+				</div>
+
+				<div
+					id="what-if-balance"
+					class="mt-6 overflow-hidden rounded-[28px] border border-violet-200/90 bg-gradient-to-br from-violet-50/80 via-white to-sky-50/60 p-5 shadow-sm sm:p-6"
+					data-whatif-accounts="<%= Number(safeWhatIf.accounts_total || 0) %>"
+					data-whatif-income="<%= Number(safeWhatIf.period_income || 0) %>"
+					data-whatif-expense="<%= Number(safeWhatIf.period_expense || 0) %>"
+					data-whatif-net="<%= Number(safeWhatIf.period_net || 0) %>"
+				>
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+						<div>
+							<p class="text-base font-semibold text-stone-900">What-if balance (simulator)</p>
+							<p class="mt-1 max-w-2xl text-sm text-stone-600">
+								Tweak how much <span class="font-medium text-stone-800">income</span> and <span class="font-medium text-stone-800">expense</span> in this period could have differed from what you logged. We estimate a <span class="font-medium text-stone-800">projected total balance</span> (sum of active accounts today, adjusted by the change in period net). Transfers are not shifted here.
+							</p>
+						</div>
+						<button type="button" id="whatif-reset" class="shrink-0 rounded-2xl border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-700 shadow-sm hover:bg-stone-50">
+							Reset sliders
+						</button>
+					</div>
+
+					<div class="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+						<div>
+							<div class="flex items-center justify-between gap-2">
+								<label for="whatif-income-range" class="text-sm font-semibold text-stone-800">Income vs actual</label>
+								<span id="whatif-income-pct-label" class="tabular-nums text-sm font-bold text-emerald-700">0%</span>
+							</div>
+							<input
+								type="range"
+								id="whatif-income-range"
+								min="-50"
+								max="100"
+								value="0"
+								step="5"
+								class="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-emerald-100 accent-emerald-600"
+							>
+							<p class="mt-1 text-xs text-stone-500">−50% to +100% relative to period income (<span class="tabular-nums font-medium text-stone-700"><%= formatCurrency(safeWhatIf.period_income) %></span>).</p>
+						</div>
+						<div>
+							<div class="flex items-center justify-between gap-2">
+								<label for="whatif-expense-range" class="text-sm font-semibold text-stone-800">Expense vs actual</label>
+								<span id="whatif-expense-pct-label" class="tabular-nums text-sm font-bold text-rose-700">0%</span>
+							</div>
+							<input
+								type="range"
+								id="whatif-expense-range"
+								min="-50"
+								max="100"
+								value="0"
+								step="5"
+								class="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-rose-100 accent-rose-600"
+							>
+							<p class="mt-1 text-xs text-stone-500">−50% to +100% relative to period expense (<span class="tabular-nums font-medium text-stone-700"><%= formatCurrency(safeWhatIf.period_expense) %></span>).</p>
+						</div>
+					</div>
+
+					<div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+						<div class="rounded-2xl border border-stone-200/80 bg-white/90 px-4 py-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Actual period net</p>
+							<p id="whatif-actual-net" class="mt-1 text-lg font-bold tabular-nums text-stone-900"><%= formatCurrency(safeWhatIf.period_net) %></p>
+						</div>
+						<div class="rounded-2xl border border-stone-200/80 bg-white/90 px-4 py-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Simulated period net</p>
+							<p id="whatif-sim-net" class="mt-1 text-lg font-bold tabular-nums text-violet-800">—</p>
+						</div>
+						<div class="rounded-2xl border border-stone-200/80 bg-white/90 px-4 py-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">Δ vs actual net</p>
+							<p id="whatif-delta-net" class="mt-1 text-lg font-bold tabular-nums text-stone-800">—</p>
+						</div>
+						<div class="rounded-2xl border border-violet-200 bg-violet-50/80 px-4 py-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-800">Projected total balance</p>
+							<p id="whatif-projected-total" class="mt-1 text-lg font-bold tabular-nums text-violet-950">—</p>
+							<p class="mt-1 text-[10px] leading-snug text-violet-900/80">Sum of active accounts now + Δ net</p>
+						</div>
+					</div>
+					<p class="mt-4 text-xs leading-relaxed text-stone-500">
+						Baseline total (accounts): <span class="font-medium text-stone-700 tabular-nums"><%= formatCurrency(safeWhatIf.accounts_total) %></span>.
+						Uses dashboard income/expense for <span class="font-medium"><%= safeFilters.from_date %></span>–<span class="font-medium"><%= safeFilters.to_date %></span> (included in dashboard only).
+					</p>
 				</div>
 
 				<% if (safePlanVsActual.plan_month) { %>
@@ -637,8 +721,78 @@
 			});
 		}
 
+		(function initWhatIf() {
+			const root = document.getElementById('what-if-balance');
+			const incRange = document.getElementById('whatif-income-range');
+			const expRange = document.getElementById('whatif-expense-range');
+			const incLabel = document.getElementById('whatif-income-pct-label');
+			const expLabel = document.getElementById('whatif-expense-pct-label');
+			const simNetEl = document.getElementById('whatif-sim-net');
+			const deltaEl = document.getElementById('whatif-delta-net');
+			const projectedEl = document.getElementById('whatif-projected-total');
+			const resetBtn = document.getElementById('whatif-reset');
+			if (!root || !incRange || !expRange || !simNetEl || !deltaEl || !projectedEl) {
+				return;
+			}
+
+			const base = {
+				accounts_total: Number(root.dataset.whatifAccounts || 0),
+				period_income: Number(root.dataset.whatifIncome || 0),
+				period_expense: Number(root.dataset.whatifExpense || 0),
+				period_net: Number(root.dataset.whatifNet != null ? root.dataset.whatifNet : NaN)
+			};
+			if (Number.isNaN(base.period_net)) {
+				base.period_net = base.period_income - base.period_expense;
+			}
+
+			function fmtRp(n) {
+				return 'Rp ' + Number(n || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+			}
+
+			function recalc() {
+				const incPct = Number(incRange.value) / 100;
+				const expPct = Number(expRange.value) / 100;
+				const pi = Number(base.period_income || 0);
+				const pe = Number(base.period_expense || 0);
+				const actualNet = Number(base.period_net != null ? base.period_net : pi - pe);
+				const simInc = pi * (1 + incPct);
+				const simExp = pe * (1 + expPct);
+				const simNet = simInc - simExp;
+				const delta = simNet - actualNet;
+				const projected = Number(base.accounts_total || 0) + delta;
+
+				const incV = Number(incRange.value);
+				const expV = Number(expRange.value);
+				if (incLabel) {
+					incLabel.textContent = (incV >= 0 ? '+' : '') + String(incV) + '%';
+				}
+				if (expLabel) {
+					expLabel.textContent = (expV >= 0 ? '+' : '') + String(expV) + '%';
+				}
+				simNetEl.textContent = fmtRp(simNet);
+				deltaEl.textContent = fmtRp(delta);
+				deltaEl.className = 'mt-1 text-lg font-bold tabular-nums ' + (delta >= 0 ? 'text-emerald-700' : 'text-rose-700');
+				projectedEl.textContent = fmtRp(projected);
+			}
+
+			incRange.addEventListener('input', recalc);
+			incRange.addEventListener('change', recalc);
+			expRange.addEventListener('input', recalc);
+			expRange.addEventListener('change', recalc);
+			if (resetBtn) {
+				resetBtn.addEventListener('click', function (e) {
+					e.preventDefault();
+					incRange.value = '0';
+					expRange.value = '0';
+					recalc();
+				});
+			}
+			recalc();
+		})();
+
 		const donutCtx = document.getElementById('expenseDonutChart');
 		if (donutCtx) {
+			try {
 			const expensePalette = [
 				'#dc2626', // red-600
 				'#ef4444', // red-500
@@ -671,10 +825,14 @@
 					}
 				}
 			});
+			} catch (chartErr) {
+				console.warn('[dashboard] expense donut chart', chartErr);
+			}
 		}
 
 		const barCtx = document.getElementById('incomeExpenseBarChart');
 		if (barCtx) {
+			try {
 			new Chart(barCtx, {
 				type: 'bar',
 				data: {
@@ -703,6 +861,9 @@
 					maintainAspectRatio: false
 				}
 			});
+			} catch (chartErr) {
+				console.warn('[dashboard] income/expense bar chart', chartErr);
+			}
 		}
 
 		const trendQuick = document.getElementById('trend-granularity-quick');

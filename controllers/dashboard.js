@@ -1,5 +1,6 @@
 const report = require('../models/report');
 const budget = require('../models/budget');
+const account = require('../models/account');
 const monthly_income_plan = require('../models/monthly_income_plan');
 const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
 const {
@@ -311,7 +312,8 @@ async function index(req, res, next) {
             previous_week_summary,
             budget_alerts,
             planned_expense_total,
-            stored_planned_income
+            stored_planned_income,
+            accounts_total_balance
         ] = await Promise.all([
             report.get_dashboard_summary(user_id, from_date, to_date),
             report.get_recent_transactions_by_range(user_id, from_date, to_date, 5),
@@ -324,7 +326,8 @@ async function index(req, res, next) {
             report.get_period_summary(user_id, previous_week.from_date, previous_week.to_date),
             budget.get_active_period_alert_counts(user_id),
             budget.sum_planned_expense_budgets_overlap(user_id, from_date, to_date),
-            plan_month ? monthly_income_plan.get_planned_income(user_id, plan_month) : Promise.resolve(0)
+            plan_month ? monthly_income_plan.get_planned_income(user_id, plan_month) : Promise.resolve(0),
+            account.sum_active_accounts_balance(user_id)
         ]);
 
         const total_income = Number(summary.total_income || 0);
@@ -392,6 +395,12 @@ async function index(req, res, next) {
                 from_date,
                 to_date,
                 trend_granularity
+            },
+            what_if: {
+                accounts_total: Number(accounts_total_balance || 0),
+                period_income: total_income,
+                period_expense: total_expense,
+                period_net: balance
             }
         });
     } catch (err) {

@@ -56,7 +56,7 @@
                     <div>
                       <h2 class="text-base font-semibold text-stone-900">Transaction details</h2>
                       <p class="mt-1 max-w-xl text-sm text-stone-500">
-                        Work top to bottom: when it happened, how much, then category and accounts.
+                        Start with the account, then date and time, type, amount, and category when it applies.
                       </p>
                     </div>
                   </div>
@@ -64,6 +64,48 @@
 
                 <div class="mt-7 space-y-8">
                   <div>
+                    <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Accounts</p>
+                    <p class="mb-4 text-xs text-stone-500">Choose the account first; for transfers, pick both from and to.</p>
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                      <div>
+                        <label for="account_id" class="mb-2 block text-sm font-semibold text-stone-800">
+                          From account
+                        </label>
+                        <select
+                          id="account_id"
+                          name="account_id"
+                          class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                          required
+                        >
+                          <option value="">Select account</option>
+                          <% (accounts || []).forEach((item) => { %>
+                          <option value="<%= item.id %>" <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.account_id) === Number(item.id)) ? 'selected' : '' %>>
+                            <%= item.account_name %> - <%= item.account_type %> - Rp <%= Number(item.current_balance || 0).toLocaleString('id-ID') %>
+                          </option>
+                          <% }) %>
+                        </select>
+                      </div>
+                      <div id="transfer-account-wrapper" class="hidden">
+                        <label for="transfer_to_account_id" class="mb-2 block text-sm font-semibold text-stone-800">
+                          To account
+                        </label>
+                        <select
+                          id="transfer_to_account_id"
+                          name="transfer_to_account_id"
+                          class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                        >
+                          <option value="">Select destination account</option>
+                          <% (accounts || []).forEach((item) => { %>
+                          <option value="<%= item.id %>" <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.transfer_to_account_id) === Number(item.id)) ? 'selected' : '' %>>
+                            <%= item.account_name %> - <%= item.account_type %> - Rp <%= Number(item.current_balance || 0).toLocaleString('id-ID') %>
+                          </option>
+                          <% }) %>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="border-t border-stone-200/90 pt-8">
                     <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">When</p>
                     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                       <div>
@@ -130,9 +172,9 @@
                           step="0.01"
                           required
                         >
-                        <p class="mt-2 text-xs leading-5 text-stone-500">
+                        <!-- <p class="mt-2 text-xs leading-5 text-stone-500">
                           Positive number; type decides income, expense, or internal transfer.
-                        </p>
+                        </p> -->
                       </div>
                       <div>
                         <label for="payment_method" class="mb-2 block text-sm font-semibold text-stone-800">
@@ -144,7 +186,7 @@
                           class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                           required
                         >
-                          <option value="">Select payment method</option>
+                          <option value="">Payment method</option>
                           <option value="cash" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'cash') ? 'selected' : '' %>>Cash</option>
                           <option value="bank_transfer" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'bank_transfer') ? 'selected' : '' %>>Bank Transfer</option>
                           <option value="debit_card" <%= (typeof prefill !== 'undefined' && prefill && prefill.payment_method === 'debit_card') ? 'selected' : '' %>>Debit Card</option>
@@ -159,7 +201,7 @@
 
                   <div class="border-t border-stone-200/90 pt-8">
                     <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Category</p>
-                    <p class="mb-4 text-xs text-stone-500">For transfers, category is not used—pick accounts below.</p>
+                    <p class="mb-4 text-xs text-stone-500">For transfers, category is not used.</p>
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <div>
                         <label for="category_id" class="mb-2 block text-sm font-semibold text-stone-800">
@@ -185,47 +227,6 @@
                           class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                         >
                           <option value="">Select subcategory</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="border-t border-stone-200/90 pt-8">
-                    <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Accounts</p>
-                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                      <div>
-                        <label for="account_id" class="mb-2 block text-sm font-semibold text-stone-800">
-                          From account
-                        </label>
-                        <select
-                          id="account_id"
-                          name="account_id"
-                          class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                          required
-                        >
-                          <option value="">Select account</option>
-                          <% (accounts || []).forEach((item) => { %>
-                          <option value="<%= item.id %>" <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.account_id) === Number(item.id)) ? 'selected' : '' %>>
-                            <%= item.account_name %> - <%= item.account_type %> - Rp <%= Number(item.current_balance || 0).toLocaleString('id-ID') %>
-                          </option>
-                          <% }) %>
-                        </select>
-                      </div>
-                      <div id="transfer-account-wrapper" class="hidden">
-                        <label for="transfer_to_account_id" class="mb-2 block text-sm font-semibold text-stone-800">
-                          To account
-                        </label>
-                        <select
-                          id="transfer_to_account_id"
-                          name="transfer_to_account_id"
-                          class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                        >
-                          <option value="">Select destination account</option>
-                          <% (accounts || []).forEach((item) => { %>
-                          <option value="<%= item.id %>" <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.transfer_to_account_id) === Number(item.id)) ? 'selected' : '' %>>
-                            <%= item.account_name %> - <%= item.account_type %> - Rp <%= Number(item.current_balance || 0).toLocaleString('id-ID') %>
-                          </option>
-                          <% }) %>
                         </select>
                       </div>
                     </div>

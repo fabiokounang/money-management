@@ -310,24 +310,24 @@
                 <p class="mt-1 text-sm text-stone-500">Track budget amount, actual spending, and remaining balance.</p>
             </div>
 
-            <div class="overflow-hidden">
-                <table class="w-full table-fixed border-collapse text-xs">
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse">
                     <thead>
                         <tr class="border-b border-stone-200 bg-stone-50">
-                            <th class="w-[20%] px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-3">Category</th>
-                            <th class="w-[10%] px-1 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Budget</th>
-                            <th class="w-[10%] px-1 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Actual</th>
-                            <th class="w-[10%] px-1 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Left</th>
-                            <th class="w-[20%] px-1 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Usage</th>
-                            <th class="w-[13%] px-1 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Period</th>
-                            <th class="w-[7%] px-1 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Status</th>
-                            <th class="w-[10%] px-1 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:px-2">Act.</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Category</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Budget</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Actual</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Remaining</th>
+                            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500 w-[200px] max-w-[200px]">Usage</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Period</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Status</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (safeBudgets.length === 0) { %>
                             <tr>
-                                <td colspan="8" class="px-3 py-12 text-center text-sm text-stone-500">
+                                <td colspan="8" class="px-6 py-12 text-center text-sm text-stone-500">
                                     No budgets found for the current filter.
                                 </td>
                             </tr>
@@ -342,35 +342,35 @@
                             %>
 
                             <tr class="border-b border-stone-100 last:border-b-0 hover:bg-stone-50/70">
-                                <td class="max-w-0 px-2 py-2.5 align-top sm:px-3">
-                                    <p class="truncate font-semibold text-stone-900" title="<%= item.category_name %>"><%= item.category_name %></p>
-                                    <p class="truncate text-[10px] leading-snug text-stone-500" title="<%= item.note || '' %>"><%= item.note || '—' %></p>
+                                <td class="px-6 py-4 align-top">
+                                    <p class="font-semibold text-stone-900"><%= item.category_name %></p>
+                                    <p class="mt-1 text-xs text-stone-500"><%= item.note || 'No note' %></p>
                                 </td>
 
-                                <td class="px-1 py-2.5 font-semibold tabular-nums text-stone-900 sm:px-2">
-                                    <span class="block truncate" title="<%= formatCurrency(budgetAmount) %>"><%= formatCurrency(budgetAmount) %></span>
+                                <td class="px-6 py-4 text-sm font-semibold text-stone-900 whitespace-nowrap">
+                                    <%= formatCurrency(budgetAmount) %>
                                 </td>
 
-                                <td class="px-1 py-2.5 font-semibold tabular-nums text-stone-900 sm:px-2">
-                                    <span class="block truncate" title="<%= formatCurrency(actualAmount) %>"><%= formatCurrency(actualAmount) %></span>
+                                <td class="px-6 py-4 text-sm font-semibold text-stone-900 whitespace-nowrap">
+                                    <%= formatCurrency(actualAmount) %>
                                 </td>
 
-                                <td class="px-1 py-2.5 font-semibold tabular-nums sm:px-2 <%= remainingAmount < 0 ? 'text-rose-700' : 'text-emerald-700' %>">
-                                    <span class="block truncate" title="<%= formatCurrency(remainingAmount) %>"><%= formatCurrency(remainingAmount) %></span>
+                                <td class="px-6 py-4 text-sm font-semibold <%= remainingAmount < 0 ? 'text-rose-700' : 'text-emerald-700' %> whitespace-nowrap">
+                                    <%= formatCurrency(remainingAmount) %>
                                 </td>
 
-                                <td class="min-w-0 px-1 py-2.5 sm:px-2">
-                                    <div class="min-w-0 space-y-1">
-                                        <div class="flex min-w-0 items-center justify-between gap-1">
-                                            <span class="inline-flex max-w-[min(100%,7rem)] shrink truncate rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-tight <%= getUsageStatusClass(actualAmount, budgetAmount) %>" title="<%= getUsageStatus(actualAmount, budgetAmount) %>">
+                                <td class="w-[200px] max-w-[200px] px-4 py-4 align-top">
+                                    <div class="space-y-1.5">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="inline-flex max-w-[min(100%,7.5rem)] shrink truncate rounded-full px-2.5 py-0.5 text-[11px] font-semibold <%= getUsageStatusClass(actualAmount, budgetAmount) %>" title="<%= getUsageStatus(actualAmount, budgetAmount) %>">
                                                 <%= getUsageStatus(actualAmount, budgetAmount) %>
                                             </span>
-                                            <span class="shrink-0 tabular-nums text-[10px] <%= actualAmount > budgetAmount ? 'font-semibold text-rose-700' : 'text-stone-500' %>">
-                                                <%= Math.round((budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0)) %>%<% if (actualAmount > budgetAmount) { %><span class="hidden sm:inline"> over</span><% } %>
+                                            <span class="shrink-0 text-xs tabular-nums <%= actualAmount > budgetAmount ? 'font-semibold text-rose-700' : 'text-stone-500' %>">
+                                                <%= Math.round((budgetAmount > 0 ? (actualAmount / budgetAmount) * 100 : 0)) %>%<% if (actualAmount > budgetAmount) { %> over<% } %>
                                             </span>
                                         </div>
 
-                                        <div class="h-1.5 overflow-hidden rounded-full bg-stone-200">
+                                        <div class="h-2 overflow-hidden rounded-full bg-stone-200">
                                             <div
                                                 class="h-full rounded-full <%= getProgressBarClass(actualAmount, budgetAmount) %>"
                                                 style="width: <%= progressWidth %>%"
@@ -379,24 +379,26 @@
                                     </div>
                                 </td>
 
-                                <td class="min-w-0 px-1 py-2.5 text-[10px] leading-tight text-stone-600 sm:px-2">
-                                    <div class="capitalize leading-tight"><%= item.period_type %></div>
-                                    <div class="mt-0.5 break-all font-mono text-[9px] text-stone-500">
-                                        <%= item.start_date ? String(item.start_date).slice(0, 10) : '-' %>–<%= item.end_date ? String(item.end_date).slice(0, 10) : '-' %>
+                                <td class="px-6 py-4 text-sm text-stone-500">
+                                    <div class="capitalize"><%= item.period_type %></div>
+                                    <div class="mt-1 text-xs">
+                                        <%= item.start_date ? String(item.start_date).slice(0, 10) : '-' %>
+                                        -
+                                        <%= item.end_date ? String(item.end_date).slice(0, 10) : '-' %>
                                     </div>
                                 </td>
 
-                                <td class="px-1 py-2.5 sm:px-2">
-                                    <span class="inline-flex max-w-full truncate rounded-full px-1.5 py-0.5 text-[10px] font-semibold <%= getStatusBadgeClass(item.is_active) %>">
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= getStatusBadgeClass(item.is_active) %>">
                                         <%= getStatusLabel(item.is_active) %>
                                     </span>
                                 </td>
 
-                                <td class="px-1 py-2.5 sm:px-2">
-                                    <div class="flex flex-col items-stretch justify-center gap-1">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-center gap-2">
                                         <a
                                             href="/budget/<%= item.id %>/edit"
-                                            class="rounded-lg border border-stone-200 bg-white px-1.5 py-1 text-center text-[10px] font-semibold leading-none text-stone-700 transition hover:bg-stone-50 sm:px-2"
+                                            class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50"
                                         >
                                             Edit
                                         </a>
@@ -404,9 +406,9 @@
                                         <form action="/budget/<%= item.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Delete this budget?');">
                                             <button
                                                 type="submit"
-                                                class="w-full rounded-lg border border-rose-200 bg-rose-50 px-1.5 py-1 text-[10px] font-semibold leading-none text-rose-700 transition hover:bg-rose-100 sm:px-2"
+                                                class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
                                             >
-                                                Del
+                                                Delete
                                             </button>
                                         </form>
                                     </div>
