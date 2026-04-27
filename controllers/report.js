@@ -5,19 +5,31 @@ const {
   parse_positive_int,
   sanitize_search,
   sanitize_enum,
-  sanitize_date_yyyy_mm_dd
+  sanitize_date_yyyy_mm_dd,
+  local_calendar_iso_date
 } = require('../utils/validation');
 
 function get_default_month_range() {
-  const now = new Date();
+  const today = local_calendar_iso_date();
+  const [yearRaw, monthRaw] = today.split('-');
+  const currentYear = Number(yearRaw);
+  const currentMonth = Number(monthRaw) - 1;
+  const now = new Date(currentYear, currentMonth, 1);
   const year = now.getFullYear();
   const month = now.getMonth();
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
 
+  function to_local_iso_date(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
   return {
-    from_date: first.toISOString().slice(0, 10),
-    to_date: last.toISOString().slice(0, 10)
+    from_date: to_local_iso_date(first),
+    to_date: to_local_iso_date(last)
   };
 }
 

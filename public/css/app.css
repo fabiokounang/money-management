@@ -185,7 +185,31 @@ textarea {
   box-sizing: border-box;
 }
 
+/* Standardize chevron and right padding for single-choice dropdowns globally.
+   Exclude multi-select/listbox patterns to preserve their native UX. */
+select:not([multiple]):not([size]),
+.app-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%23575047' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
+  background-position: right 1rem center;
+  padding-right: 2.75rem;
+}
+
 input[type="date"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+input[type="time"] {
   display: block;
   width: 100%;
   min-width: 0;

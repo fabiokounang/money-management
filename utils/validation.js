@@ -356,6 +356,7 @@ module.exports = {
   is_valid_enum,
   is_valid_iso_date,
   parse_iso_date,
+  local_calendar_iso_date,
   sanitize_date_yyyy_mm_dd,
   is_allowed_date,
   normalize_iso_date_range,

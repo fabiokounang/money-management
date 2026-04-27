@@ -59,6 +59,26 @@ async function update_next_due_date(id, user_id, next_due_date) {
   return result.affectedRows;
 }
 
+async function update_next_due_date_if_current(id, user_id, expected_current_due_date, next_due_date) {
+  const sql = `
+        UPDATE recurring_schedules
+        SET next_due_date = ?
+        WHERE id = ?
+          AND user_id = ?
+          AND next_due_date = ?
+        LIMIT ?
+    `;
+
+  const [result] = await pool.query(sql, [
+    next_due_date,
+    id,
+    user_id,
+    expected_current_due_date,
+    1
+  ]);
+  return result.affectedRows;
+}
+
 async function get_list(user_id, limit, offset) {
   const sql = `
         SELECT
@@ -168,6 +188,7 @@ module.exports = {
   add_calendar_months,
   list_due_on_or_before,
   update_next_due_date,
+  update_next_due_date_if_current,
   get_list,
   count_all,
   find_by_id,

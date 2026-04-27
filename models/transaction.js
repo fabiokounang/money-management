@@ -251,7 +251,7 @@ async function create_with_balance_update(data) {
 			data.account_id,
 			data.transfer_to_account_id || null,
 			data.payment_method,
-            data.include_in_dashboard ? 1 : 0,
+            Number(data.include_in_dashboard) === 0 ? 0 : 1,
 			data.description || null,
 			data.reference_no || null
 		]);
@@ -597,7 +597,7 @@ async function update_with_balance_update(data) {
 			data.account_id,
 			data.transfer_to_account_id || null,
 			data.payment_method,
-            data.include_in_dashboard ? 1 : 0,
+            Number(data.include_in_dashboard) === 0 ? 0 : 1,
 			data.description || null,
 			data.reference_no || null,
 			data.id,

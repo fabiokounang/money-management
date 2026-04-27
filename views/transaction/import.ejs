@@ -61,7 +61,7 @@
               </div>
               <div>
                 <label class="mb-2 block text-sm font-semibold text-stone-800">Type column (optional)</label>
-                <input type="number" name="col_type" min="0" placeholder="income / expense / transfer" class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm">
+                <input type="number" name="col_type" min="0" placeholder="income / expense" class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm">
               </div>
             </div>
 
@@ -76,7 +76,6 @@
                 <select name="default_transaction_type" class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm">
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
-                  <option value="transfer">Transfer</option>
                 </select>
               </div>
               <div>
@@ -111,7 +110,7 @@
               </div>
             </div>
 
-            <p class="text-xs text-stone-500"><strong>Note:</strong> Transfer rows need both accounts in the file; this importer only supports single-account lines (same as manual expense/income). Use type column + default account for simple bank exports.</p>
+            <p class="text-xs text-stone-500"><strong>Note:</strong> This importer supports only income and expense rows (single-account lines). Use type column + default account for simple bank exports.</p>
 
             <button type="submit" class="w-full rounded-2xl bg-stone-900 py-3 text-sm font-semibold text-white hover:bg-emerald-700 sm:w-auto sm:px-8">Upload & import</button>
           </form>

@@ -136,7 +136,16 @@ async function process_import(req, res, next) {
     const col_desc = col_desc_raw === '' ? -1 : parse_non_negative_int(col_desc_raw, null);
     const col_type = col_type_raw === '' ? -1 : parse_non_negative_int(col_type_raw, null);
     const has_header = String(req.body.has_header || '').trim() === '1';
-    const default_type = parse_enum(req.body.default_transaction_type, ['income', 'expense', 'transfer'], 'expense');
+    const default_type = parse_enum(req.body.default_transaction_type, ['income', 'expense'], 'expense');
+    if (String(req.body.default_transaction_type || '').trim() === 'transfer') {
+      return res.status(400).render('transaction/import', {
+        title: 'Import CSV',
+        error: 'Transfer type is not supported in CSV import (destination account column is required)',
+        result: null,
+        ...base_ctx
+      });
+    }
+
     const payment_method = parse_enum(req.body.payment_method, [
       'cash',
       'bank_transfer',
@@ -238,8 +247,11 @@ async function process_import(req, res, next) {
       if (col_type >= 0 && cells[col_type]) {
         const cell_type = String(cells[col_type]).trim().toLowerCase();
 
-        if (['income', 'expense', 'transfer'].includes(cell_type)) {
+        if (['income', 'expense'].includes(cell_type)) {
           transaction_type = cell_type;
+        } else if (cell_type === 'transfer') {
+          failures.push({ row: row_num, reason: 'Transfer type is not supported by CSV importer' });
+          continue;
         }
       }
 
