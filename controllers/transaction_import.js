@@ -278,6 +278,18 @@ async function process_import(req, res, next) {
         row_subcategory_id = null;
       }
 
+      if (row_category_id) {
+        const c = await category.find_by_id(row_category_id, user_id);
+        if (!c || Number(c.is_active) !== 1) {
+          failures.push({ row: row_num, reason: 'Invalid category' });
+          continue;
+        }
+        if (c.category_type !== transaction_type) {
+          failures.push({ row: row_num, reason: 'Category does not match transaction type' });
+          continue;
+        }
+      }
+
       const description = col_desc >= 0 && cells[col_desc]
         ? normalize_optional_text(cells[col_desc], 500)
         : null;
@@ -293,6 +305,7 @@ async function process_import(req, res, next) {
           account_id,
           transfer_to_account_id: null,
           payment_method,
+          include_in_dashboard: 1,
           description,
           reference_no: null
         });

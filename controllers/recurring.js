@@ -10,6 +10,7 @@ const {
   normalize_optional_text,
   normalize_string
 } = require('../utils/validation');
+const { validate_category_subcategory_for_transaction } = require('../utils/validateTransactionCategory');
 
 const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer']);
 const PAYMENT_METHODS = new Set([
@@ -163,6 +164,18 @@ async function create(req, res, next) {
       if (transfer_to_account_id === account_id) {
         return renderErr('Source and destination cannot be the same');
       }
+    }
+
+    const resolved_category_id = category_id > 0 ? category_id : null;
+    const resolved_subcategory_id = subcategory_id > 0 ? subcategory_id : null;
+    const categoryCheck = await validate_category_subcategory_for_transaction(
+      user_id,
+      transaction_type,
+      resolved_category_id,
+      resolved_subcategory_id
+    );
+    if (!categoryCheck.ok) {
+      return renderErr(categoryCheck.error);
     }
 
     await recurring_schedule.create({

@@ -4,6 +4,7 @@ const account = require('../models/account');
 const recurring_schedule = require('../models/recurring_schedule');
 const displayTime = require('../utils/displayTime');
 const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
+const { validate_category_subcategory_for_transaction } = require('../utils/validateTransactionCategory');
 const {
     is_valid_iso_date,
     parse_positive_integer,
@@ -406,6 +407,28 @@ async function create(req, res, next) {
 			});
 		}
 
+		const categoryCheck = await validate_category_subcategory_for_transaction(
+			user_id,
+			transaction_type,
+			category_id,
+			subcategory_id
+		);
+		if (!categoryCheck.ok) {
+			const [income_categories, expense_categories, accounts] = await Promise.all([
+				category.get_active_by_type(user_id, 'income'),
+				category.get_active_by_type(user_id, 'expense'),
+				account.get_active_accounts(user_id)
+			]);
+
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: categoryCheck.error,
+				income_categories,
+				expense_categories,
+				accounts
+			});
+		}
+
 		await transaction.create_with_balance_update({
 			user_id,
 			transaction_date,
@@ -623,6 +646,16 @@ async function update(req, res, next) {
 
         if (amount <= 0) {
             return renderEditError('Amount must be greater than zero');
+        }
+
+        const categoryCheck = await validate_category_subcategory_for_transaction(
+            user_id,
+            transaction_type,
+            category_id,
+            subcategory_id
+        );
+        if (!categoryCheck.ok) {
+            return renderEditError(categoryCheck.error);
         }
 
         await transaction.update_with_balance_update({
