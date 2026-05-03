@@ -220,6 +220,42 @@ input[type="time"] {
   line-height: 1.2;
 }
 
+input[type="number"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+  line-height: 1.25;
+  /* Long digit strings: scroll inside field instead of widening the viewport */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent grid/flex children from refusing to shrink (common mobile overflow cause) */
+.app-main .grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  /* Large formatted amounts (Rp …): wrap instead of forcing horizontal page scroll */
+  .app-main h3.whitespace-nowrap,
+  .app-main p.whitespace-nowrap,
+  .app-main .tabular-nums {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .app-main table td.whitespace-nowrap,
+  .app-main table th.whitespace-nowrap {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
 @media (min-width: 1024px) {
   .app-main {
     margin-left: 290px;
@@ -228,4 +264,9 @@ input[type="time"] {
   .app-topbar {
     top: 12px;
   }
+}
+
+/* Account combobox list (transaction create/edit) */
+[data-account-combobox-list] {
+  scrollbar-width: thin;
 }
