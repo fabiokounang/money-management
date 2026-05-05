@@ -102,6 +102,7 @@ CREATE TABLE transactions (
         'other'
     ) NOT NULL,
     include_in_dashboard TINYINT(1) NOT NULL DEFAULT 1,
+    include_in_budget TINYINT(1) NOT NULL DEFAULT 1,
     description VARCHAR(500) NULL,
     reference_no VARCHAR(100) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

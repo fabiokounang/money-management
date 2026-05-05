@@ -290,6 +290,19 @@
                       </span>
                     </label>
                     <p class="mt-2 text-xs text-stone-500">Uncheck to keep the row in history but exclude it from dashboard totals.</p>
+                    <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        name="include_in_budget"
+                        value="1"
+                        <%= (typeof prefill !== 'undefined' && prefill && Number(prefill.include_in_budget || 0) !== 1) ? '' : 'checked' %>
+                        class="mt-1 h-4 w-4 rounded border-stone-300 text-amber-700"
+                      >
+                      <span class="text-sm text-stone-800">
+                        Include in budget spending (vs budget limits)
+                      </span>
+                    </label>
+                    <p class="mt-2 text-xs text-stone-500">Uncheck to exclude this expense from budget “spent” / remaining calculations. Applies to expense categories with an active budget.</p>
                   </div>
                 </div>
               </div>

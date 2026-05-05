@@ -306,6 +306,7 @@ async function process_import(req, res, next) {
           transfer_to_account_id: null,
           payment_method,
           include_in_dashboard: 1,
+          include_in_budget: 1,
           description,
           reference_no: null
         });

@@ -36,6 +36,7 @@ router.post(
     'transfer_to_account_id',
     'payment_method',
     'include_in_dashboard',
+    'include_in_budget',
     'description',
     'reference_no',
     'enable_monthly_schedule',
@@ -59,6 +60,7 @@ router.put(
     'transfer_to_account_id',
     'payment_method',
     'include_in_dashboard',
+    'include_in_budget',
     'description',
     'reference_no'
   ]),

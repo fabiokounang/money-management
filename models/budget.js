@@ -251,6 +251,7 @@ async function get_actual_amount_by_budget_ids(user_id, budget_ids) {
            AND t.category_id = b.category_id
            AND t.transaction_type = ?
            AND t.transaction_date BETWEEN b.start_date AND b.end_date
+           AND t.include_in_budget = 1
         WHERE b.user_id = ?
           AND b.id IN (${placeholders})
         GROUP BY b.id
@@ -300,6 +301,7 @@ async function get_totals(user_id, search, period_type, is_active) {
                AND t.category_id = b2.category_id
                AND t.transaction_type = ?
                AND t.transaction_date BETWEEN b2.start_date AND b2.end_date
+               AND t.include_in_budget = 1
             WHERE b2.user_id = ?
             GROUP BY b2.id
         ) actual
@@ -389,6 +391,7 @@ async function get_active_period_usage_rows(user_id) {
            AND t.category_id = b.category_id
            AND t.transaction_type = ?
            AND t.transaction_date BETWEEN b.start_date AND b.end_date
+           AND t.include_in_budget = 1
         WHERE b.user_id = ?
           AND b.is_active = ?
           AND CURDATE() BETWEEN b.start_date AND b.end_date
@@ -463,6 +466,7 @@ async function get_recap_by_date_range(user_id, range_from, range_to) {
            AND t.transaction_type = ?
            AND t.transaction_date >= GREATEST(b.start_date, ?)
            AND t.transaction_date <= LEAST(b.end_date, ?)
+           AND t.include_in_budget = 1
         WHERE b.user_id = ?
           AND b.start_date <= ?
           AND b.end_date >= ?

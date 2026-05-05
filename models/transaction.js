@@ -131,6 +131,7 @@ async function find_by_id(id, user_id) {
             transfer_to_account_id,
             payment_method,
             include_in_dashboard,
+            include_in_budget,
             description,
             reference_no,
             created_at,
@@ -233,11 +234,12 @@ async function create_with_balance_update(data) {
                 subcategory_id,
                 account_id,
                 transfer_to_account_id,
-                payment_method,
-                include_in_dashboard,
-                description,
-                reference_no
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            payment_method,
+            include_in_dashboard,
+            include_in_budget,
+            description,
+            reference_no
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
 		const [insert_result] = await connection.query(insert_sql, [
@@ -252,6 +254,7 @@ async function create_with_balance_update(data) {
 			data.transfer_to_account_id || null,
 			data.payment_method,
             Number(data.include_in_dashboard) === 0 ? 0 : 1,
+            Number(data.include_in_budget) === 0 ? 0 : 1,
 			data.description || null,
 			data.reference_no || null
 		]);
@@ -350,6 +353,7 @@ async function find_full_by_id(id, user_id) {
             transfer_to_account_id,
             payment_method,
             include_in_dashboard,
+            include_in_budget,
             description,
             reference_no,
             created_at,
@@ -384,6 +388,7 @@ async function update_with_balance_update(data) {
                 transfer_to_account_id,
                 payment_method,
                 include_in_dashboard,
+                include_in_budget,
                 description,
                 reference_no
             FROM transactions
@@ -580,6 +585,7 @@ async function update_with_balance_update(data) {
                 transfer_to_account_id = ?,
                 payment_method = ?,
                 include_in_dashboard = ?,
+                include_in_budget = ?,
                 description = ?,
                 reference_no = ?
             WHERE id = ?
@@ -598,6 +604,7 @@ async function update_with_balance_update(data) {
 			data.transfer_to_account_id || null,
 			data.payment_method,
             Number(data.include_in_dashboard) === 0 ? 0 : 1,
+            Number(data.include_in_budget) === 0 ? 0 : 1,
 			data.description || null,
 			data.reference_no || null,
 			data.id,

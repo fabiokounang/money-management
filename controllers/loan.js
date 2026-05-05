@@ -167,6 +167,7 @@ async function add_payment(req, res, next) {
       'bank_transfer'
     );
     const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
+    const include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
 
     if (!loan_id) {
       req.flash('error_msg', 'Loan entry not found');
@@ -220,6 +221,7 @@ async function add_payment(req, res, next) {
         transfer_to_account_id: null,
         payment_method,
         include_in_dashboard,
+        include_in_budget,
         description: `${tx_desc_prefix} - ${item.counterparty_name} (loan #${loan_id})`,
         reference_no: null
       });

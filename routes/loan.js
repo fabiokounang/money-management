@@ -12,7 +12,7 @@ router.get('/loan/:id', auth, allow_query_fields([]), loan.show_detail);
 router.post(
   '/loan/:id/payment',
   auth,
-  allow_body_fields(['amount', 'payment_date', 'payment_time', 'note', 'create_transaction', 'account_id', 'payment_method', 'include_in_dashboard']),
+  allow_body_fields(['amount', 'payment_date', 'payment_time', 'note', 'create_transaction', 'account_id', 'payment_method', 'include_in_dashboard', 'include_in_budget']),
   loan.add_payment
 );
 
