@@ -10,6 +10,7 @@ const migrationScripts = [
   'run-migration-usernames.js',
   'run-migration-recurring-schedules.js',
   'run-migration-transaction-dashboard-flag.js',
+  'run-migration-transaction-budget-flag.js',
   'run-migration-loans-module.js',
   'run-migration-add-time-fields.js',
   'run-migration-monthly-income-plans.js',
