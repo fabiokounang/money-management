@@ -3,7 +3,7 @@ const auth = require('../middleware/auth');
 const transaction = require('../controllers/transaction');
 const { allow_query_fields, allow_body_fields } = require('../middleware/security');
 
-/* CSV import — disabled. Uncomment below and Import CSV routes + sidebar link to enable.
+/* CSV import ? disabled. Uncomment below and Import CSV routes + sidebar link to enable.
 const multer = require('multer');
 const transaction_import = require('../controllers/transaction_import');
 const upload = multer({
@@ -16,7 +16,7 @@ const upload = multer({
 
 const router = express.Router();
 
-router.get('/transaction', auth, allow_query_fields(['page', 'from_date', 'to_date', 'transaction_type', 'account_id', 'category_id', 'search']), transaction.index);
+router.get('/transaction', auth, allow_query_fields(['page', 'limit', 'from_date', 'to_date', 'transaction_type', 'account_id', 'category_id', 'search']), transaction.index);
 /* router.get('/transaction/import', auth, transaction_import.show_import);
 router.post('/transaction/import', auth, upload.single('csv_file'), transaction_import.process_import); */
 router.get('/transaction/create', auth, allow_query_fields(['from_id']), transaction.show_create);

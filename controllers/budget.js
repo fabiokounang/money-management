@@ -3,6 +3,7 @@ const category = require('../models/category');
 const displayTime = require('../utils/displayTime');
 const {
   normalize_page,
+  normalize_pagination_limit,
   normalize_is_active_filter,
   parse_positive_int,
   parse_non_negative_decimal,
@@ -278,7 +279,7 @@ async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
     const page = normalize_page(req.query.page);
-    const limit = 10;
+    const limit = normalize_pagination_limit(req.query.limit, 10);
     const offset = (page - 1) * limit;
 
     const search = normalize_string(req.query.search, 120);
@@ -328,7 +329,8 @@ async function index(req, res, next) {
       filters: {
         search,
         period_type,
-        is_active
+        is_active,
+        limit
       }
     });
   } catch (error) {

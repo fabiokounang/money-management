@@ -5,14 +5,15 @@ const {
     normalize_active_filter,
     parse_positive_int,
     normalize_text,
-    is_allowed_date
+    is_allowed_date,
+    normalize_pagination_limit
 } = require('../utils/validation');
 
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
         const page = normalize_page(req.query.page);
-        const limit = 10;
+        const limit = normalize_pagination_limit(req.query.limit, 10);
         const offset = (page - 1) * limit;
 
         const search = normalize_text(req.query.search, 100);
@@ -38,7 +39,8 @@ async function index(req, res, next) {
             filters: {
                 search,
                 category_id,
-                is_active
+                is_active,
+                limit
             },
             categories: [...income_categories, ...expense_categories]
         });

@@ -15,7 +15,8 @@ const {
     normalize_date_range,
     normalize_search,
     normalize_positive_int,
-    parse_enum
+    parse_enum,
+    normalize_pagination_limit
 } = require('../utils/validation');
 
 const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer']);
@@ -76,6 +77,7 @@ function build_transaction_filter_query(filters) {
     if (filters.account_id) qs.set('account_id', String(filters.account_id));
     if (filters.category_id) qs.set('category_id', String(filters.category_id));
     if (filters.search) qs.set('search', filters.search);
+    if (filters.limit) qs.set('limit', String(filters.limit));
     return qs.toString();
 }
 
@@ -85,7 +87,7 @@ async function index(req, res, next) {
 		await apply_due_recurring_for_user(user_id);
 
 		const page = normalize_pagination_page(req.query.page);
-		const limit = 10;
+		const limit = normalize_pagination_limit(req.query.limit, 10);
 		const offset = (page - 1) * limit;
 
 		const dr = normalize_date_range(req.query.from_date, req.query.to_date, default_month_range());
@@ -127,8 +129,9 @@ async function index(req, res, next) {
 			transaction_type,
 			account_id: account_id_result.value,
 			category_id: category_id_result.value,
-			search
-		};
+            search,
+            limit
+        };
 
 		const [transactions, total, income_categories, expense_categories, accounts] = await Promise.all([
 			transaction.get_list(user_id, limit, offset, filters),

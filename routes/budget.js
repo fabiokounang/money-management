@@ -5,7 +5,7 @@ const { allow_query_fields, allow_body_fields } = require('../middleware/securit
 
 const router = express.Router();
 
-router.get('/budget', auth, allow_query_fields(['page', 'search', 'period_type', 'is_active']), budget.index);
+router.get('/budget', auth, allow_query_fields(['page', 'limit', 'search', 'period_type', 'is_active']), budget.index);
 router.get('/budget/recap', auth, allow_query_fields(['from_date', 'to_date']), budget.recap);
 router.get('/budget/create', auth, allow_query_fields([]), budget.show_create);
 router.post('/budget', auth, allow_body_fields(['category_id', 'amount', 'period_type', 'start_date', 'end_date', 'note', 'is_active']), budget.create);

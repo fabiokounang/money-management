@@ -116,5 +116,65 @@
   });
 </script>
 
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const pageablePaths = new Set(['/transaction', '/account', '/category', '/subcategory', '/budget', '/loan', '/recurring']);
+    const currentPath = window.location.pathname;
+    if (!pageablePaths.has(currentPath)) return;
+
+    const allowedLimits = ['10', '25', '50', '100', '200'];
+    const params = new URLSearchParams(window.location.search);
+    const currentLimit = allowedLimits.includes(params.get('limit')) ? params.get('limit') : '10';
+
+    document.querySelectorAll('a[href*="page="]').forEach((link) => {
+      const url = new URL(link.getAttribute('href'), window.location.origin);
+      if (url.pathname !== currentPath) return;
+      if (!url.searchParams.get('limit')) {
+        url.searchParams.set('limit', currentLimit);
+        const nextHref = url.pathname + (url.search ? url.search : '');
+        link.setAttribute('href', nextHref);
+      }
+    });
+
+    const pageLinks = Array.from(document.querySelectorAll('a[href*="page="]')).filter((link) => {
+      const url = new URL(link.getAttribute('href'), window.location.origin);
+      return url.pathname === currentPath;
+    });
+    if (pageLinks.length === 0) return;
+
+    const paginationContainer = pageLinks[0].closest('div.flex');
+    if (!paginationContainer || paginationContainer.querySelector('[data-pagination-limit]')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'inline-flex items-center gap-2';
+    wrapper.setAttribute('data-pagination-limit', '1');
+
+    const label = document.createElement('span');
+    label.className = 'text-sm font-semibold text-stone-600';
+    label.textContent = 'Rows';
+
+    const select = document.createElement('select');
+    select.className = 'app-select rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-semibold text-stone-700 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100';
+    allowedLimits.forEach((value) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      if (value === currentLimit) option.selected = true;
+      select.appendChild(option);
+    });
+
+    select.addEventListener('change', () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('limit', select.value);
+      url.searchParams.set('page', '1');
+      window.location.href = url.pathname + '?' + url.searchParams.toString();
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+    paginationContainer.prepend(wrapper);
+  });
+</script>
+
 <script src="/js/global-loader.js" defer></script>
 <script src="/js/csrf-protect.js" defer></script>

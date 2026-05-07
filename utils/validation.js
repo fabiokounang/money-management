@@ -34,6 +34,14 @@ function normalize_pagination_page(value) {
   return normalize_page(value);
 }
 
+function normalize_pagination_limit(value, default_value = 10, allowed_values = [10, 25, 50, 100, 200]) {
+  const parsed = Number(value);
+  if (Number.isInteger(parsed) && allowed_values.includes(parsed)) {
+    return parsed;
+  }
+  return default_value;
+}
+
 function clamp_page(value, min = 1) {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < min) {
@@ -332,6 +340,7 @@ module.exports = {
   normalize_string,
   normalize_page,
   normalize_pagination_page,
+  normalize_pagination_limit,
   clamp_page,
   parse_positive_int,
   parse_positive_integer,

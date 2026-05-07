@@ -433,7 +433,15 @@ async function get_period_summary(user_id, from_date, to_date) {
   const sql = `
         SELECT
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = ?
+                     AND include_in_dashboard = 1
+                     AND include_in_budget = 1
+                    THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_expense,
             COUNT(*) AS transaction_count
         FROM transactions
         WHERE user_id = ?

@@ -8,14 +8,15 @@ const {
     normalize_range,
     parse_enum,
     clamp_page,
-    normalize_text
+    normalize_text,
+    normalize_pagination_limit
 } = require('../utils/validation');
 
 async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
         const page = clamp_page(req.query.page);
-        const limit = 10;
+        const limit = normalize_pagination_limit(req.query.limit, 10);
         const offset = (page - 1) * limit;
 
         const search = normalize_text(req.query.search, 120);
@@ -41,7 +42,8 @@ async function index(req, res, next) {
             filters: {
                 search,
                 account_type,
-                is_active
+                is_active,
+                limit
             }
         });
     } catch (error) {

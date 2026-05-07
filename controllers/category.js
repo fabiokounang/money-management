@@ -1,11 +1,12 @@
 const category = require('../models/category');
 const validation = require('../utils/validation');
+const { normalize_pagination_limit } = require('../utils/validation');
 
 async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
     const page = validation.parse_positive_int(req.query.page, 1);
-    const limit = 10;
+    const limit = normalize_pagination_limit(req.query.limit, 10);
     const offset = (page - 1) * limit;
 
     const search = validation.normalize_search(req.query.search, 100);
@@ -29,7 +30,8 @@ async function index(req, res, next) {
       filters: {
         search,
         category_type,
-        is_active
+        is_active,
+        limit
       }
     });
   } catch (error) {

@@ -13,6 +13,9 @@
       const safeRows = Array.isArray(loans) ? loans : [];
       const safeSummary = summary || {};
       const safeFilters = filters || { search: '', loan_type: '', status: '' };
+      const currentPage = Number(page || 1);
+      const totalPages = Number(total_pages || 1);
+      const perPage = Number(limit || 10);
       function money(v) { return 'Rp ' + Number(v || 0).toLocaleString('id-ID'); }
       function typeLabel(t) { return t === 'receivable' ? 'Receivable' : 'Payable'; }
       function typeClass(t) { return t === 'receivable' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'; }
@@ -101,6 +104,30 @@
           </div>
         <% } %>
       </div>
+
+      <% if (totalPages > 1) { %>
+      <div class="flex flex-wrap items-center justify-end gap-2 border-t border-stone-200 px-5 py-5 sm:px-7">
+        <% if (currentPage > 1) { %>
+          <a href="/loan?page=<%= currentPage - 1 %>&limit=<%= perPage %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&loan_type=<%= encodeURIComponent(safeFilters.loan_type || '') %>&status=<%= encodeURIComponent(safeFilters.status || '') %>" class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm">Prev</a>
+        <% } else { %>
+          <span class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-400">Prev</span>
+        <% } %>
+
+        <% for (let i = 1; i <= totalPages; i += 1) { %>
+          <% if (i === currentPage) { %>
+            <span class="rounded-xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm"><%= i %></span>
+          <% } else { %>
+            <a href="/loan?page=<%= i %>&limit=<%= perPage %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&loan_type=<%= encodeURIComponent(safeFilters.loan_type || '') %>&status=<%= encodeURIComponent(safeFilters.status || '') %>" class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"><%= i %></a>
+          <% } %>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+          <a href="/loan?page=<%= currentPage + 1 %>&limit=<%= perPage %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&loan_type=<%= encodeURIComponent(safeFilters.loan_type || '') %>&status=<%= encodeURIComponent(safeFilters.status || '') %>" class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm">Next</a>
+        <% } else { %>
+          <span class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-400">Next</span>
+        <% } %>
+      </div>
+      <% } %>
     </section>
   </main>
 

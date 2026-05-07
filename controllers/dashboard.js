@@ -235,12 +235,21 @@ function build_actionable_insights({
     if (safe_top_categories.length > 0) {
         const top = safe_top_categories[0];
         const top_total = Number(top.total || 0);
+        const top_category_id = Number(top.id || 0);
+        const topExpenseQuery = new URLSearchParams({
+            from_date: String(from_date || ''),
+            to_date: String(to_date || ''),
+            transaction_type: 'expense'
+        });
+        if (top_category_id > 0) {
+            topExpenseQuery.set('category_id', String(top_category_id));
+        }
         insights.push({
             title: 'Top expense focus',
             message: `Your top spending category is ${top.category_name} (Rp ${top_total.toLocaleString('id-ID')}). Set a dedicated limit there to feel the impact quickly.`,
             tone: 'warning',
             cta_label: 'Review category spend',
-            cta_href: `/transaction?from_date=${from_date}&to_date=${to_date}`
+            cta_href: `/transaction?${topExpenseQuery.toString()}`
         });
     }
 

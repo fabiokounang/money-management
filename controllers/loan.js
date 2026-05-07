@@ -9,7 +9,8 @@ const {
   parse_positive_int,
   is_valid_iso_date,
   parse_positive_integer,
-  parse_enum
+  parse_enum,
+  normalize_pagination_limit
 } = require('../utils/validation');
 
 const LOAN_TYPES = new Set(['receivable', 'payable']);
@@ -29,13 +30,14 @@ async function index(req, res, next) {
     await loan.touch_overdue_statuses(user_id);
 
     const page = normalize_page(req.query.page);
-    const limit = 10;
+    const limit = normalize_pagination_limit(req.query.limit, 10);
     const offset = (page - 1) * limit;
 
     const filters = {
       search: normalize_string(req.query.search, 120),
       loan_type: normalize_enum(req.query.loan_type, LOAN_TYPES),
-      status: normalize_enum(req.query.status, LOAN_STATUSES)
+      status: normalize_enum(req.query.status, LOAN_STATUSES),
+      limit
     };
 
     const [rows, total, summary] = await Promise.all([

@@ -3,6 +3,7 @@ const category = require('../models/category');
 const account = require('../models/account');
 const {
   normalize_pagination_page,
+  normalize_pagination_limit,
   parse_positive_int,
   parse_positive_decimal,
   is_valid_iso_date,
@@ -27,7 +28,7 @@ async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
     const page = normalize_pagination_page(req.query.page);
-    const limit = 20;
+    const limit = normalize_pagination_limit(req.query.limit, 10);
     const offset = (page - 1) * limit;
 
     const [rows, total] = await Promise.all([
