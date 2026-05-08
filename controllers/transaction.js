@@ -16,7 +16,8 @@ const {
     normalize_search,
     normalize_positive_int,
     parse_enum,
-    normalize_pagination_limit
+    normalize_pagination_limit,
+    parse_status_filter
 } = require('../utils/validation');
 
 const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer']);
@@ -76,6 +77,8 @@ function build_transaction_filter_query(filters) {
     if (filters.transaction_type) qs.set('transaction_type', filters.transaction_type);
     if (filters.account_id) qs.set('account_id', String(filters.account_id));
     if (filters.category_id) qs.set('category_id', String(filters.category_id));
+    if (Number(filters.include_in_dashboard) !== -1) qs.set('include_in_dashboard', String(filters.include_in_dashboard));
+    if (Number(filters.include_in_budget) !== -1) qs.set('include_in_budget', String(filters.include_in_budget));
     if (filters.search) qs.set('search', filters.search);
     if (filters.limit) qs.set('limit', String(filters.limit));
     return qs.toString();
@@ -122,6 +125,8 @@ async function index(req, res, next) {
 		}
 
 		const search = normalize_search(req.query.search, 100);
+        const include_in_dashboard = parse_status_filter(req.query.include_in_dashboard);
+        const include_in_budget = parse_status_filter(req.query.include_in_budget);
 
 		const filters = {
 			from_date: dr.from_date,
@@ -129,6 +134,8 @@ async function index(req, res, next) {
 			transaction_type,
 			account_id: account_id_result.value,
 			category_id: category_id_result.value,
+            include_in_dashboard,
+            include_in_budget,
             search,
             limit
         };

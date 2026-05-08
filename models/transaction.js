@@ -8,6 +8,8 @@ async function count_all(user_id, filters = {}) {
 	const transaction_type = filters.transaction_type || '';
 	const account_id = Number(filters.account_id || 0);
 	const category_id = Number(filters.category_id || 0);
+	const include_in_dashboard = Number.isInteger(Number(filters.include_in_dashboard)) ? Number(filters.include_in_dashboard) : -1;
+	const include_in_budget = Number.isInteger(Number(filters.include_in_budget)) ? Number(filters.include_in_budget) : -1;
 	const search = filters.search || '';
 
 	const sql = `
@@ -19,6 +21,8 @@ async function count_all(user_id, filters = {}) {
           AND (? = '' OR t.transaction_type = ?)
           AND (? = 0 OR t.account_id = ? OR t.transfer_to_account_id = ?)
           AND (? = 0 OR t.category_id = ?)
+          AND (? = -1 OR t.include_in_dashboard = ?)
+          AND (? = -1 OR t.include_in_budget = ?)
           AND (
             ? = ''
             OR t.description LIKE CONCAT('%', ?, '%')
@@ -40,6 +44,10 @@ async function count_all(user_id, filters = {}) {
 		account_id,
 		category_id,
 		category_id,
+		include_in_dashboard,
+		include_in_dashboard,
+		include_in_budget,
+		include_in_budget,
 		search,
 		search,
 		search,
@@ -54,6 +62,8 @@ async function get_list(user_id, limit, offset, filters = {}) {
 	const transaction_type = filters.transaction_type || '';
 	const account_id = Number(filters.account_id || 0);
 	const category_id = Number(filters.category_id || 0);
+	const include_in_dashboard = Number.isInteger(Number(filters.include_in_dashboard)) ? Number(filters.include_in_dashboard) : -1;
+	const include_in_budget = Number.isInteger(Number(filters.include_in_budget)) ? Number(filters.include_in_budget) : -1;
 	const search = filters.search || '';
 
 	const sql = `
@@ -64,6 +74,7 @@ async function get_list(user_id, limit, offset, filters = {}) {
             t.transaction_type,
             t.amount,
             t.include_in_dashboard,
+            t.include_in_budget,
             t.description,
             t.reference_no,
             a.account_name,
@@ -85,6 +96,8 @@ async function get_list(user_id, limit, offset, filters = {}) {
           AND (? = '' OR t.transaction_type = ?)
           AND (? = 0 OR t.account_id = ? OR t.transfer_to_account_id = ?)
           AND (? = 0 OR t.category_id = ?)
+          AND (? = -1 OR t.include_in_dashboard = ?)
+          AND (? = -1 OR t.include_in_budget = ?)
           AND (
             ? = ''
             OR t.description LIKE CONCAT('%', ?, '%')
@@ -107,6 +120,10 @@ async function get_list(user_id, limit, offset, filters = {}) {
 		account_id,
 		category_id,
 		category_id,
+		include_in_dashboard,
+		include_in_dashboard,
+		include_in_budget,
+		include_in_budget,
 		search,
 		search,
 		search,

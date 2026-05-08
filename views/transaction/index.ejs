@@ -25,6 +25,8 @@
                 transaction_type: '',
                 account_id: 0,
                 category_id: 0,
+                include_in_dashboard: -1,
+                include_in_budget: -1,
                 search: ''
             };
             const safeFilterCategories = Array.isArray(filter_categories) ? filter_categories : [];
@@ -286,6 +288,30 @@
 						</select>
 					</div>
 
+                    <div class="min-w-0">
+                        <label class="mb-2 block text-sm font-semibold text-stone-800">Include Dashboard</label>
+                        <select
+                            name="include_in_dashboard"
+                            class="app-select w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                        >
+                            <option value="" <%= Number(safeFilters.include_in_dashboard) === -1 ? 'selected' : '' %>>All</option>
+                            <option value="1" <%= Number(safeFilters.include_in_dashboard) === 1 ? 'selected' : '' %>>Included</option>
+                            <option value="0" <%= Number(safeFilters.include_in_dashboard) === 0 ? 'selected' : '' %>>Excluded</option>
+                        </select>
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-2 block text-sm font-semibold text-stone-800">Include Budget</label>
+                        <select
+                            name="include_in_budget"
+                            class="app-select w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                        >
+                            <option value="" <%= Number(safeFilters.include_in_budget) === -1 ? 'selected' : '' %>>All</option>
+                            <option value="1" <%= Number(safeFilters.include_in_budget) === 1 ? 'selected' : '' %>>Included</option>
+                            <option value="0" <%= Number(safeFilters.include_in_budget) === 0 ? 'selected' : '' %>>Excluded</option>
+                        </select>
+                    </div>
+
 					<div class="min-w-0 xl:col-span-2">
 						<label class="mb-2 block text-sm font-semibold text-stone-800">Search (description / reference)</label>
 						<input
@@ -348,6 +374,7 @@
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Type</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Category</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Account</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Include</th>
 								<th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Amount</th>
 								<th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
 							</tr>
@@ -355,7 +382,7 @@
 						<tbody>
 							<% if (safeTransactions.length === 0) { %>
 							<tr>
-								<td colspan="7" class="px-6 py-12 text-center text-sm text-stone-500">
+								<td colspan="8" class="px-6 py-12 text-center text-sm text-stone-500">
 									No transactions found yet. Start by creating your first transaction.
 								</td>
 							</tr>
@@ -385,6 +412,13 @@
 								<td class="px-6 py-4 text-sm text-stone-800">
 									<%= getDisplayAccount(item) %>
 								</td>
+
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold <%= Number(item.include_in_dashboard || 0) === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600' %>">Dash</span>
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold <%= Number(item.include_in_budget || 0) === 1 ? 'bg-amber-100 text-amber-700' : 'bg-stone-200 text-stone-600' %>">Budget</span>
+                                    </div>
+                                </td>
 
 								<td class="px-6 py-4 text-right text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
 									<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
@@ -457,9 +491,14 @@
 					</div>
 
 					<div class="mt-4 flex items-center justify-between gap-4">
-						<p class="text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
-							<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
-						</p>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold <%= Number(item.include_in_dashboard || 0) === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600' %>">Dash</span>
+                            <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold <%= Number(item.include_in_budget || 0) === 1 ? 'bg-amber-100 text-amber-700' : 'bg-stone-200 text-stone-600' %>">Budget</span>
+                        </div>
+
+                        <p class="text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
+                            <%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
+                        </p>
 
 						<div class="flex flex-wrap gap-2">
 							<a
