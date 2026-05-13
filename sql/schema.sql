@@ -86,7 +86,7 @@ CREATE TABLE transactions (
     user_id INT UNSIGNED NOT NULL,
     transaction_date DATE NOT NULL,
     transaction_time TIME NOT NULL DEFAULT '00:00:00',
-    transaction_type ENUM('income', 'expense', 'transfer') NOT NULL,
+    transaction_type ENUM('income', 'expense', 'transfer', 'debt') NOT NULL,
     amount DECIMAL(18, 2) NOT NULL,
     category_id INT UNSIGNED NULL,
     subcategory_id INT UNSIGNED NULL,

@@ -20,7 +20,7 @@ const {
     parse_status_filter
 } = require('../utils/validation');
 
-const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer']);
+const TRANSACTION_TYPES = new Set(['income', 'expense', 'transfer', 'debt']);
 const PAYMENT_METHODS = new Set([
     'cash',
     'bank_transfer',
@@ -31,12 +31,24 @@ const PAYMENT_METHODS = new Set([
     'other'
 ]);
 
+function loan_form_from_body(req) {
+	const lt = String(req.body.loan_type || 'payable').trim();
+	return {
+		create_linked_loan: String(req.body.create_linked_loan || '').trim() === '1',
+		loan_type: lt === 'receivable' || lt === 'payable' ? lt : 'payable',
+		counterparty_name: String(req.body.counterparty_name || '').trim(),
+		loan_due_date: String(req.body.loan_due_date || '').trim(),
+		reminder_days: String(req.body.reminder_days ?? '0'),
+		loan_note: String(req.body.loan_note || '').trim()
+	};
+}
+
 function normalize_time_input(value) {
-    const raw = String(value || '').trim();
-    if (!raw) return '';
-    if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(raw)) return `${raw}:00`;
-    if (/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/.test(raw)) return raw;
-    return '';
+	const raw = String(value || '').trim();
+	if (!raw) return '';
+	if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(raw)) return `${raw}:00`;
+	if (/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/.test(raw)) return raw;
+	return '';
 }
 
 function to_time_input_value(value) {
@@ -100,7 +112,7 @@ async function index(req, res, next) {
 		}
 
 		const raw_type = String(req.query.transaction_type || '').trim();
-		const transaction_type = parse_enum(raw_type, ['', 'income', 'expense', 'transfer'], '');
+		const transaction_type = parse_enum(raw_type, ['', 'income', 'expense', 'transfer', 'debt'], '');
 		if (raw_type !== '' && transaction_type === '') {
 			req.flash('error_msg', 'Invalid transaction type filter');
 			return res.redirect('/transaction');
@@ -209,7 +221,15 @@ async function show_create(req, res, next) {
 			income_categories,
 			expense_categories,
 			accounts,
-			prefill
+			prefill,
+			loan_form: {
+				create_linked_loan: false,
+				loan_type: 'payable',
+				counterparty_name: '',
+				loan_due_date: '',
+				reminder_days: '0',
+				loan_note: ''
+			}
 		});
 	} catch (error) {
 		return next(error);
@@ -271,9 +291,13 @@ async function create(req, res, next) {
 		const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
 		const payment_method = String(req.body.payment_method || '').trim();
         const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
-        const include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
+        let include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
 		const description = normalize_optional_text(req.body.description, 500);
 		const reference_no = normalize_optional_text(req.body.reference_no, 100);
+
+		if (transaction_type === 'debt') {
+			include_in_budget = 0;
+		}
 
 		if (!transaction_date || !transaction_time || !transaction_type || !amount || !account_id || !payment_method) {
 			const [income_categories, expense_categories, accounts] = await Promise.all([
@@ -287,7 +311,8 @@ async function create(req, res, next) {
 				error: 'Please fill all required fields',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -303,7 +328,8 @@ async function create(req, res, next) {
 				error: 'Invalid transaction date',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -319,7 +345,8 @@ async function create(req, res, next) {
 				error: 'Invalid transaction type',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -335,7 +362,8 @@ async function create(req, res, next) {
 				error: 'Invalid payment method',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -351,7 +379,8 @@ async function create(req, res, next) {
 				error: 'Amount must be greater than zero',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -367,7 +396,8 @@ async function create(req, res, next) {
 				error: 'Invalid amount',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -383,7 +413,8 @@ async function create(req, res, next) {
 				error: 'Invalid category',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -399,7 +430,8 @@ async function create(req, res, next) {
 				error: 'Invalid subcategory',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -415,7 +447,8 @@ async function create(req, res, next) {
 				error: 'Invalid destination account',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -437,9 +470,63 @@ async function create(req, res, next) {
 				error: categoryCheck.error,
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
+
+		let linked_loan = null;
+		if (transaction_type === 'debt' && String(req.body.create_linked_loan || '').trim() === '1') {
+			const lf = loan_form_from_body(req);
+			const counterparty = lf.counterparty_name.trim();
+			if (!counterparty) {
+				const [income_categories, expense_categories, accounts] = await Promise.all([
+					category.get_active_by_type(user_id, 'income'),
+					category.get_active_by_type(user_id, 'expense'),
+					account.get_active_accounts(user_id)
+				]);
+
+				return res.status(400).render('transaction/create', {
+					title: 'Create Transaction',
+					error: 'Counterparty is required to create a loan entry',
+					income_categories,
+					expense_categories,
+					accounts,
+					loan_form: loan_form_from_body(req)
+				});
+			}
+			const due_raw = lf.loan_due_date.trim();
+			if (due_raw && !is_valid_iso_date(due_raw)) {
+				const [income_categories, expense_categories, accounts] = await Promise.all([
+					category.get_active_by_type(user_id, 'income'),
+					category.get_active_by_type(user_id, 'expense'),
+					account.get_active_accounts(user_id)
+				]);
+
+				return res.status(400).render('transaction/create', {
+					title: 'Create Transaction',
+					error: 'Invalid loan due date',
+					income_categories,
+					expense_categories,
+					accounts,
+					loan_form: loan_form_from_body(req)
+				});
+			}
+			const reminder_raw = parse_positive_integer(lf.reminder_days);
+			let reminder_days = 0;
+			if (Number.isFinite(reminder_raw) && reminder_raw >= 0 && reminder_raw <= 3650) {
+				reminder_days = reminder_raw;
+			}
+			linked_loan = {
+				loan_type: lf.loan_type === 'receivable' ? 'receivable' : 'payable',
+				counterparty_name: counterparty.slice(0, 120),
+				due_date: due_raw || null,
+				reminder_days,
+				note: lf.loan_note ? normalize_optional_text(lf.loan_note, 500) : null
+			};
+		}
+
+		const wants_linked_loan = Boolean(linked_loan);
 
 		await transaction.create_with_balance_update({
 			user_id,
@@ -455,10 +542,11 @@ async function create(req, res, next) {
             include_in_dashboard,
             include_in_budget,
 			description,
-			reference_no
+			reference_no,
+			linked_loan
 		});
 
-		if (String(req.body.enable_monthly_schedule || '').trim() === '1') {
+		if (transaction_type !== 'debt' && String(req.body.enable_monthly_schedule || '').trim() === '1') {
 			const schedule_next = String(req.body.schedule_next_due_date || '').trim();
 			const interval_raw = parse_positive_integer(req.body.schedule_interval_months);
 			const interval = interval_raw && interval_raw >= 1 && interval_raw <= 60 ? interval_raw : 1;
@@ -494,7 +582,11 @@ async function create(req, res, next) {
 			}
 		}
 
-		req.flash('success_msg', 'Transaction created successfully');
+		if (wants_linked_loan) {
+			req.flash('success_msg', 'Transaction created and loan entry saved');
+		} else {
+			req.flash('success_msg', 'Transaction created successfully');
+		}
 		return res.redirect('/transaction');
 	} catch (error) {
 		const user_id = req.session.user.id;
@@ -510,7 +602,8 @@ async function create(req, res, next) {
 				error: 'Source account not found or inactive',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -520,7 +613,8 @@ async function create(req, res, next) {
 				error: 'Destination account is required for transfer',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -530,7 +624,8 @@ async function create(req, res, next) {
 				error: 'Source and destination account cannot be the same',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -540,7 +635,8 @@ async function create(req, res, next) {
 				error: 'Destination account not found or inactive',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -550,7 +646,8 @@ async function create(req, res, next) {
 				error: 'Insufficient account balance',
 				income_categories,
 				expense_categories,
-				accounts
+				accounts,
+				loan_form: loan_form_from_body(req)
 			});
 		}
 
@@ -572,9 +669,13 @@ async function update(req, res, next) {
         const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
         const payment_method = String(req.body.payment_method || '').trim();
         const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
-        const include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
+        let include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
         const description = normalize_optional_text(req.body.description, 500);
         const reference_no = normalize_optional_text(req.body.reference_no, 100);
+
+        if (transaction_type === 'debt') {
+            include_in_budget = 0;
+        }
 
         if (!id) {
             req.flash('error_msg', 'Transaction not found');
@@ -706,9 +807,13 @@ async function update(req, res, next) {
         const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
         const payment_method = String(req.body.payment_method || '').trim();
         const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
-        const include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
+        let include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
         const description = normalize_optional_text(req.body.description, 500);
         const reference_no = normalize_optional_text(req.body.reference_no, 100);
+
+        if (transaction_type === 'debt') {
+            include_in_budget = 0;
+        }
 
         const [income_categories, expense_categories, accounts] = await Promise.all([
             category.get_active_by_type(user_id, 'income'),

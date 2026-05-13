@@ -37,6 +37,7 @@
             let totalIncome = 0;
             let totalExpense = 0;
             let totalTransfer = 0;
+            let totalDebt = 0;
 
             safeTransactions.forEach((item) => {
                 const amount = Number(item.amount || 0);
@@ -52,6 +53,10 @@
                 if (item.transaction_type === 'transfer') {
                     totalTransfer += amount;
                 }
+
+                if (item.transaction_type === 'debt') {
+                    totalDebt += amount;
+                }
             });
 
             const startRow = totalRows === 0 ? 0 : ((currentPage - 1) * perPage) + 1;
@@ -64,6 +69,7 @@
             function getTypeBadgeClass(type) {
                 if (type === 'income') return 'bg-emerald-100 text-emerald-700';
                 if (type === 'expense') return 'bg-rose-100 text-rose-700';
+                if (type === 'debt') return 'bg-violet-100 text-violet-800';
                 return 'bg-amber-100 text-amber-700';
             }
 
@@ -71,6 +77,7 @@
                 if (type === 'income') return 'Income';
                 if (type === 'expense') return 'Expense';
                 if (type === 'transfer') return 'Transfer';
+                if (type === 'debt') return 'Debt';
                 return '-';
             }
 
@@ -101,13 +108,13 @@
             }
 
             function getAmountClass(type) {
-                if (type === 'income') return 'text-emerald-700';
+                if (type === 'income' || type === 'debt') return 'text-emerald-700';
                 if (type === 'expense') return 'text-rose-700';
                 return 'text-stone-800';
             }
 
             function getAmountPrefix(type) {
-                if (type === 'income') return '+ ';
+                if (type === 'income' || type === 'debt') return '+ ';
                 if (type === 'expense') return '- ';
                 return '';
             }
@@ -259,6 +266,7 @@
 							<option value="income" <%= safeFilters.transaction_type === 'income' ? 'selected' : '' %>>Income</option>
 							<option value="expense" <%= safeFilters.transaction_type === 'expense' ? 'selected' : '' %>>Expense</option>
 							<option value="transfer" <%= safeFilters.transaction_type === 'transfer' ? 'selected' : '' %>>Transfer</option>
+							<option value="debt" <%= safeFilters.transaction_type === 'debt' ? 'selected' : '' %>>Debt</option>
 						</select>
 					</div>
 

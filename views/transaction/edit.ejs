@@ -26,17 +26,18 @@
             function getPreviewBadgeClass(type) {
                 if (type === 'income') return 'bg-emerald-100 text-emerald-700';
                 if (type === 'expense') return 'bg-rose-100 text-rose-700';
+                if (type === 'debt') return 'bg-violet-100 text-violet-800';
                 return 'bg-amber-100 text-amber-700';
             }
 
             function getPreviewAmountClass(type) {
-                if (type === 'income') return 'text-emerald-700';
+                if (type === 'income' || type === 'debt') return 'text-emerald-700';
                 if (type === 'expense') return 'text-rose-700';
                 return 'text-stone-900';
             }
 
             function getPreviewAmountPrefix(type) {
-                if (type === 'income') return '+ ';
+                if (type === 'income' || type === 'debt') return '+ ';
                 if (type === 'expense') return '- ';
                 return '';
             }
@@ -229,6 +230,7 @@
                                                     <option value="income" <%= item.transaction_type === 'income' ? 'selected' : '' %>>Income</option>
                                                     <option value="expense" <%= item.transaction_type === 'expense' ? 'selected' : '' %>>Expense</option>
                                                     <option value="transfer" <%= item.transaction_type === 'transfer' ? 'selected' : '' %>>Transfer</option>
+                                                    <option value="debt" <%= item.transaction_type === 'debt' ? 'selected' : '' %>>Debt (borrow / lend cash)</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -527,6 +529,19 @@
         const transferAccountWrapper = document.getElementById('transfer-account-wrapper');
         const categoryField = document.getElementById('category_id');
         const subcategoryField = document.getElementById('subcategory_id');
+        const budgetIncludeInput = document.querySelector('input[name="include_in_budget"]');
+
+        function syncDebtEditBudget() {
+            if (!transactionType || !budgetIncludeInput) {
+                return;
+            }
+            if (transactionType.value === 'debt') {
+                budgetIncludeInput.checked = false;
+                budgetIncludeInput.disabled = true;
+            } else {
+                budgetIncludeInput.disabled = false;
+            }
+        }
 
         function fillCategoryOptions(type, selectedCategoryId) {
             if (!categoryField) {
@@ -538,7 +553,7 @@
 
             let options = [];
 
-            if (type === 'income') {
+            if (type === 'income' || type === 'debt') {
                 options = incomeCategories;
             }
 
@@ -621,6 +636,7 @@
 
                 categoryField.innerHTML = '<option value="">Select category</option>';
                 subcategoryField.innerHTML = '<option value="">Select subcategory</option>';
+                syncDebtEditBudget();
                 return;
             }
 
@@ -639,6 +655,7 @@
             } else {
                 subcategoryField.innerHTML = '<option value="">Select subcategory</option>';
             }
+            syncDebtEditBudget();
         }
 
         if (transactionType) {

@@ -249,10 +249,10 @@
 							<tr class="border-b border-stone-200 bg-stone-50">
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Account</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Type</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Opening Balance</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Current Balance</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Created At</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Color</th>
+								<th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Opening balance</th>
+								<th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Current balance</th>
+								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Created at</th>
+								<th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Color</th>
 								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Status</th>
 								<th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
 							</tr>
@@ -279,23 +279,23 @@
 									</span>
 								</td>
 
-								<td class="px-6 py-4 text-sm font-medium text-stone-800 whitespace-nowrap">
+								<td class="px-6 py-4 text-right text-sm font-medium text-stone-800 whitespace-nowrap tabular-nums">
 									<%= formatCurrency(item.opening_balance) %>
 								</td>
 
-								<td class="px-6 py-4 text-sm font-semibold text-stone-900 whitespace-nowrap">
+								<td class="px-6 py-4 text-right text-sm font-semibold text-stone-900 whitespace-nowrap tabular-nums">
 									<%= formatCurrency(item.current_balance) %>
 								</td>
 
-								<td class="px-6 py-4 text-sm text-stone-600 whitespace-nowrap">
+								<td class="px-6 py-4 text-sm text-stone-500 whitespace-nowrap">
 									<%= formatDateTimeWib(item.created_at) %>
 								</td>
 
 								<td class="px-6 py-4">
-									<span class="inline-flex items-center gap-2 text-sm text-stone-800">
-										<span class="h-4 w-4 rounded-full <%= getColorSwatchClass(item.account_color) %>"></span>
-										<%= getDisplayColor(item.account_color) %>
-									</span>
+									<div class="flex items-center justify-center gap-2">
+										<span class="h-4 w-4 shrink-0 rounded-full <%= getColorSwatchClass(item.account_color) %>"></span>
+										<span class="text-sm text-stone-800"><%= getDisplayColor(item.account_color) %></span>
+									</div>
 								</td>
 
 								<td class="px-6 py-4">

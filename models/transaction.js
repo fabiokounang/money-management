@@ -1,6 +1,7 @@
 const {
 	pool
 } = require('../utils/db');
+const loan = require('./loan');
 
 async function count_all(user_id, filters = {}) {
 	const from_date = filters.from_date || null;
@@ -276,7 +277,7 @@ async function create_with_balance_update(data) {
 			data.reference_no || null
 		]);
 
-		if (data.transaction_type === 'income') {
+		if (data.transaction_type === 'income' || data.transaction_type === 'debt') {
 			const update_from_sql = `
                 UPDATE accounts
                 SET current_balance = ?
@@ -340,6 +341,26 @@ async function create_with_balance_update(data) {
 				data.user_id,
 				1
 			]);
+		}
+
+		if (data.transaction_type === 'debt' && data.linked_loan) {
+			const L = data.linked_loan;
+			let loan_status = 'open';
+			if (L.due_date && new Date(`${L.due_date}T23:59:59`) < new Date() && Number(data.amount) > 0) {
+				loan_status = 'overdue';
+			}
+			await loan.createInConnection(connection, {
+				user_id: data.user_id,
+				loan_type: L.loan_type,
+				counterparty_name: L.counterparty_name,
+				principal_amount: Number(data.amount),
+				outstanding_amount: Number(data.amount),
+				start_date: data.transaction_date,
+				due_date: L.due_date || null,
+				status: loan_status,
+				reminder_days: L.reminder_days || 0,
+				note: L.note || null
+			});
 		}
 
 		await connection.commit();
@@ -484,7 +505,7 @@ async function update_with_balance_update(data) {
 			const from_id = Number(transaction_item.account_id || 0);
 			const to_id = Number(transaction_item.transfer_to_account_id || 0);
 
-			if (transaction_item.transaction_type === 'income') {
+			if (transaction_item.transaction_type === 'income' || transaction_item.transaction_type === 'debt') {
 				account_map[from_id].current_balance -= amount;
 			}
 
@@ -499,7 +520,7 @@ async function update_with_balance_update(data) {
 		}
 
 		function validateNewTransactionInput() {
-			if (!['income', 'expense', 'transfer'].includes(data.transaction_type)) {
+			if (!['income', 'expense', 'transfer', 'debt'].includes(data.transaction_type)) {
 				throw new Error('INVALID_TRANSACTION_TYPE');
 			}
 
@@ -539,7 +560,7 @@ async function update_with_balance_update(data) {
 			const from_id = Number(transaction_item.account_id || 0);
 			const to_id = Number(transaction_item.transfer_to_account_id || 0);
 
-			if (transaction_item.transaction_type === 'income') {
+			if (transaction_item.transaction_type === 'income' || transaction_item.transaction_type === 'debt') {
 				account_map[from_id].current_balance += amount;
 			}
 
@@ -720,7 +741,7 @@ async function delete_with_balance_update(id, user_id) {
 		const from_id = Number(item.account_id || 0);
 		const to_id = Number(item.transfer_to_account_id || 0);
 
-		if (item.transaction_type === 'income') {
+		if (item.transaction_type === 'income' || item.transaction_type === 'debt') {
 			if (account_map[from_id].current_balance < amount) {
 				throw new Error('INVALID_BALANCE_REVERSE');
 			}

@@ -6,6 +6,7 @@ async function get_dashboard_summary(user_id, from_date, to_date) {
   const sql = `
         SELECT
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_debt,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_transfer
         FROM transactions
@@ -17,6 +18,7 @@ async function get_dashboard_summary(user_id, from_date, to_date) {
 
   const [rows] = await pool.query(sql, [
     'income',
+    'debt',
     'expense',
     'transfer',
     user_id,
@@ -27,6 +29,7 @@ async function get_dashboard_summary(user_id, from_date, to_date) {
 
   return rows[0] || {
     total_income: 0,
+    total_debt: 0,
     total_expense: 0,
     total_transfer: 0
   };
@@ -141,6 +144,7 @@ async function get_summary(user_id, from_date, to_date, transaction_type, accoun
   const sql = `
         SELECT
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_debt,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_transfer
         FROM transactions
@@ -153,6 +157,7 @@ async function get_summary(user_id, from_date, to_date, transaction_type, accoun
 
   const [rows] = await pool.query(sql, [
     'income',
+    'debt',
     'expense',
     'transfer',
     user_id,
@@ -168,6 +173,7 @@ async function get_summary(user_id, from_date, to_date, transaction_type, accoun
 
   return rows[0] || {
     total_income: 0,
+    total_debt: 0,
     total_expense: 0,
     total_transfer: 0
   };
@@ -247,7 +253,7 @@ async function get_monthly_cashflow(user_id, month_limit) {
   const sql = `
         SELECT
             DATE_FORMAT(transaction_date, '%Y-%m') AS month_label,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
@@ -257,7 +263,6 @@ async function get_monthly_cashflow(user_id, month_limit) {
     `;
 
   const [rows] = await pool.query(sql, [
-    'income',
     'expense',
     user_id,
     month_limit
@@ -292,7 +297,7 @@ async function get_income_expense_trend(
   const sql = `
         SELECT
             ${bucket_expr} AS period_label,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
@@ -305,7 +310,6 @@ async function get_income_expense_trend(
     `;
 
   const [rows] = await pool.query(sql, [
-    'income',
     'expense',
     user_id,
     from_date,
@@ -325,7 +329,7 @@ async function get_monthly_income_expense(user_id, month_limit) {
     const sql = `
         SELECT
             DATE_FORMAT(transaction_date, '%Y-%m') AS month_label,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
@@ -335,7 +339,6 @@ async function get_monthly_income_expense(user_id, month_limit) {
     `;
 
     const [rows] = await pool.query(sql, [
-        'income',
         'expense',
         user_id,
         month_limit
@@ -409,7 +412,7 @@ async function get_income_expense_trend_by_range(user_id, from_date, to_date) {
     const sql = `
         SELECT
             DATE_FORMAT(transaction_date, '%Y-%m-%d') AS day_label,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
@@ -419,7 +422,6 @@ async function get_income_expense_trend_by_range(user_id, from_date, to_date) {
     `;
 
     const [rows] = await pool.query(sql, [
-        'income',
         'expense',
         user_id,
         from_date,
@@ -432,7 +434,7 @@ async function get_income_expense_trend_by_range(user_id, from_date, to_date) {
 async function get_period_summary(user_id, from_date, to_date) {
   const sql = `
         SELECT
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
             COALESCE(SUM(
                 CASE
                     WHEN transaction_type = ?
@@ -450,7 +452,6 @@ async function get_period_summary(user_id, from_date, to_date) {
     `;
 
   const [rows] = await pool.query(sql, [
-    'income',
     'expense',
     user_id,
     from_date,

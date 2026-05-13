@@ -80,7 +80,8 @@ async function transactions_csv(req, res, next) {
             '',
             'income',
             'expense',
-            'transfer'
+            'transfer',
+            'debt'
         ]);
 
         if (raw_transaction_type !== '' && transaction_type === '') {

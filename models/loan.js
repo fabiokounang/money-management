@@ -97,8 +97,8 @@ async function get_summary(user_id) {
   };
 }
 
-async function create(data) {
-  const [result] = await pool.query(
+async function createInConnection(conn, data) {
+  const [result] = await conn.query(
     `
       INSERT INTO loan_records (
         user_id,
@@ -127,6 +127,10 @@ async function create(data) {
     ]
   );
   return result.insertId;
+}
+
+async function create(data) {
+  return createInConnection(pool, data);
 }
 
 async function find_by_id(id, user_id) {
@@ -243,6 +247,7 @@ module.exports = {
   get_list,
   get_summary,
   create,
+  createInConnection,
   find_by_id,
   get_payments,
   add_payment

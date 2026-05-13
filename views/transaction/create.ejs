@@ -26,7 +26,7 @@
                   Create New Transaction
                 </h1>
                 <p class="mt-2 max-w-2xl text-sm leading-7 text-stone-600">
-                  Add income, expense, or transfer with clear, easy-to-read details.
+                  Add income, expense, transfer, or debt (optional linked loan).
                 </p>
               </div>
 
@@ -112,6 +112,7 @@
                           <option value="income" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'income') ? 'selected' : '' %>>Income</option>
                           <option value="expense" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'expense') ? 'selected' : '' %>>Expense</option>
                           <option value="transfer" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'transfer') ? 'selected' : '' %>>Transfer</option>
+                          <option value="debt" <%= (typeof prefill !== 'undefined' && prefill && prefill.transaction_type === 'debt') ? 'selected' : '' %>>Debt (borrow / lend cash)</option>
                         </select>
                       </div>
                       <div>
@@ -245,7 +246,7 @@
 
                   <div class="border-t border-stone-200/90 pt-8">
                     <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Category</p>
-                    <p class="mb-4 text-xs text-stone-500">For transfers, category is not used.</p>
+                    <p class="mb-4 text-xs text-stone-500">For transfers, category is not used. For debt, categories are the same as income (optional).</p>
                     <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                       <div>
                         <label for="category_id" class="mb-2 block text-sm font-semibold text-stone-800">
@@ -350,7 +351,69 @@
                 </div>
               </div>
 
-              <div class="rounded-[28px] border border-indigo-200/90 bg-indigo-50/50 p-5 sm:p-6">
+              <% const lf = typeof loan_form !== 'undefined' && loan_form ? loan_form : { create_linked_loan: false, loan_type: 'payable', counterparty_name: '', loan_due_date: '', reminder_days: '0', loan_note: '' }; %>
+              <div id="debt-loan-panel" class="hidden rounded-[28px] border border-violet-200/90 bg-violet-50/40 p-5 sm:p-6">
+                <div class="flex items-start gap-3">
+                  <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-lg text-violet-800">
+                    ⧉
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-base font-semibold text-stone-900">Loan entry (optional)</h2>
+                    <p class="mt-1 text-sm text-stone-600">
+                      Debt increases the selected account balance (cash in). Check below if you also want a row under <a href="/loan" class="font-semibold text-violet-800 underline">Loans</a> with the same principal as this amount.
+                    </p>
+                    <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-violet-200 bg-white px-4 py-3">
+                      <input
+                        type="checkbox"
+                        name="create_linked_loan"
+                        id="create_linked_loan"
+                        value="1"
+                        class="mt-1 h-4 w-4 rounded border-stone-300 text-violet-700"
+                        <%= lf.create_linked_loan ? 'checked' : '' %>
+                      >
+                      <span class="text-sm text-stone-800">Also create a loan record (same principal as amount above)</span>
+                    </label>
+                    <div id="debt-loan-fields" class="mt-5 hidden space-y-5">
+                      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div>
+                          <label for="loan_type" class="mb-2 block text-sm font-semibold text-stone-800">Loan type</label>
+                          <select id="loan_type" name="loan_type" class="app-select w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                            <option value="payable" <%= lf.loan_type === 'payable' ? 'selected' : '' %>>Payable (I owe someone)</option>
+                            <option value="receivable" <%= lf.loan_type === 'receivable' ? 'selected' : '' %>>Receivable (someone owes me)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label for="counterparty_name" class="mb-2 block text-sm font-semibold text-stone-800">Counterparty</label>
+                          <input
+                            type="text"
+                            id="counterparty_name"
+                            name="counterparty_name"
+                            value="<%= lf.counterparty_name %>"
+                            maxlength="120"
+                            autocomplete="off"
+                            class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm"
+                            placeholder="Who is the other party?"
+                          >
+                        </div>
+                        <div>
+                          <label for="loan_due_date" class="mb-2 block text-sm font-semibold text-stone-800">Due date (optional)</label>
+                          <input type="date" id="loan_due_date" name="loan_due_date" value="<%= lf.loan_due_date %>" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                          <label for="reminder_days" class="mb-2 block text-sm font-semibold text-stone-800">Reminder days before due</label>
+                          <input type="number" id="reminder_days" name="reminder_days" min="0" step="1" value="<%= lf.reminder_days %>" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                          <label for="loan_note" class="mb-2 block text-sm font-semibold text-stone-800">Loan note (optional)</label>
+                          <textarea id="loan_note" name="loan_note" rows="2" maxlength="500" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm" placeholder="Stored on the loan entry, separate from transaction description"><%= lf.loan_note %></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div data-monthly-schedule-section class="rounded-[28px] border border-indigo-200/90 bg-indigo-50/50 p-5 sm:p-6">
                 <div class="flex items-center gap-3">
                   <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-lg text-indigo-700">
                     ↻
@@ -461,6 +524,13 @@
                 Use when money moves between accounts—not income or expense.
               </p>
             </div>
+
+            <div class="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+              <p class="text-sm font-semibold text-stone-900">Debt</p>
+              <p class="mt-1 text-sm leading-6 text-stone-600">
+                Use when cash enters an account because you borrowed or someone repaid you in cash. Optionally create a matching loan entry under Loans.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -552,7 +622,7 @@
 
       let options = [];
 
-      if (type === 'income') {
+      if (type === 'income' || type === 'debt') {
         options = incomeCategories;
       }
 
@@ -602,6 +672,43 @@
       }
     }
 
+    const debtLoanPanel = document.getElementById('debt-loan-panel');
+    const debtLoanFields = document.getElementById('debt-loan-fields');
+    const createLinkedLoan = document.getElementById('create_linked_loan');
+    const monthlyScheduleSection = document.querySelector('[data-monthly-schedule-section]');
+    const budgetIncludeInput = document.querySelector('input[name="include_in_budget"]');
+
+    function syncDebtLoanUi() {
+      if (!debtLoanPanel || !transactionType) {
+        return;
+      }
+      const isDebt = transactionType.value === 'debt';
+      if (isDebt) {
+        debtLoanPanel.classList.remove('hidden');
+        if (monthlyScheduleSection) {
+          monthlyScheduleSection.classList.add('hidden');
+        }
+        if (budgetIncludeInput) {
+          budgetIncludeInput.checked = false;
+          budgetIncludeInput.disabled = true;
+        }
+        if (createLinkedLoan && debtLoanFields) {
+          debtLoanFields.classList.toggle('hidden', !createLinkedLoan.checked);
+        }
+      } else {
+        debtLoanPanel.classList.add('hidden');
+        if (debtLoanFields) {
+          debtLoanFields.classList.add('hidden');
+        }
+        if (monthlyScheduleSection) {
+          monthlyScheduleSection.classList.remove('hidden');
+        }
+        if (budgetIncludeInput) {
+          budgetIncludeInput.disabled = false;
+        }
+      }
+    }
+
     function updateTransactionFormState() {
       if (!transactionType || !transferAccountWrapper || !categoryField || !subcategoryField) {
         return;
@@ -618,6 +725,7 @@
 
         categoryField.innerHTML = '<option value="">Select category</option>';
         resetSubcategoryOptions();
+        syncDebtLoanUi();
         return;
       }
 
@@ -631,6 +739,7 @@
 
       fillCategoryOptions(transactionType.value);
       resetSubcategoryOptions();
+      syncDebtLoanUi();
     }
 
     if (transactionType) {
@@ -639,6 +748,12 @@
       });
 
       updateTransactionFormState();
+    }
+
+    if (createLinkedLoan) {
+      createLinkedLoan.addEventListener('change', () => {
+        syncDebtLoanUi();
+      });
     }
 
     if (categoryField) {
@@ -669,7 +784,7 @@
         transactionType.value = prefill.transaction_type;
         updateTransactionFormState();
 
-        if (prefill.category_id && categoryField && (prefill.transaction_type === 'income' || prefill.transaction_type === 'expense')) {
+        if (prefill.category_id && categoryField && (prefill.transaction_type === 'income' || prefill.transaction_type === 'expense' || prefill.transaction_type === 'debt')) {
           categoryField.value = String(prefill.category_id);
           await loadSubcategories(String(prefill.category_id));
 

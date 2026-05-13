@@ -340,9 +340,10 @@ async function index(req, res, next) {
         ]);
 
         const total_income = Number(summary.total_income || 0);
+        const total_debt = Number(summary.total_debt || 0);
         const total_expense = Number(summary.total_expense || 0);
         const total_transfer = Number(summary.total_transfer || 0);
-        const balance = total_income - total_expense;
+        const balance = total_income + total_debt - total_expense;
 
         const plan_vs_actual = build_plan_vs_actual({
             from_date,
@@ -355,7 +356,7 @@ async function index(req, res, next) {
         const actionable_insights = build_actionable_insights({
             from_date,
             to_date,
-            total_income,
+            total_income: total_income + total_debt,
             total_expense,
             balance,
             top_categories,
@@ -384,6 +385,7 @@ async function index(req, res, next) {
             title: 'Dashboard',
             summary: {
                 total_income,
+                total_debt,
                 total_expense,
                 total_transfer,
                 balance,
@@ -407,9 +409,9 @@ async function index(req, res, next) {
             },
             what_if: {
                 accounts_total: Number(accounts_total_balance || 0),
-                period_income: total_income,
+                period_income: total_income + total_debt,
                 period_expense: total_expense,
-                period_net: balance
+                period_net: total_income + total_debt - total_expense
             }
         });
     } catch (err) {

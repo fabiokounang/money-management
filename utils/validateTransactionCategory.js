@@ -18,6 +18,8 @@ async function validate_category_subcategory_for_transaction(
     return { ok: true };
   }
 
+  const categoryTypeExpected = transaction_type === 'debt' ? 'income' : transaction_type;
+
   if (subcategory_id && !category_id) {
     return { ok: false, error: 'Select a category when using a subcategory' };
   }
@@ -33,7 +35,7 @@ async function validate_category_subcategory_for_transaction(
   if (Number(cat.is_active) !== 1) {
     return { ok: false, error: 'Category is inactive' };
   }
-  if (cat.category_type !== transaction_type) {
+  if (cat.category_type !== categoryTypeExpected) {
     return { ok: false, error: 'Category does not match transaction type' };
   }
 

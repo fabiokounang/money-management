@@ -64,7 +64,7 @@ async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
     const { from_date, to_date } = normalize_range(req.query.from_date, req.query.to_date);
-    const transaction_type = sanitize_enum(req.query.transaction_type, ['income', 'expense', 'transfer'], '');
+    const transaction_type = sanitize_enum(req.query.transaction_type, ['income', 'expense', 'transfer', 'debt'], '');
     const account_id = parse_positive_int(req.query.account_id, 0);
     const category_ids = to_number_array(req.query.category_ids);
     const trend_granularity = sanitize_enum(req.query.trend_granularity, ['day', 'month', 'year'], 'month');
@@ -90,14 +90,16 @@ async function index(req, res, next) {
     );
 
     const total_income = Number(summary.total_income || 0);
+    const total_debt = Number(summary.total_debt || 0);
     const total_expense = Number(summary.total_expense || 0);
     const total_transfer = Number(summary.total_transfer || 0);
-    const net_balance = total_income - total_expense;
+    const net_balance = total_income + total_debt - total_expense;
 
     return res.render('report/index', {
       title: 'Report',
       summary: {
         total_income,
+        total_debt,
         total_expense,
         total_transfer,
         net_balance,
