@@ -39,6 +39,12 @@ router.post(
     'include_in_budget',
     'description',
     'reference_no',
+    'create_linked_loan',
+    'loan_type',
+    'counterparty_name',
+    'loan_due_date',
+    'reminder_days',
+    'loan_note',
     'enable_monthly_schedule',
     'schedule_next_due_date',
     'schedule_interval_months',
@@ -62,7 +68,13 @@ router.put(
     'include_in_dashboard',
     'include_in_budget',
     'description',
-    'reference_no'
+    'reference_no',
+    'create_linked_loan',
+    'loan_type',
+    'counterparty_name',
+    'loan_due_date',
+    'reminder_days',
+    'loan_note'
   ]),
   transaction.update
 );
