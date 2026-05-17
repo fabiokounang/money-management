@@ -259,79 +259,91 @@
 				</div>
 
 				<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-					<div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
-						<div class="flex items-start justify-between gap-4">
-							<div>
-								<p class="text-sm font-medium text-stone-500">Total Income</p>
-								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
-									<%= formatCurrency(safeSummary.total_income) %>
-								</h3>
-								<p class="mt-2 text-xs text-emerald-600">For <%= safeFilters.from_date %> until <%= safeFilters.to_date %></p>
+					<article class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
+						<div class="flex items-center gap-3.5">
+							<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/80 text-emerald-700 ring-1 ring-emerald-200/60 shadow-sm shadow-emerald-100/50">
+								<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M7 17l9.2-9.2M17 17V7H7" />
+								</svg>
 							</div>
-							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-semibold text-emerald-700">↗</div>
+							<p class="min-w-0 text-sm font-semibold leading-snug text-stone-600">Total Income</p>
 						</div>
-					</div>
+						<p class="mt-4 text-xl font-bold tabular-nums leading-tight tracking-tight text-stone-900 sm:text-2xl">
+							<%= formatCurrency(safeSummary.total_income) %>
+						</p>
+						<p class="mt-2 text-xs leading-relaxed text-emerald-700/90">For <%= safeFilters.from_date %> until <%= safeFilters.to_date %></p>
+					</article>
 
-					<div class="rounded-[28px] border border-violet-200/80 bg-white p-5 shadow-sm">
-						<div class="flex items-start justify-between gap-4">
-							<div>
-								<p class="text-sm font-medium text-stone-500">Debt (cash in)</p>
-								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
-									<%= formatCurrency(safeSummary.total_debt || 0) %>
-								</h3>
-								<p class="mt-2 text-xs text-violet-700">Borrow / lend entries included in dashboard</p>
+					<article class="rounded-[28px] border border-violet-200/70 bg-gradient-to-br from-white via-white to-violet-50/40 p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
+						<div class="flex items-center gap-3.5">
+							<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-50 to-violet-100/80 text-violet-700 ring-1 ring-violet-200/60 shadow-sm shadow-violet-100/50">
+								<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M12 3v18M7 8h10a4 4 0 0 1 0 8H9a4 4 0 0 0 0 8h10" />
+								</svg>
 							</div>
-							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-lg font-semibold text-violet-800">⧉</div>
+							<p class="min-w-0 text-sm font-semibold leading-snug text-stone-600">Debt (cash in)</p>
 						</div>
-					</div>
+						<p class="mt-4 text-xl font-bold tabular-nums leading-tight tracking-tight text-stone-900 sm:text-2xl">
+							<%= formatCurrency(safeSummary.total_debt || 0) %>
+						</p>
+						<p class="mt-2 text-xs leading-relaxed text-violet-700/90">Borrow / lend entries included in dashboard</p>
+					</article>
 
-					<div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
-						<div class="flex items-start justify-between gap-4">
-							<div>
-								<p class="text-sm font-medium text-stone-500">Total Expense</p>
-								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
-									<%= formatCurrency(safeSummary.total_expense) %>
-								</h3>
-								<p class="mt-2 text-xs text-rose-600">For <%= safeFilters.from_date %> until <%= safeFilters.to_date %></p>
+					<article class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
+						<div class="flex items-center gap-3.5">
+							<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-50 to-rose-100/80 text-rose-700 ring-1 ring-rose-200/60 shadow-sm shadow-rose-100/50">
+								<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M7 7l9.2 9.2M17 7v10H7" />
+								</svg>
 							</div>
-							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-lg font-semibold text-rose-700">↘</div>
+							<p class="min-w-0 text-sm font-semibold leading-snug text-stone-600">Total Expense</p>
 						</div>
-					</div>
+						<p class="mt-4 text-xl font-bold tabular-nums leading-tight tracking-tight text-stone-900 sm:text-2xl">
+							<%= formatCurrency(safeSummary.total_expense) %>
+						</p>
+						<p class="mt-2 text-xs leading-relaxed text-rose-700/90">For <%= safeFilters.from_date %> until <%= safeFilters.to_date %></p>
+					</article>
 
-					<div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
-						<div class="flex items-start justify-between gap-4">
-							<div>
-								<p class="text-sm font-medium text-stone-500">Current Balance</p>
-								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap">
-									<%= formatCurrency(safeSummary.balance) %>
-								</h3>
-								<p class="mt-2 text-xs text-amber-700">Income plus debt minus expense</p>
+					<article class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
+						<div class="flex items-center gap-3.5">
+							<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/80 text-amber-800 ring-1 ring-amber-200/60 shadow-sm shadow-amber-100/50">
+								<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M12 3v18M5 12h14" />
+								</svg>
 							</div>
-							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-lg font-semibold text-amber-700">◎</div>
+							<p class="min-w-0 text-sm font-semibold leading-snug text-stone-600">Current Balance</p>
 						</div>
-					</div>
+						<p class="mt-4 text-xl font-bold tabular-nums leading-tight tracking-tight text-stone-900 sm:text-2xl">
+							<%= formatCurrency(safeSummary.balance) %>
+						</p>
+						<p class="mt-2 text-xs leading-relaxed text-amber-800/90">Income plus debt minus expense</p>
+					</article>
 
-					<div class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm">
-						<div class="flex items-start justify-between gap-4">
-							<div>
-								<p class="text-sm font-medium text-stone-500">Transactions</p>
-								<h3 class="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900 whitespace-nowrap"><%= safeSummary.transaction_count %></h3>
-								<div class="mt-2 space-y-1 text-[11px] leading-4">
-									<div class="flex items-center gap-2 text-stone-500">
-										<span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-										<span>Included</span>
-										<span class="font-semibold text-emerald-700"><%= safeSummary.transaction_included_count %></span>
-									</div>
-									<div class="flex items-center gap-2 text-stone-500">
-										<span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-										<span>Excluded</span>
-										<span class="font-semibold text-amber-700"><%= safeSummary.transaction_excluded_count %></span>
-									</div>
-								</div>
+					<article class="rounded-[28px] border border-stone-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
+						<div class="flex items-center gap-3.5">
+							<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-stone-100 to-stone-200/60 text-stone-700 ring-1 ring-stone-200/80 shadow-sm">
+								<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+								</svg>
 							</div>
-							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-200 text-lg font-semibold text-stone-700">▣</div>
+							<p class="min-w-0 text-sm font-semibold leading-snug text-stone-600">Transactions</p>
 						</div>
-					</div>
+						<p class="mt-4 text-xl font-bold tabular-nums leading-tight tracking-tight text-stone-900 sm:text-2xl">
+							<%= safeSummary.transaction_count %>
+						</p>
+						<div class="mt-3 space-y-1.5 text-xs leading-relaxed text-stone-500">
+							<div class="flex items-center gap-2">
+								<span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>
+								<span>Included</span>
+								<span class="ml-auto font-semibold tabular-nums text-emerald-700"><%= safeSummary.transaction_included_count %></span>
+							</div>
+							<div class="flex items-center gap-2">
+								<span class="h-2 w-2 shrink-0 rounded-full bg-amber-500"></span>
+								<span>Excluded</span>
+								<span class="ml-auto font-semibold tabular-nums text-amber-700"><%= safeSummary.transaction_excluded_count %></span>
+							</div>
+						</div>
+					</article>
 				</div>
 
 				<div
