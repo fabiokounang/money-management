@@ -31,6 +31,18 @@ const PAYMENT_METHODS = new Set([
     'other'
 ]);
 
+function normalize_transaction_include_flags(transaction_type, include_in_dashboard, include_in_budget) {
+	if (transaction_type === 'transfer') {
+		return { include_in_dashboard: 0, include_in_budget: 0 };
+	}
+	const dash = include_in_dashboard ? 1 : 0;
+	const budget = include_in_budget ? 1 : 0;
+	if (transaction_type === 'debt') {
+		return { include_in_dashboard: dash, include_in_budget: 0 };
+	}
+	return { include_in_dashboard: dash, include_in_budget: budget };
+}
+
 function loan_form_from_body(req) {
 	const lt = String(req.body.loan_type || 'payable').trim();
 	return {
@@ -290,14 +302,15 @@ async function create(req, res, next) {
 		const account_id = parse_positive_integer(req.body.account_id);
 		const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
 		const payment_method = String(req.body.payment_method || '').trim();
-        const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
+        let include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
         let include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
 		const description = normalize_optional_text(req.body.description, 500);
 		const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
-		if (transaction_type === 'debt') {
-			include_in_budget = 0;
-		}
+		({
+			include_in_dashboard,
+			include_in_budget
+		} = normalize_transaction_include_flags(transaction_type, include_in_dashboard, include_in_budget));
 
 		if (!transaction_date || !transaction_time || !transaction_type || !amount || !account_id || !payment_method) {
 			const [income_categories, expense_categories, accounts] = await Promise.all([
@@ -668,14 +681,15 @@ async function update(req, res, next) {
         const account_id = parse_positive_integer(req.body.account_id);
         const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
         const payment_method = String(req.body.payment_method || '').trim();
-        const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
+        let include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
         let include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
         const description = normalize_optional_text(req.body.description, 500);
         const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
-        if (transaction_type === 'debt') {
-            include_in_budget = 0;
-        }
+        ({
+            include_in_dashboard,
+            include_in_budget
+        } = normalize_transaction_include_flags(transaction_type, include_in_dashboard, include_in_budget));
 
         if (!id) {
             req.flash('error_msg', 'Transaction not found');
@@ -806,14 +820,15 @@ async function update(req, res, next) {
         const account_id = parse_positive_integer(req.body.account_id);
         const transfer_to_account_id = parse_positive_integer(req.body.transfer_to_account_id);
         const payment_method = String(req.body.payment_method || '').trim();
-        const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
+        let include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
         let include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
         const description = normalize_optional_text(req.body.description, 500);
         const reference_no = normalize_optional_text(req.body.reference_no, 100);
 
-        if (transaction_type === 'debt') {
-            include_in_budget = 0;
-        }
+        ({
+            include_in_dashboard,
+            include_in_budget
+        } = normalize_transaction_include_flags(transaction_type, include_in_dashboard, include_in_budget));
 
         const [income_categories, expense_categories, accounts] = await Promise.all([
             category.get_active_by_type(user_id, 'income'),

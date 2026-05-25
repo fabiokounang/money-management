@@ -343,6 +343,7 @@
                                             </span>
                                         </label>
                                         <p class="mt-2 text-xs text-stone-500">Uncheck to exclude this expense from budget “spent” / remaining calculations.</p>
+                                        <p id="transfer-include-hint" class="mt-3 hidden text-xs text-stone-500">Transfers between your own accounts are not counted in dashboard income/expense or budget spending.</p>
                                     </div>
                                 </div>
                             </div>
@@ -529,17 +530,38 @@
         const transferAccountWrapper = document.getElementById('transfer-account-wrapper');
         const categoryField = document.getElementById('category_id');
         const subcategoryField = document.getElementById('subcategory_id');
+        const dashboardIncludeInput = document.querySelector('input[name="include_in_dashboard"]');
         const budgetIncludeInput = document.querySelector('input[name="include_in_budget"]');
+        const transferIncludeHint = document.getElementById('transfer-include-hint');
 
-        function syncDebtEditBudget() {
-            if (!transactionType || !budgetIncludeInput) {
+        function syncIncludeFlagsUi() {
+            if (!transactionType) {
                 return;
             }
-            if (transactionType.value === 'debt') {
-                budgetIncludeInput.checked = false;
-                budgetIncludeInput.disabled = true;
-            } else {
-                budgetIncludeInput.disabled = false;
+            const type = transactionType.value;
+            const isTransfer = type === 'transfer';
+            const isDebt = type === 'debt';
+
+            if (dashboardIncludeInput) {
+                if (isTransfer) {
+                    dashboardIncludeInput.checked = false;
+                    dashboardIncludeInput.disabled = true;
+                } else {
+                    dashboardIncludeInput.disabled = false;
+                }
+            }
+
+            if (budgetIncludeInput) {
+                if (isTransfer || isDebt) {
+                    budgetIncludeInput.checked = false;
+                    budgetIncludeInput.disabled = true;
+                } else {
+                    budgetIncludeInput.disabled = false;
+                }
+            }
+
+            if (transferIncludeHint) {
+                transferIncludeHint.classList.toggle('hidden', !isTransfer);
             }
         }
 
@@ -636,7 +658,7 @@
 
                 categoryField.innerHTML = '<option value="">Select category</option>';
                 subcategoryField.innerHTML = '<option value="">Select subcategory</option>';
-                syncDebtEditBudget();
+                syncIncludeFlagsUi();
                 return;
             }
 
@@ -655,7 +677,7 @@
             } else {
                 subcategoryField.innerHTML = '<option value="">Select subcategory</option>';
             }
-            syncDebtEditBudget();
+            syncIncludeFlagsUi();
         }
 
         if (transactionType) {

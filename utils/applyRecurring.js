@@ -41,8 +41,8 @@ async function apply_due_recurring_for_user(user_id) {
           payment_method: row.payment_method,
           description: row.description || null,
           reference_no: row.reference_no || null,
-          include_in_dashboard: 1,
-          include_in_budget: 1
+          include_in_dashboard: row.transaction_type === 'transfer' ? 0 : 1,
+          include_in_budget: row.transaction_type === 'transfer' || row.transaction_type === 'debt' ? 0 : 1
         });
 
         next_due = advanced_due;
