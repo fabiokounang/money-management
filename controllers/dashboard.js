@@ -50,6 +50,32 @@ function plan_month_key_from_range_start(from_date) {
     return `${from_date.slice(0, 7)}-01`;
 }
 
+/** Normalizes DB DATE / strings to YYYY-MM-01 for consistent month keys. */
+function normalize_plan_month_key(value) {
+    if (value === null || value === undefined || value === '') {
+        return '';
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+            return `${trimmed.slice(0, 7)}-01`;
+        }
+        if (/^\d{4}-\d{2}$/.test(trimmed)) {
+            return `${trimmed}-01`;
+        }
+    }
+
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        return `${year}-${month}-01`;
+    }
+
+    return '';
+}
+
 function format_plan_month_label(plan_month) {
     const parts = String(plan_month || '').split('-');
     const y = Number(parts[0]);
@@ -152,20 +178,26 @@ function paginate_rows(rows, page, per_page) {
 }
 
 function build_income_target_history(planned_rows, monthly_actual_rows, highlight_plan_month) {
+    const highlight_key = normalize_plan_month_key(highlight_plan_month) || highlight_plan_month;
+
     const planned_map = new Map();
     (Array.isArray(planned_rows) ? planned_rows : []).forEach((row) => {
-        const key = String(row.plan_month || '').slice(0, 10);
-        if (key) {
-            planned_map.set(key, Number(row.planned_income || 0));
+        const key = normalize_plan_month_key(row.plan_month);
+        if (!key) {
+            return;
         }
+
+        planned_map.set(key, Number(row.planned_income || 0));
     });
 
     const actual_map = new Map();
     (Array.isArray(monthly_actual_rows) ? monthly_actual_rows : []).forEach((row) => {
-        const ym = String(row.month_label || '').trim();
-        if (ym) {
-            actual_map.set(`${ym}-01`, Number(row.total_income || 0));
+        const key = normalize_plan_month_key(row.month_label);
+        if (!key) {
+            return;
         }
+
+        actual_map.set(key, Number(row.total_income || 0));
     });
 
     const month_keys = new Set([...planned_map.keys(), ...actual_map.keys()]);
@@ -204,7 +236,7 @@ function build_income_target_history(planned_rows, monthly_actual_rows, highligh
             pct,
             status_key,
             status_label,
-            is_current: plan_month === highlight_plan_month
+            is_current: plan_month === highlight_key
         };
     });
 }
