@@ -462,17 +462,23 @@ async function get_income_expense_trend_by_range(user_id, from_date, to_date) {
 async function get_period_summary(user_id, from_date, to_date) {
   const sql = `
         SELECT
-            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type IN ('income', 'debt')
+                     AND include_in_dashboard = 1
+                    THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_income,
             COALESCE(SUM(
                 CASE
                     WHEN transaction_type = ?
                      AND include_in_dashboard = 1
-                     AND include_in_budget = 1
                     THEN amount
                     ELSE 0
                 END
             ), 0) AS total_expense,
-            COUNT(*) AS transaction_count
+            COALESCE(SUM(CASE WHEN include_in_dashboard = 1 THEN 1 ELSE 0 END), 0) AS transaction_count
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?

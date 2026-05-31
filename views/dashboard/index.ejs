@@ -740,9 +740,10 @@
 						<p class="mt-1 text-sm text-stone-500">
 							<%= safeWeeklyCheckin.current_week.from_date %> - <%= safeWeeklyCheckin.current_week.to_date %>
 						</p>
+						<p class="mt-1 text-xs text-stone-400">Income and expense use transactions included in dashboard only.</p>
 					</div>
 					<a
-						href="/transaction?from_date=<%= encodeURIComponent(safeWeeklyCheckin.current_week.from_date || '') %>&to_date=<%= encodeURIComponent(safeWeeklyCheckin.current_week.to_date || '') %>"
+						href="/transaction?from_date=<%= encodeURIComponent(safeWeeklyCheckin.current_week.from_date || '') %>&to_date=<%= encodeURIComponent(safeWeeklyCheckin.current_week.to_date || '') %>&include_in_dashboard=1"
 						class="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
 					>
 						Open week details

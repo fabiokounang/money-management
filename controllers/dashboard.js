@@ -242,12 +242,26 @@ function get_previous_week_range(current_week_range) {
     };
 }
 
+function weekly_transactions_href(from_date, to_date) {
+    const qs = new URLSearchParams();
+    if (from_date) {
+        qs.set('from_date', from_date);
+    }
+    if (to_date) {
+        qs.set('to_date', to_date);
+    }
+    qs.set('include_in_dashboard', '1');
+    const query = qs.toString();
+    return query ? `/transaction?${query}` : '/transaction?include_in_dashboard=1';
+}
+
 function build_weekly_recommendation(current_week, previous_week) {
     const current_income = Number(current_week.total_income || 0);
     const current_expense = Number(current_week.total_expense || 0);
     const previous_expense = Number(previous_week.total_expense || 0);
     const expense_delta = current_expense - previous_expense;
     const tx_count = Number(current_week.transaction_count || 0);
+    const week_tx_href = weekly_transactions_href(current_week.from_date, current_week.to_date);
 
     if (tx_count === 0) {
         return {
@@ -263,7 +277,7 @@ function build_weekly_recommendation(current_week, previous_week) {
             title: 'Expense is trending up',
             message: `This week’s spending is up Rp ${expense_delta.toLocaleString('id-ID')} vs last week. Review your top few transactions and set one weekly spending cap.`,
             cta_label: 'Review this week expenses',
-            cta_href: `/transaction?from_date=${current_week.from_date}&to_date=${current_week.to_date}`
+            cta_href: week_tx_href
         };
     }
 
@@ -272,7 +286,7 @@ function build_weekly_recommendation(current_week, previous_week) {
             title: 'Great weekly balance',
             message: 'Income is still higher than spending this week. Keep it up and move any surplus to savings or priority budgets.',
             cta_label: 'View this week transactions',
-            cta_href: `/transaction?from_date=${current_week.from_date}&to_date=${current_week.to_date}`
+            cta_href: week_tx_href
         };
     }
 
@@ -280,7 +294,7 @@ function build_weekly_recommendation(current_week, previous_week) {
         title: 'Keep your weekly check-in',
         message: 'Review this week’s spending categories and pick one expense to trim next week.',
         cta_label: 'Open weekly transactions',
-        cta_href: `/transaction?from_date=${current_week.from_date}&to_date=${current_week.to_date}`
+        cta_href: week_tx_href
     };
 }
 

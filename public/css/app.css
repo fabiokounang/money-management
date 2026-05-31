@@ -18,6 +18,56 @@
 
 .app-main {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* List panels and tables use the full workspace width beside the sidebar */
+.app-main > section,
+.app-main .app-panel {
+  width: 100%;
+  max-width: 100%;
+}
+
+.app-data-table-shell {
+  width: 100%;
+  max-width: 100%;
+}
+
+.app-data-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-data-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+@media (min-width: 768px) {
+  .app-data-table {
+    table-layout: fixed;
+  }
+
+  .app-main .overflow-x-auto {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .app-main .overflow-x-auto > table {
+    width: 100%;
+    min-width: 100%;
+    table-layout: fixed;
+  }
+
+  .app-main .overflow-x-auto > table th,
+  .app-main .overflow-x-auto > table td {
+    vertical-align: top;
+  }
 }
 
 .app-topbar {
@@ -259,10 +309,18 @@ input[type="number"] {
 @media (min-width: 1024px) {
   .app-main {
     margin-left: 290px;
+    width: calc(100vw - 290px);
+    max-width: calc(100vw - 290px);
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
 
   .app-topbar {
     top: 12px;
+  }
+
+  .app-topbar .topbar-shell {
+    width: 100%;
   }
 }
 
