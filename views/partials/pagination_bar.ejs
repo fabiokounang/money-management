@@ -8,7 +8,7 @@
   const pgQuerySuffix = typeof paginationQuerySuffix === 'string' ? paginationQuerySuffix : '';
   const pgEntityLabel = typeof paginationEntityLabel === 'string' ? paginationEntityLabel : 'items';
   const pgPageParam = typeof paginationPageParam === 'string' && paginationPageParam ? paginationPageParam : 'page';
-  const pgCompact = Boolean(paginationCompact);
+  const pgCompact = typeof paginationCompact !== 'undefined' && Boolean(paginationCompact);
   const pgHash = typeof paginationHash === 'string' ? paginationHash : '';
   const pgWrapperClass = pgCompact
     ? 'mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'
