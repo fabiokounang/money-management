@@ -382,27 +382,17 @@
 
 			<div id="transaction-table-view" class="app-data-table-shell hidden border-t border-stone-200 md:block">
 				<div class="app-data-table-scroll">
-					<table class="app-data-table w-full table-fixed border-collapse text-sm">
-						<colgroup>
-							<col style="width: 12%;">
-							<col style="width: 24%;">
-							<col style="width: 8%;">
-							<col style="width: 14%;">
-							<col style="width: 11%;">
-							<col style="width: 10%;">
-							<col style="width: 11%;">
-							<col style="width: 10%;">
-						</colgroup>
+					<table class="app-data-table app-data-table-transactions border-collapse text-sm">
 						<thead>
 							<tr class="border-b border-stone-200 bg-stone-50">
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Date</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Description</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Type</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Category</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Account</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Include</th>
-								<th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Amount</th>
-								<th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
+								<th class="col-date py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Date</th>
+								<th class="col-desc py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Description</th>
+								<th class="col-type py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Type</th>
+								<th class="col-cat py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Category</th>
+								<th class="col-acct py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Account</th>
+								<th class="col-include py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Include</th>
+								<th class="col-amount py-3 text-right text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Amount</th>
+								<th class="col-actions py-3 text-center text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Action</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -416,62 +406,62 @@
 
 							<% safeTransactions.forEach((item) => { %>
 							<tr class="border-b border-stone-100 last:border-b-0 hover:bg-stone-50/70">
-								<td class="px-6 py-4 text-sm text-stone-500">
+								<td class="col-date py-3 text-sm text-stone-500">
 									<%= formatDateTimeWib(toDateTimeValue(item.transaction_date, item.transaction_time)) %>
 								</td>
 
-								<td class="px-6 py-4 align-top">
-									<p class="break-words font-semibold leading-snug text-stone-900"><%= getDisplayDescription(item) %></p>
+								<td class="col-desc py-3 align-top">
+									<p class="font-semibold leading-snug text-stone-900"><%= getDisplayDescription(item) %></p>
 									<p class="mt-1 truncate text-xs text-stone-500"><%= item.reference_no || 'No reference' %></p>
 								</td>
 
-								<td class="px-6 py-4">
-									<span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= getTypeBadgeClass(item.transaction_type) %>">
+								<td class="col-type py-3">
+									<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap <%= getTypeBadgeClass(item.transaction_type) %>">
 										<%= getTypeLabel(item.transaction_type) %>
 									</span>
 								</td>
 
-								<td class="px-6 py-4 text-sm text-stone-800">
-									<%= getDisplayCategory(item) %>
+								<td class="col-cat py-3 text-sm text-stone-800">
+									<span class="line-clamp-2"><%= getDisplayCategory(item) %></span>
 								</td>
 
-								<td class="px-6 py-4 text-sm text-stone-800">
+								<td class="col-acct py-3 text-sm text-stone-800 whitespace-nowrap">
 									<%= getDisplayAccount(item) %>
 								</td>
 
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-wrap gap-1.5">
-                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold <%= Number(item.include_in_dashboard || 0) === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600' %>">Dash</span>
-                                        <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold <%= Number(item.include_in_budget || 0) === 1 ? 'bg-amber-100 text-amber-700' : 'bg-stone-200 text-stone-600' %>">Budget</span>
-                                    </div>
-                                </td>
+								<td class="col-include py-3">
+									<div class="flex flex-nowrap gap-1">
+										<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap <%= Number(item.include_in_dashboard || 0) === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-600' %>">Dash</span>
+										<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap <%= Number(item.include_in_budget || 0) === 1 ? 'bg-amber-100 text-amber-700' : 'bg-stone-200 text-stone-600' %>">Budget</span>
+									</div>
+								</td>
 
-								<td class="px-6 py-4 text-right text-sm font-semibold <%= getAmountClass(item.transaction_type) %> whitespace-nowrap">
+								<td class="col-amount py-3 text-right text-sm font-semibold tabular-nums <%= getAmountClass(item.transaction_type) %>">
 									<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
 								</td>
 
-								<td class="px-6 py-4">
-									<div class="flex items-center justify-center gap-2">
+								<td class="col-actions py-3">
+									<div class="tx-action-group">
 										<a
 											href="/transaction/<%= item.id %>/edit"
-											class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50"
+											class="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-stone-700 transition hover:bg-stone-50"
 										>
 											Edit
 										</a>
 
 										<a
 											href="/transaction/create?from_id=<%= item.id %>"
-											class="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100"
+											class="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-100"
 										>
-											Duplicate
+											Dup
 										</a>
 
 										<form action="/transaction/<%= item.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Delete this transaction?');">
 											<button
 												type="submit"
-												class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+												class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 transition hover:bg-rose-100"
 											>
-												Delete
+												Del
 											</button>
 										</form>
 									</div>

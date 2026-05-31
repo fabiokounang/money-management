@@ -1,4 +1,13 @@
 <meta charset="UTF-8">
+<script>
+  try {
+    if (localStorage.getItem('mm-sidebar-collapsed') === '1') {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+  } catch (_err) {
+    /* ignore */
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= title || 'Money Management' %></title>
 
@@ -172,5 +181,6 @@
   });
 </script>
 
+<script src="/js/sidebar-layout.js" defer></script>
 <script src="/js/global-loader.js" defer></script>
 <script src="/js/csrf-protect.js" defer></script>
