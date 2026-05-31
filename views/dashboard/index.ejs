@@ -226,7 +226,7 @@
 					<p class="text-base font-semibold text-stone-900">Period filter</p>
 					<p class="mt-1 text-sm text-stone-600">Pick dates then click <span class="font-medium text-stone-800">Apply filter</span> to refresh this page.</p>
 					<form method="GET" action="/dashboard" class="mt-4">
-						<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto_auto] xl:items-center">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end xl:grid-cols-[1fr_1fr_1fr_auto_auto] xl:items-end">
 							<div class="min-w-0">
 								<label class="mb-2 block text-sm font-semibold text-stone-800">From date</label>
 								<input
@@ -261,19 +261,19 @@
 								</select>
 							</div>
 
-							<div class="flex md:col-span-2 xl:col-span-1">
+							<div class="flex w-full md:col-span-1 xl:col-span-1">
 								<a
 									href="/dashboard"
-									class="inline-flex h-[50px] w-full items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
+									class="inline-flex h-[50px] w-full min-w-[8.5rem] items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300"
 								>
 									Reset period
 								</a>
 							</div>
 
-							<div class="flex md:col-span-2 xl:col-span-1">
+							<div class="flex w-full md:col-span-1 xl:col-span-1">
 								<button
 									type="submit"
-									class="inline-flex h-[50px] w-full min-w-[140px] items-center justify-center rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+									class="inline-flex h-[50px] w-full min-w-[8.5rem] items-center justify-center rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:-translate-y-0.5 hover:bg-emerald-700"
 								>
 									Apply filter
 								</button>
