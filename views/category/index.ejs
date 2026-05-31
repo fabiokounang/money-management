@@ -41,6 +41,7 @@
 
       const startRow = totalRows === 0 ? 0 : ((currentPage - 1) * perPage) + 1;
       const endRow = Math.min(currentPage * perPage, totalRows);
+      const pageQuerySuffix = `&search=${encodeURIComponent(safeFilters.search || '')}&category_type=${encodeURIComponent(safeFilters.category_type || '')}&is_active=${encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active)}`;
 
       function getTypeBadgeClass(type) {
         if (type === 'income') return 'bg-emerald-100 text-emerald-700';
@@ -384,55 +385,16 @@
         <% }) %>
       </div>
 
-      <div class="flex flex-col gap-3 border-t border-stone-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6">
-        <p class="text-sm text-stone-500">
-          Showing <span class="font-semibold text-stone-900 whitespace-nowrap"><%= startRow %> - <%= endRow %></span> of
-          <span class="font-semibold text-stone-900 whitespace-nowrap"><%= totalRows %></span> categories
-        </p>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <% if (currentPage > 1) { %>
-          <a
-            href="/category?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&category_type=<%= encodeURIComponent(safeFilters.category_type || '') %>&is_active=<%= encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active) %>"
-            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"
-          >
-            Prev
-          </a>
-          <% } else { %>
-          <span class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-400">
-            Prev
-          </span>
-          <% } %>
-
-          <% for (let i = 1; i <= totalPages; i += 1) { %>
-          <% if (i === currentPage) { %>
-          <span class="rounded-xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
-            <%= i %>
-          </span>
-          <% } else { %>
-          <a
-            href="/category?page=<%= i %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&category_type=<%= encodeURIComponent(safeFilters.category_type || '') %>&is_active=<%= encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active) %>"
-            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"
-          >
-            <%= i %>
-          </a>
-          <% } %>
-          <% } %>
-
-          <% if (currentPage < totalPages) { %>
-          <a
-            href="/category?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(safeFilters.search || '') %>&category_type=<%= encodeURIComponent(safeFilters.category_type || '') %>&is_active=<%= encodeURIComponent(Number(safeFilters.is_active) === -1 ? '' : safeFilters.is_active) %>"
-            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm"
-          >
-            Next
-          </a>
-          <% } else { %>
-          <span class="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-400">
-            Next
-          </span>
-          <% } %>
-        </div>
-      </div>
+      <%- include('../partials/pagination_bar', {
+        paginationCurrentPage: currentPage,
+        paginationTotalPages: totalPages,
+        paginationStartRow: startRow,
+        paginationEndRow: endRow,
+        paginationTotalRows: totalRows,
+        paginationBasePath: '/category',
+        paginationQuerySuffix: pageQuerySuffix,
+        paginationEntityLabel: 'categories'
+      }) %>
     </section>
   </main>
 

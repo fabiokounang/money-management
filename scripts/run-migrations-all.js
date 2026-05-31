@@ -14,7 +14,8 @@ const migrationScripts = [
   'run-migration-loans-module.js',
   'run-migration-add-time-fields.js',
   'run-migration-monthly-income-plans.js',
-  'run-migration-transaction-type-debt.js'
+  'run-migration-transaction-type-debt.js',
+  'run-migration-budget-auto-renew.js'
 ];
 
 function runScript(scriptName) {

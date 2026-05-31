@@ -25,6 +25,28 @@ async function get_planned_income(user_id, plan_month) {
   }
 }
 
+async function list_planned_incomes(user_id, limit = 24) {
+  const sql = `
+        SELECT
+            plan_month,
+            planned_income
+        FROM monthly_income_plans
+        WHERE user_id = ?
+        ORDER BY plan_month DESC
+        LIMIT ?
+    `;
+
+  try {
+    const [rows] = await pool.query(sql, [user_id, limit]);
+    return rows;
+  } catch (err) {
+    if (is_no_such_table_error(err)) {
+      return [];
+    }
+    throw err;
+  }
+}
+
 async function upsert_planned_income(user_id, plan_month, planned_income) {
   const sql = `
         INSERT INTO monthly_income_plans (user_id, plan_month, planned_income)
@@ -50,5 +72,6 @@ async function upsert_planned_income(user_id, plan_month, planned_income) {
 
 module.exports = {
   get_planned_income,
+  list_planned_incomes,
   upsert_planned_income
 };

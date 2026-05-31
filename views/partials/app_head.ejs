@@ -136,14 +136,10 @@
       }
     });
 
-    const pageLinks = Array.from(document.querySelectorAll('a[href*="page="]')).filter((link) => {
-      const url = new URL(link.getAttribute('href'), window.location.origin);
-      return url.pathname === currentPath;
-    });
-    if (pageLinks.length === 0) return;
-
-    const paginationContainer = pageLinks[0].closest('div.flex');
-    if (!paginationContainer || paginationContainer.querySelector('[data-pagination-limit]')) return;
+    const paginationControls =
+      document.querySelector('[data-app-pagination-controls]') ||
+      document.querySelector('[data-app-pagination-bar] [data-app-pagination-controls]');
+    if (!paginationControls || paginationControls.querySelector('[data-pagination-limit]')) return;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'inline-flex items-center gap-2';
@@ -172,7 +168,7 @@
 
     wrapper.appendChild(label);
     wrapper.appendChild(select);
-    paginationContainer.prepend(wrapper);
+    paginationControls.prepend(wrapper);
   });
 </script>
 

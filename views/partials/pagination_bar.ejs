@@ -1,0 +1,96 @@
+<%
+  const pgCurrent = Math.max(1, Number(typeof paginationCurrentPage !== 'undefined' ? paginationCurrentPage : 1));
+  const pgTotal = Math.max(1, Number(typeof paginationTotalPages !== 'undefined' ? paginationTotalPages : 1));
+  const pgStart = Number(typeof paginationStartRow !== 'undefined' ? paginationStartRow : 0);
+  const pgEnd = Number(typeof paginationEndRow !== 'undefined' ? paginationEndRow : 0);
+  const pgTotalRows = Number(typeof paginationTotalRows !== 'undefined' ? paginationTotalRows : 0);
+  const pgBasePath = typeof paginationBasePath === 'string' ? paginationBasePath : '';
+  const pgQuerySuffix = typeof paginationQuerySuffix === 'string' ? paginationQuerySuffix : '';
+  const pgEntityLabel = typeof paginationEntityLabel === 'string' ? paginationEntityLabel : 'items';
+  const pgPageParam = typeof paginationPageParam === 'string' && paginationPageParam ? paginationPageParam : 'page';
+  const pgCompact = Boolean(paginationCompact);
+  const pgHash = typeof paginationHash === 'string' ? paginationHash : '';
+  const pgWrapperClass = pgCompact
+    ? 'mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'
+    : 'flex flex-col gap-3 border-t border-stone-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6';
+
+  function buildPaginationItems(current, total, siblingCount) {
+    const siblings = Math.max(0, Number(siblingCount) || 0);
+    if (total <= 1) {
+      return [{ type: 'page', page: 1 }];
+    }
+    const pages = new Set([1, total, current]);
+    for (let offset = 1; offset <= siblings; offset += 1) {
+      if (current - offset >= 1) pages.add(current - offset);
+      if (current + offset <= total) pages.add(current + offset);
+    }
+    const sorted = [...pages].sort((a, b) => a - b);
+    const items = [];
+    let previous = 0;
+    sorted.forEach((page) => {
+      if (previous && page - previous > 1) items.push({ type: 'ellipsis' });
+      items.push({ type: 'page', page });
+      previous = page;
+    });
+    return items;
+  }
+
+  const paginationItems = buildPaginationItems(pgCurrent, pgTotal, 1);
+  const pageBtnClass = 'inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-2.5 text-sm font-semibold transition';
+%>
+
+<div class="<%= pgWrapperClass %>" data-app-pagination-bar>
+  <p class="text-sm text-stone-500">
+    Showing <span class="font-semibold text-stone-900 tabular-nums whitespace-nowrap"><%= pgStart %> – <%= pgEnd %></span>
+    of <span class="font-semibold text-stone-900 tabular-nums whitespace-nowrap"><%= pgTotalRows %></span> <%= pgEntityLabel %>
+  </p>
+
+  <% if (pgTotal > 1) { %>
+  <div class="flex flex-wrap items-center gap-3" data-app-pagination-controls>
+    <p class="hidden text-xs font-medium text-stone-500 sm:block">
+      Page <span class="tabular-nums text-stone-800"><%= pgCurrent %></span> of <span class="tabular-nums text-stone-800"><%= pgTotal %></span>
+    </p>
+    <nav class="inline-flex flex-wrap items-center gap-1 rounded-2xl border border-stone-200/90 bg-stone-50/90 p-1 shadow-sm" aria-label="Pagination">
+      <% if (pgCurrent > 1) { %>
+      <a
+        href="<%= pgBasePath %>?<%= pgPageParam %>=<%= pgCurrent - 1 %><%= pgQuerySuffix %><%= pgHash %>"
+        class="<%= pageBtnClass %> border border-transparent bg-white text-stone-700 hover:border-stone-200 hover:bg-white"
+        aria-label="Previous page"
+      >
+        ‹
+      </a>
+      <% } else { %>
+      <span class="<%= pageBtnClass %> cursor-not-allowed text-stone-300" aria-hidden="true">‹</span>
+      <% } %>
+
+      <% paginationItems.forEach((item) => { %>
+        <% if (item.type === 'ellipsis') { %>
+        <span class="<%= pageBtnClass %> min-w-[1.75rem] cursor-default text-stone-400" aria-hidden="true">…</span>
+        <% } else if (item.page === pgCurrent) { %>
+        <span
+          class="<%= pageBtnClass %> bg-stone-900 text-white shadow-sm"
+          aria-current="page"
+        ><%= item.page %></span>
+        <% } else { %>
+        <a
+          href="<%= pgBasePath %>?<%= pgPageParam %>=<%= item.page %><%= pgQuerySuffix %><%= pgHash %>"
+          class="<%= pageBtnClass %> border border-transparent bg-white text-stone-700 hover:border-stone-200"
+        ><%= item.page %></a>
+        <% } %>
+      <% }) %>
+
+      <% if (pgCurrent < pgTotal) { %>
+      <a
+        href="<%= pgBasePath %>?<%= pgPageParam %>=<%= pgCurrent + 1 %><%= pgQuerySuffix %><%= pgHash %>"
+        class="<%= pageBtnClass %> border border-transparent bg-white text-stone-700 hover:border-stone-200 hover:bg-white"
+        aria-label="Next page"
+      >
+        ›
+      </a>
+      <% } else { %>
+      <span class="<%= pageBtnClass %> cursor-not-allowed text-stone-300" aria-hidden="true">›</span>
+      <% } %>
+    </nav>
+  </div>
+  <% } %>
+</div>

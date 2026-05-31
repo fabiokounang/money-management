@@ -347,6 +347,34 @@ async function get_monthly_income_expense(user_id, month_limit) {
     return rows.reverse();
 }
 
+async function get_monthly_income_targets(user_id, month_limit) {
+    const sql = `
+        SELECT
+            DATE_FORMAT(transaction_date, '%Y-%m') AS month_label,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = ?
+                     AND include_in_dashboard = 1
+                    THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_income
+        FROM transactions
+        WHERE user_id = ?
+        GROUP BY DATE_FORMAT(transaction_date, '%Y-%m')
+        ORDER BY month_label DESC
+        LIMIT ?
+    `;
+
+    const [rows] = await pool.query(sql, [
+        'income',
+        user_id,
+        month_limit
+    ]);
+
+    return rows;
+}
+
 async function get_expense_by_category(user_id, from_date, to_date, limit) {
     const sql = `
         SELECT
@@ -478,6 +506,7 @@ module.exports = {
   get_monthly_cashflow,
   get_income_expense_trend,
   get_monthly_income_expense,
+  get_monthly_income_targets,
   get_expense_by_category,
   get_recent_transactions_by_range,
   get_income_expense_trend_by_range,

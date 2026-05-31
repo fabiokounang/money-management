@@ -76,18 +76,24 @@
         </table>
       </div>
 
-      <% const tp = Math.max(Number(total_pages || 1), 1); const cp = Number(page || 1); %>
-      <% if (tp > 1) { %>
-      <div class="flex flex-wrap gap-2 border-t border-stone-200 px-5 py-4">
-        <% for (let i = 1; i <= tp; i += 1) { %>
-          <% if (i === cp) { %>
-          <span class="rounded-xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white"><%= i %></span>
-          <% } else { %>
-          <a href="/recurring?page=<%= i %>" class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700"><%= i %></a>
-          <% } %>
-        <% } %>
-      </div>
-      <% } %>
+      <%
+        const recurringCurrentPage = Number(page || 1);
+        const recurringPerPage = Number(limit || 10);
+        const recurringTotalRows = Number(total || 0);
+        const recurringTotalPages = Math.max(Number(total_pages || 1), 1);
+        const recurringStartRow = recurringTotalRows === 0 ? 0 : ((recurringCurrentPage - 1) * recurringPerPage) + 1;
+        const recurringEndRow = Math.min(recurringCurrentPage * recurringPerPage, recurringTotalRows);
+      %>
+      <%- include('../partials/pagination_bar', {
+        paginationCurrentPage: recurringCurrentPage,
+        paginationTotalPages: recurringTotalPages,
+        paginationStartRow: recurringStartRow,
+        paginationEndRow: recurringEndRow,
+        paginationTotalRows: recurringTotalRows,
+        paginationBasePath: '/recurring',
+        paginationQuerySuffix: '',
+        paginationEntityLabel: 'schedules'
+      }) %>
     </section>
   </main>
 

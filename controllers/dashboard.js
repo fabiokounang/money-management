@@ -5,11 +5,15 @@ const monthly_income_plan = require('../models/monthly_income_plan');
 const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
 const {
     normalize_pagination_page,
+    normalize_pagination_limit,
     normalize_date_range,
     sanitize_enum,
     is_valid_iso_date,
     parse_non_negative_decimal
 } = require('../utils/validation');
+
+const INCOME_HISTORY_MONTH_CAP = 120;
+const INCOME_HISTORY_PER_PAGE_DEFAULT = 6;
 
 function get_default_month_range() {
     const now = new Date();
@@ -88,10 +92,32 @@ function build_plan_vs_actual({
     const net_planned = pi - pe;
     const net_actual = ai - ae;
 
+    const same_calendar_month = Boolean(
+        from_date && to_date && from_date.slice(0, 7) === to_date.slice(0, 7)
+    );
+    const income_pct_of_planned =
+        pi > 0 && same_calendar_month
+            ? Math.min(999, Math.round((ai / pi) * 1000) / 10)
+            : null;
+
+    let income_achievement_status = 'none';
+    if (pi > 0 && same_calendar_month) {
+        if (ai > pi) {
+            income_achievement_status = 'over';
+        } else if (ai >= pi) {
+            income_achievement_status = 'met';
+        } else {
+            income_achievement_status = 'under';
+        }
+    } else if (ai > 0 && same_calendar_month) {
+        income_achievement_status = 'no_target';
+    }
+
     return {
         plan_month,
         plan_month_label: format_plan_month_label(plan_month),
         range_spans_multiple_months,
+        same_calendar_month,
         planned_income: pi,
         planned_expense_total: pe,
         actual_income: ai,
@@ -101,8 +127,86 @@ function build_plan_vs_actual({
         variance_income: ai - pi,
         variance_expense: ae - pe,
         variance_net: net_actual - net_planned,
-        expense_pct_of_planned: pe > 0 ? Math.min(999, Math.round((ae / pe) * 1000) / 10) : null
+        expense_pct_of_planned: pe > 0 ? Math.min(999, Math.round((ae / pe) * 1000) / 10) : null,
+        income_pct_of_planned,
+        income_achievement_status
     };
+}
+
+function paginate_rows(rows, page, per_page) {
+    const safe_rows = Array.isArray(rows) ? rows : [];
+    const total_rows = safe_rows.length;
+    const total_pages = Math.max(1, Math.ceil(total_rows / per_page) || 1);
+    const current_page = Math.min(Math.max(1, Number(page) || 1), total_pages);
+    const offset = (current_page - 1) * per_page;
+
+    return {
+        rows: safe_rows.slice(offset, offset + per_page),
+        current_page,
+        total_pages,
+        total_rows,
+        per_page,
+        start_row: total_rows === 0 ? 0 : offset + 1,
+        end_row: Math.min(offset + per_page, total_rows)
+    };
+}
+
+function build_income_target_history(planned_rows, monthly_actual_rows, highlight_plan_month) {
+    const planned_map = new Map();
+    (Array.isArray(planned_rows) ? planned_rows : []).forEach((row) => {
+        const key = String(row.plan_month || '').slice(0, 10);
+        if (key) {
+            planned_map.set(key, Number(row.planned_income || 0));
+        }
+    });
+
+    const actual_map = new Map();
+    (Array.isArray(monthly_actual_rows) ? monthly_actual_rows : []).forEach((row) => {
+        const ym = String(row.month_label || '').trim();
+        if (ym) {
+            actual_map.set(`${ym}-01`, Number(row.total_income || 0));
+        }
+    });
+
+    const month_keys = new Set([...planned_map.keys(), ...actual_map.keys()]);
+    const sorted = [...month_keys].sort((a, b) => b.localeCompare(a));
+
+    return sorted.map((plan_month) => {
+        const planned = Number(planned_map.get(plan_month) || 0);
+        const actual = Number(actual_map.get(plan_month) || 0);
+        const pct =
+            planned > 0 ? Math.min(999, Math.round((actual / planned) * 1000) / 10) : null;
+
+        let status_key = 'empty';
+        let status_label = 'No target set';
+
+        if (planned > 0) {
+            if (actual > planned) {
+                status_key = 'over';
+                status_label = 'Exceeded';
+            } else if (actual >= planned) {
+                status_key = 'met';
+                status_label = 'On target';
+            } else {
+                status_key = 'under';
+                status_label = 'Below target';
+            }
+        } else if (actual > 0) {
+            status_key = 'no_target';
+            status_label = 'No target set';
+        }
+
+        return {
+            plan_month,
+            month_label: format_plan_month_label(plan_month),
+            planned,
+            actual,
+            pct,
+            status_key,
+            status_label,
+            is_current: plan_month === highlight_plan_month
+        };
+    });
 }
 
 function get_current_week_range() {
@@ -288,9 +392,12 @@ async function index(req, res, next) {
         const user_id = req.session.user.id;
         await apply_due_recurring_for_user(user_id);
 
-        const page = normalize_pagination_page(req.query.page);
-        const limit = 10;
-        const offset = (page - 1) * limit;
+        const income_history_page = normalize_pagination_page(req.query.income_page);
+        const income_history_per_page = normalize_pagination_limit(
+            req.query.income_per_page,
+            INCOME_HISTORY_PER_PAGE_DEFAULT,
+            [6, 12, 24]
+        );
 
         const range = normalize_date_range(
             req.query.from_date,
@@ -322,6 +429,8 @@ async function index(req, res, next) {
             budget_alerts,
             planned_expense_total,
             stored_planned_income,
+            planned_income_rows,
+            monthly_income_targets,
             accounts_total_balance
         ] = await Promise.all([
             report.get_dashboard_summary(user_id, from_date, to_date),
@@ -336,6 +445,8 @@ async function index(req, res, next) {
             budget.get_active_period_alert_counts(user_id),
             budget.sum_planned_expense_budgets_overlap(user_id, from_date, to_date),
             plan_month ? monthly_income_plan.get_planned_income(user_id, plan_month) : Promise.resolve(0),
+            monthly_income_plan.list_planned_incomes(user_id, INCOME_HISTORY_MONTH_CAP),
+            report.get_monthly_income_targets(user_id, INCOME_HISTORY_MONTH_CAP),
             account.sum_active_accounts_balance(user_id)
         ]);
 
@@ -353,6 +464,22 @@ async function index(req, res, next) {
             actual_income: total_income,
             actual_expense: total_expense
         });
+        const income_target_history_all = build_income_target_history(
+            planned_income_rows,
+            monthly_income_targets,
+            plan_month
+        );
+        const income_target_history_page = paginate_rows(
+            income_target_history_all,
+            income_history_page,
+            income_history_per_page
+        );
+        const income_history_query_suffix = [
+            `from_date=${encodeURIComponent(from_date)}`,
+            `to_date=${encodeURIComponent(to_date)}`,
+            `trend_granularity=${encodeURIComponent(trend_granularity)}`,
+            `income_per_page=${income_history_per_page}`
+        ].join('&');
         const actionable_insights = build_actionable_insights({
             from_date,
             to_date,
@@ -402,6 +529,17 @@ async function index(req, res, next) {
             weekly_checkin,
             budget_alerts,
             plan_vs_actual,
+            income_target_history: income_target_history_page.rows,
+            income_target_history_meta: {
+                current_page: income_target_history_page.current_page,
+                total_pages: income_target_history_page.total_pages,
+                total_rows: income_target_history_page.total_rows,
+                start_row: income_target_history_page.start_row,
+                end_row: income_target_history_page.end_row,
+                per_page: income_target_history_page.per_page,
+                month_cap: INCOME_HISTORY_MONTH_CAP,
+                query_suffix: income_history_query_suffix ? `&${income_history_query_suffix}` : ''
+            },
             filters: {
                 from_date,
                 to_date,
