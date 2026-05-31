@@ -13,13 +13,16 @@
       <button
         type="button"
         data-sidebar-collapse-toggle
-        class="sidebar-collapse-btn hidden h-10 w-10 lg:inline-flex"
+        class="app-rail-toggle topbar-toggle hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl lg:inline-flex"
         aria-pressed="false"
         aria-label="Collapse sidebar"
         title="Minimize menu"
       >
-        <span data-collapse-icon-expanded aria-hidden="true">‹</span>
-        <span data-collapse-icon-collapsed aria-hidden="true">›</span>
+        <svg class="h-5 w-5 text-stone-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+          <path d="M9.5 4.5v15"></path>
+          <path class="app-rail-toggle-chevron" d="M14 12h5.5"></path>
+        </svg>
       </button>
 
       <div class="min-w-0">

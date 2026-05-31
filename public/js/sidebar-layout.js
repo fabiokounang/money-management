@@ -20,11 +20,13 @@
 
   function syncCollapseUi(collapsed) {
     root.classList.toggle('sidebar-collapsed', collapsed);
-    document.querySelectorAll('[data-sidebar-collapse-toggle]').forEach((btn) => {
-      btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
-      btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
-      btn.setAttribute('title', collapsed ? 'Expand menu' : 'Minimize menu');
-    });
+    const toggle = document.querySelector('[data-sidebar-collapse-toggle]');
+    if (toggle) {
+      toggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+      toggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+      toggle.setAttribute('title', collapsed ? 'Buka menu' : 'Sembunyikan menu');
+      toggle.classList.toggle('is-collapsed', collapsed);
+    }
   }
 
   function toggleCollapsed() {
@@ -36,11 +38,14 @@
   syncCollapseUi(readCollapsed());
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-sidebar-collapse-toggle]').forEach((btn) => {
-      btn.addEventListener('click', (event) => {
-        event.preventDefault();
-        toggleCollapsed();
-      });
+    const toggle = document.querySelector('[data-sidebar-collapse-toggle]');
+    if (!toggle) {
+      return;
+    }
+
+    toggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      toggleCollapsed();
     });
   });
 })();

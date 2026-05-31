@@ -1,28 +1,15 @@
 <aside id="app-sidebar" class="app-sidebar fixed inset-y-0 left-0 z-40 w-[290px] -translate-x-full overflow-y-auto lg:translate-x-0">
   <div class="flex min-h-full flex-col">
-    <div class="px-5 pb-4 pt-5">
-      <div class="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-lg shadow-stone-200/40 backdrop-blur">
-        <div class="sidebar-brand-row flex items-center justify-between gap-2">
-          <div class="flex min-w-0 items-center gap-3">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sage/20 text-lg font-bold text-sageDark">
-              ₿
-            </div>
-            <div class="sidebar-brand-text min-w-0">
-              <h1 class="truncate text-base font-bold tracking-tight text-cocoa">Money Management</h1>
-              <p class="text-xs text-muted">Finance made simple</p>
-            </div>
+    <div class="sidebar-header px-4 pb-4 pt-5 lg:px-5">
+      <div class="sidebar-brand-card rounded-3xl border border-white/70 bg-white/80 p-4 shadow-lg shadow-stone-200/40 backdrop-blur">
+        <div class="sidebar-brand-row flex min-w-0 items-center gap-3">
+          <div class="sidebar-logo flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sage/20 text-lg font-bold text-sageDark">
+            ₿
           </div>
-          <button
-            type="button"
-            data-sidebar-collapse-toggle
-            class="sidebar-collapse-btn hidden shrink-0 lg:inline-flex"
-            aria-pressed="false"
-            aria-label="Collapse sidebar"
-            title="Minimize menu"
-          >
-            <span data-collapse-icon-expanded aria-hidden="true">‹</span>
-            <span data-collapse-icon-collapsed aria-hidden="true">›</span>
-          </button>
+          <div class="sidebar-brand-text min-w-0">
+            <h1 class="truncate text-base font-bold tracking-tight text-cocoa">Money Management</h1>
+            <p class="text-xs text-muted">Finance made simple</p>
+          </div>
         </div>
 
         <div class="sidebar-user-block mt-4 rounded-2xl border border-stone-200/80 bg-stone-50/80 px-3 py-2">
