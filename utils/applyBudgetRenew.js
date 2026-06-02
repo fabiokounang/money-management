@@ -80,6 +80,22 @@ async function apply_budget_autorenew_for_user(user_id) {
   return renewed_count;
 }
 
+/**
+ * Auto-renew eligible budgets, then mark any remaining past-due budgets inactive.
+ */
+async function apply_budget_period_maintenance_for_user(user_id) {
+  await apply_budget_autorenew_for_user(user_id);
+
+  try {
+    const today = local_calendar_iso_date();
+    return await budget.deactivate_expired(user_id, today);
+  } catch (err) {
+    console.error('[budget-renew] deactivate_expired failed', err.message || err);
+    return 0;
+  }
+}
+
 module.exports = {
-  apply_budget_autorenew_for_user
+  apply_budget_autorenew_for_user,
+  apply_budget_period_maintenance_for_user
 };

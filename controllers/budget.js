@@ -1,6 +1,7 @@
 const budget = require('../models/budget');
 const category = require('../models/category');
 const displayTime = require('../utils/displayTime');
+const { apply_budget_period_maintenance_for_user } = require('../utils/applyBudgetRenew');
 const {
   normalize_page,
   normalize_pagination_limit,
@@ -129,6 +130,8 @@ function normalize_period_range(period_type, start_date_input, end_date_input) {
 async function recap(req, res, next) {
   try {
     const user_id = req.session.user.id;
+    await apply_budget_period_maintenance_for_user(user_id);
+
     const range = normalize_date_range(
       req.query.from_date,
       req.query.to_date,
@@ -278,6 +281,8 @@ async function recap(req, res, next) {
 async function index(req, res, next) {
   try {
     const user_id = req.session.user.id;
+    await apply_budget_period_maintenance_for_user(user_id);
+
     const page = normalize_page(req.query.page);
     const limit = normalize_pagination_limit(req.query.limit, 10);
     const offset = (page - 1) * limit;

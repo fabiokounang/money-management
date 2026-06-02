@@ -3,6 +3,7 @@ const budget = require('../models/budget');
 const account = require('../models/account');
 const monthly_income_plan = require('../models/monthly_income_plan');
 const { apply_due_recurring_for_user } = require('../utils/applyRecurring');
+const { apply_budget_period_maintenance_for_user } = require('../utils/applyBudgetRenew');
 const {
     normalize_pagination_page,
     normalize_pagination_limit,
@@ -437,6 +438,7 @@ async function index(req, res, next) {
     try {
         const user_id = req.session.user.id;
         await apply_due_recurring_for_user(user_id);
+        await apply_budget_period_maintenance_for_user(user_id);
 
         const income_history_page = normalize_pagination_page(req.query.income_page);
         const income_history_per_page = normalize_pagination_limit(

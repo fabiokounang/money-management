@@ -154,7 +154,42 @@ async function find_overlapping_period(user_id, category_id, start_date, end_dat
 }
 
 async function create(data) {
-  const sql = `
+  const auto_renew = data.auto_renew === undefined ? 1 : Number(data.auto_renew) === 1 ? 1 : 0;
+
+  try {
+    const sql = `
+        INSERT INTO budgets (
+            user_id,
+            category_id,
+            amount,
+            period_type,
+            start_date,
+            end_date,
+            note,
+            is_active,
+            auto_renew
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await pool.query(sql, [
+      data.user_id,
+      data.category_id,
+      data.amount,
+      data.period_type,
+      data.start_date,
+      data.end_date,
+      data.note || null,
+      data.is_active,
+      auto_renew
+    ]);
+
+    return result.insertId;
+  } catch (err) {
+    if (err.code !== 'ER_BAD_FIELD_ERROR') {
+      throw err;
+    }
+
+    const sql = `
         INSERT INTO budgets (
             user_id,
             category_id,
@@ -167,18 +202,19 @@ async function create(data) {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-  const [result] = await pool.query(sql, [
-    data.user_id,
-    data.category_id,
-    data.amount,
-    data.period_type,
-    data.start_date,
-    data.end_date,
-    data.note || null,
-    data.is_active
-  ]);
+    const [result] = await pool.query(sql, [
+      data.user_id,
+      data.category_id,
+      data.amount,
+      data.period_type,
+      data.start_date,
+      data.end_date,
+      data.note || null,
+      data.is_active
+    ]);
 
-  return result.insertId;
+    return result.insertId;
+  }
 }
 
 async function update(data) {
@@ -211,6 +247,88 @@ async function update(data) {
   ]);
 
   return result.affectedRows;
+}
+
+async function set_is_active(id, user_id, is_active) {
+  const sql = `
+        UPDATE budgets
+        SET is_active = ?
+        WHERE id = ?
+          AND user_id = ?
+        LIMIT ?
+    `;
+
+  const [result] = await pool.query(sql, [
+    Number(is_active) === 1 ? 1 : 0,
+    id,
+    user_id,
+    1
+  ]);
+
+  return result.affectedRows;
+}
+
+/** Active budgets whose end_date is before as_of_date (YYYY-MM-DD). */
+async function deactivate_expired(user_id, as_of_date) {
+  const sql = `
+        UPDATE budgets
+        SET is_active = 0
+        WHERE user_id = ?
+          AND is_active = 1
+          AND end_date < ?
+    `;
+
+  const [result] = await pool.query(sql, [user_id, as_of_date]);
+  return result.affectedRows;
+}
+
+/**
+ * Expired active budgets eligible for auto-renew (weekly/monthly/yearly, auto_renew on).
+ * Falls back without auto_renew column if migration not applied yet.
+ */
+async function list_expired_auto_renew(user_id, as_of_date) {
+  const base_sql = `
+        SELECT
+            b.id,
+            b.user_id,
+            b.category_id,
+            b.amount,
+            b.period_type,
+            b.start_date,
+            b.end_date,
+            b.note,
+            b.is_active,
+            c.category_name
+        FROM budgets b
+        JOIN categories c
+            ON c.id = b.category_id
+        WHERE b.user_id = ?
+          AND b.is_active = 1
+          AND b.end_date < ?
+          AND b.period_type IN ('weekly', 'monthly', 'yearly')
+    `;
+
+  try {
+    const sql = `${base_sql}
+          AND COALESCE(b.auto_renew, 0) = 1
+        ORDER BY b.end_date ASC, b.id ASC
+        LIMIT 500`;
+
+    const [rows] = await pool.query(sql, [user_id, as_of_date]);
+    return rows;
+  } catch (err) {
+    if (err.code !== 'ER_BAD_FIELD_ERROR') {
+      throw err;
+    }
+
+    const [rows] = await pool.query(
+      `${base_sql}
+        ORDER BY b.end_date ASC, b.id ASC
+        LIMIT 500`,
+      [user_id, as_of_date]
+    );
+    return rows;
+  }
 }
 
 async function remove(id, user_id) {
@@ -536,6 +654,9 @@ module.exports = {
   create,
   update,
   remove,
+  set_is_active,
+  deactivate_expired,
+  list_expired_auto_renew,
   get_actual_amount_by_budget_ids,
   get_totals,
   get_totals_by_period_type,
