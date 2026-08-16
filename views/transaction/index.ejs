@@ -151,15 +151,19 @@
                 return item.account_name || '-';
             }
 
-            function getAmountClass(type) {
-                if (type === 'income' || type === 'debt') return 'text-emerald-700';
-                if (type === 'expense') return 'text-rose-700';
+            function getAmountClass(item) {
+                const type = item.transaction_type;
+                if (type === 'income') return 'text-emerald-700';
+                if (type === 'debt' && item.debt_cash_effect !== 'out') return 'text-emerald-700';
+                if (type === 'expense' || (type === 'debt' && item.debt_cash_effect === 'out')) return 'text-rose-700';
                 return 'text-stone-800';
             }
 
-            function getAmountPrefix(type) {
-                if (type === 'income' || type === 'debt') return '+\u00A0';
-                if (type === 'expense') return '−\u00A0';
+            function getAmountPrefix(item) {
+                const type = item.transaction_type;
+                if (type === 'income') return '+\u00A0';
+                if (type === 'debt' && item.debt_cash_effect !== 'out') return '+\u00A0';
+                if (type === 'expense' || (type === 'debt' && item.debt_cash_effect === 'out')) return '−\u00A0';
                 return '';
             }
 
@@ -491,8 +495,8 @@
 									</div>
 								</td>
 
-								<td class="col-amount py-3 text-right text-sm font-semibold tabular-nums <%= getAmountClass(item.transaction_type) %>">
-									<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
+								<td class="col-amount py-3 text-right text-sm font-semibold tabular-nums <%= getAmountClass(item) %>">
+									<%= getAmountPrefix(item) %><%= formatCurrency(item.amount) %>
 								</td>
 
 								<td class="col-actions py-3">
@@ -572,8 +576,8 @@
 
 					<div class="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-stone-100 bg-stone-50/90 px-3 py-2.5">
 						<p class="text-xs font-medium text-stone-500">Amount</p>
-						<p class="text-base font-bold tabular-nums leading-none whitespace-nowrap <%= getAmountClass(item.transaction_type) %>">
-							<%= getAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
+						<p class="text-base font-bold tabular-nums leading-none whitespace-nowrap <%= getAmountClass(item) %>">
+							<%= getAmountPrefix(item) %><%= formatCurrency(item.amount) %>
 						</p>
 					</div>
 

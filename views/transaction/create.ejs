@@ -360,8 +360,10 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <h2 class="text-base font-semibold text-stone-900">Loan entry (optional)</h2>
-                    <p class="mt-1 text-sm text-stone-600">
-                      Debt increases the selected account balance (cash in). Check below if you also want a row under <a href="/loan" class="font-semibold text-violet-800 underline">Loans</a> with the same principal as this amount.
+                    <p class="mt-1 text-sm text-stone-600" id="debt-loan-help">
+                      <strong>Payable</strong> (you borrow): account balance increases.
+                      <strong>Receivable</strong> (you lend): account balance decreases.
+                      Check below to also create a row under <a href="/loan" class="font-semibold text-violet-800 underline">Loans</a>.
                     </p>
                     <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-violet-200 bg-white px-4 py-3">
                       <input
@@ -379,8 +381,8 @@
                         <div>
                           <label for="loan_type" class="mb-2 block text-sm font-semibold text-stone-800">Loan type</label>
                           <select id="loan_type" name="loan_type" class="app-select w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
-                            <option value="payable" <%= lf.loan_type === 'payable' ? 'selected' : '' %>>Payable (I owe someone)</option>
-                            <option value="receivable" <%= lf.loan_type === 'receivable' ? 'selected' : '' %>>Receivable (someone owes me)</option>
+                            <option value="payable" <%= lf.loan_type === 'payable' ? 'selected' : '' %>>Payable (I borrow — cash in)</option>
+                            <option value="receivable" <%= lf.loan_type === 'receivable' ? 'selected' : '' %>>Receivable (I lend — cash out)</option>
                           </select>
                         </div>
                         <div>

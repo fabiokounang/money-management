@@ -30,15 +30,17 @@
                 return 'bg-amber-100 text-amber-700';
             }
 
-            function getPreviewAmountClass(type) {
-                if (type === 'income' || type === 'debt') return 'text-emerald-700';
-                if (type === 'expense') return 'text-rose-700';
+            function getPreviewAmountClass(type, debtEffect) {
+                if (type === 'income') return 'text-emerald-700';
+                if (type === 'debt' && debtEffect !== 'out') return 'text-emerald-700';
+                if (type === 'expense' || (type === 'debt' && debtEffect === 'out')) return 'text-rose-700';
                 return 'text-stone-900';
             }
 
-            function getPreviewAmountPrefix(type) {
-                if (type === 'income' || type === 'debt') return '+ ';
-                if (type === 'expense') return '- ';
+            function getPreviewAmountPrefix(type, debtEffect) {
+                if (type === 'income') return '+ ';
+                if (type === 'debt' && debtEffect !== 'out') return '+ ';
+                if (type === 'expense' || (type === 'debt' && debtEffect === 'out')) return '- ';
                 return '';
             }
         %>
@@ -491,8 +493,8 @@
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
                                 <p class="text-xs uppercase tracking-wide text-white/60">Amount</p>
-                                <p class="mt-1 text-sm font-semibold <%= getPreviewAmountClass(item.transaction_type) %> whitespace-nowrap">
-                                    <%= getPreviewAmountPrefix(item.transaction_type) %><%= formatCurrency(item.amount) %>
+                                <p class="mt-1 text-sm font-semibold <%= getPreviewAmountClass(item.transaction_type, item.debt_cash_effect) %> whitespace-nowrap">
+                                    <%= getPreviewAmountPrefix(item.transaction_type, item.debt_cash_effect) %><%= formatCurrency(item.amount) %>
                                 </p>
                             </div>
                         </div>

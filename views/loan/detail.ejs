@@ -55,6 +55,9 @@
                       <p class="text-xs text-stone-500"><%= formatDateTimeWib(toDateTimeValue(p.payment_date, p.payment_time)) %></p>
                     </div>
                     <p class="mt-1 text-xs text-stone-500 break-words"><%= p.note || '-' %></p>
+                    <% if (p.transaction_id) { %>
+                      <p class="mt-1 text-xs text-emerald-700">Linked transaction #<%= p.transaction_id %></p>
+                    <% } %>
                   </div>
                 <% }) %>
               </div>
@@ -84,17 +87,18 @@
               <input type="text" name="note" maxlength="300" class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm">
             </div>
             <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/40 px-4 py-3">
-              <input type="checkbox" name="create_transaction" value="1" class="mt-1 h-4 w-4 rounded border-stone-300 text-emerald-600">
-              <span class="text-sm text-stone-800">Also create a transaction automatically</span>
+              <input type="checkbox" name="create_transaction" value="1" checked class="mt-1 h-4 w-4 rounded border-stone-300 text-emerald-600">
+              <span class="text-sm text-stone-800">Also create a transaction automatically (keeps account balance in sync — recommended)</span>
             </label>
             <div>
-              <label class="mb-2 block text-sm font-semibold">Destination account (for auto transaction)</label>
+              <label class="mb-2 block text-sm font-semibold">Account (for auto transaction)</label>
               <select name="account_id" class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm">
                 <option value="">Select account</option>
                 <% safeAccounts.forEach((acc) => { %>
                   <option value="<%= acc.id %>"><%= acc.account_name %> - <%= acc.account_type %></option>
                 <% }) %>
               </select>
+              <p class="mt-1 text-xs text-stone-500">Payable payments debit this account; receivable payments credit it.</p>
             </div>
             <div>
               <label class="mb-2 block text-sm font-semibold">Payment method (auto transaction)</label>

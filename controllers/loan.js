@@ -62,12 +62,18 @@ async function index(req, res, next) {
   }
 }
 
-function show_create(req, res) {
-  return res.render('loan/create', {
-    title: 'Create Loan',
-    error: null,
-    old: {}
-  });
+async function show_create(req, res, next) {
+  try {
+    const accounts = await account.get_active_accounts(req.session.user.id);
+    return res.render('loan/create', {
+      title: 'Create Loan',
+      error: null,
+      old: {},
+      accounts
+    });
+  } catch (err) {
+    return next(err);
+  }
 }
 
 async function create(req, res, next) {
@@ -80,20 +86,51 @@ async function create(req, res, next) {
     const due_date = normalize_string(req.body.due_date, 10);
     const reminder_days = parse_positive_int(req.body.reminder_days, 0) || 0;
     const note = normalize_string(req.body.note, 500);
+    const create_transaction = String(req.body.create_transaction || '').trim() === '1';
+    const account_id = parse_positive_integer(req.body.account_id);
+    const payment_method = parse_enum(
+      req.body.payment_method,
+      ['cash', 'bank_transfer', 'debit_card', 'credit_card', 'qris', 'ewallet', 'other'],
+      'bank_transfer'
+    );
+    const include_in_dashboard = String(req.body.include_in_dashboard || '').trim() === '1' ? 1 : 0;
+    const include_in_budget = String(req.body.include_in_budget || '').trim() === '1' ? 1 : 0;
 
-    const old = { loan_type, counterparty_name, principal_amount, start_date, due_date, reminder_days, note };
+    const accounts = await account.get_active_accounts(user_id);
+    const old = {
+      loan_type,
+      counterparty_name,
+      principal_amount,
+      start_date,
+      due_date,
+      reminder_days,
+      note,
+      create_transaction,
+      account_id: account_id || '',
+      payment_method,
+      include_in_dashboard,
+      include_in_budget
+    };
 
     if (!loan_type || !counterparty_name || !principal_amount || !start_date) {
-      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Please fill all required fields', old });
+      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Please fill all required fields', old, accounts });
     }
     if (!is_valid_iso_date(start_date)) {
-      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Invalid start date', old });
+      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Invalid start date', old, accounts });
     }
     if (due_date && !is_valid_iso_date(due_date)) {
-      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Invalid due date', old });
+      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Invalid due date', old, accounts });
     }
     if (Number(principal_amount) <= 0) {
-      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Principal amount must be greater than zero', old });
+      return res.status(400).render('loan/create', { title: 'Create Loan', error: 'Principal amount must be greater than zero', old, accounts });
+    }
+    if (create_transaction && !account_id) {
+      return res.status(400).render('loan/create', {
+        title: 'Create Loan',
+        error: 'Please choose an account for the cash movement',
+        old,
+        accounts
+      });
     }
 
     let status = 'open';
@@ -101,22 +138,75 @@ async function create(req, res, next) {
       status = 'overdue';
     }
 
-    await loan.create({
-      user_id,
-      loan_type,
-      counterparty_name,
-      principal_amount: Number(principal_amount),
-      outstanding_amount: Number(principal_amount),
-      start_date,
-      due_date: due_date || null,
-      status,
-      reminder_days,
-      note: note || null
-    });
+    if (create_transaction) {
+      // Payable = cash in (borrow); receivable = cash out (lend)
+      const debt_cash_effect = loan_type === 'receivable' ? 'out' : 'in';
+      const created = await transaction.create_with_balance_update({
+        user_id,
+        transaction_date: start_date,
+        transaction_time: '00:00:00',
+        transaction_type: 'debt',
+        debt_cash_effect,
+        amount: Number(principal_amount),
+        category_id: null,
+        subcategory_id: null,
+        account_id,
+        transfer_to_account_id: null,
+        payment_method,
+        include_in_dashboard,
+        include_in_budget: 0,
+        description: `Loan opened - ${counterparty_name}`,
+        reference_no: null,
+        linked_loan: {
+          loan_type,
+          counterparty_name,
+          due_date: due_date || null,
+          reminder_days,
+          note: note || null
+        }
+      });
+      void created;
+    } else {
+      await loan.create({
+        user_id,
+        loan_type,
+        counterparty_name,
+        principal_amount: Number(principal_amount),
+        outstanding_amount: Number(principal_amount),
+        start_date,
+        due_date: due_date || null,
+        status,
+        reminder_days,
+        note: note || null
+      });
+    }
 
-    req.flash('success_msg', 'Loan entry created');
+    req.flash(
+      'success_msg',
+      create_transaction
+        ? 'Loan entry created and account balance updated'
+        : 'Loan entry created (no account balance change)'
+    );
     return res.redirect('/loan');
   } catch (err) {
+    if (err.message === 'INSUFFICIENT_BALANCE') {
+      const accounts = await account.get_active_accounts(req.session.user.id);
+      return res.status(400).render('loan/create', {
+        title: 'Create Loan',
+        error: 'Insufficient account balance for lending (receivable)',
+        old: req.body,
+        accounts
+      });
+    }
+    if (err.message === 'SOURCE_ACCOUNT_INVALID') {
+      const accounts = await account.get_active_accounts(req.session.user.id);
+      return res.status(400).render('loan/create', {
+        title: 'Create Loan',
+        error: 'Selected account is invalid or inactive',
+        old: req.body,
+        accounts
+      });
+    }
     return next(err);
   }
 }
@@ -195,41 +285,28 @@ async function add_payment(req, res, next) {
     }
 
     if (create_transaction && !account_id) {
-      req.flash('error_msg', 'Please choose destination account for auto transaction');
+      req.flash('error_msg', 'Please choose an account for the auto transaction');
       return res.redirect(`/loan/${loan_id}`);
     }
 
-    await loan.add_payment({
-      loan_id,
-      user_id,
-      amount: Number(amount),
-      payment_date,
-      payment_time,
-      note: note || null
-    });
-
-    if (create_transaction) {
-      const tx_type = item.loan_type === 'receivable' ? 'income' : 'expense';
-      const tx_desc_prefix = item.loan_type === 'receivable' ? 'Loan payment received' : 'Loan payment paid';
-      await transaction.create_with_balance_update({
+    await loan.add_payment_with_optional_transaction(
+      {
+        loan_id,
         user_id,
-        transaction_date: payment_date,
-        transaction_time: payment_time,
-        transaction_type: tx_type,
         amount: Number(amount),
-        category_id: null,
-        subcategory_id: null,
+        payment_date,
+        payment_time,
+        note: note || null,
+        create_transaction,
         account_id,
-        transfer_to_account_id: null,
         payment_method,
         include_in_dashboard,
-        include_in_budget,
-        description: `${tx_desc_prefix} - ${item.counterparty_name} (loan #${loan_id})`,
-        reference_no: null
-      });
-    }
+        include_in_budget
+      },
+      (conn, txData) => transaction.create_with_balance_update(txData, conn)
+    );
 
-    req.flash('success_msg', create_transaction ? 'Payment recorded + transaction created' : 'Payment recorded');
+    req.flash('success_msg', create_transaction ? 'Payment recorded + transaction created' : 'Payment recorded (no account balance change)');
     return res.redirect(`/loan/${loan_id}`);
   } catch (err) {
     if (err.message === 'PAYMENT_EXCEEDS_OUTSTANDING') {
@@ -239,6 +316,14 @@ async function add_payment(req, res, next) {
     if (err.message === 'LOAN_NOT_FOUND') {
       req.flash('error_msg', 'Loan entry not found');
       return res.redirect('/loan');
+    }
+    if (err.message === 'INSUFFICIENT_BALANCE') {
+      req.flash('error_msg', 'Insufficient account balance to record this payment');
+      return res.redirect(`/loan/${req.params.id}`);
+    }
+    if (err.message === 'PAYMENT_ACCOUNT_REQUIRED' || err.message === 'SOURCE_ACCOUNT_INVALID') {
+      req.flash('error_msg', 'Please choose a valid account for the auto transaction');
+      return res.redirect(`/loan/${req.params.id}`);
     }
     return next(err);
   }

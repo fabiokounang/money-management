@@ -1,6 +1,11 @@
 const {
 	pool
 } = require('../utils/db');
+const {
+	money,
+	compute_balance_from_ledger,
+	lock_accounts
+} = require('../utils/accountBalance');
 
 async function find_by_id(id, user_id) {
 	const sql = `
@@ -287,6 +292,66 @@ async function remove(id, user_id) {
     return result.affectedRows;
 }
 
+/**
+ * Recompute current_balance from opening_balance + all related transactions.
+ * Returns { previous, recomputed, changed }.
+ */
+async function recalculate_current_balance(id, user_id) {
+	const connection = await pool.getConnection();
+	try {
+		await connection.beginTransaction();
+
+		const locked = await lock_accounts(connection, user_id, [id]);
+		const accountRow = locked[id];
+		if (!accountRow) {
+			throw new Error('ACCOUNT_NOT_FOUND');
+		}
+
+		const [txRows] = await connection.query(
+			`
+        SELECT
+            transaction_type,
+            debt_cash_effect,
+            amount,
+            account_id,
+            transfer_to_account_id
+        FROM transactions
+        WHERE user_id = ?
+          AND (account_id = ? OR transfer_to_account_id = ?)
+        ORDER BY transaction_date ASC, transaction_time ASC, id ASC
+      `,
+			[user_id, id, id]
+		);
+
+		const previous = money(accountRow.current_balance);
+		const recomputed = compute_balance_from_ledger(accountRow.opening_balance, txRows, id);
+
+		await connection.query(
+			`
+        UPDATE accounts
+        SET current_balance = ?
+        WHERE id = ?
+          AND user_id = ?
+        LIMIT 1
+      `,
+			[recomputed, id, user_id]
+		);
+
+		await connection.commit();
+
+		return {
+			previous,
+			recomputed,
+			changed: previous !== recomputed
+		};
+	} catch (error) {
+		await connection.rollback();
+		throw error;
+	} finally {
+		connection.release();
+	}
+}
+
 module.exports = {
 	find_by_id,
 	update_balance,
@@ -298,6 +363,7 @@ module.exports = {
 	find_by_name,
 	create,
 	update,
-    count_transactions_by_account,
-    remove
+	count_transactions_by_account,
+	remove,
+	recalculate_current_balance
 };

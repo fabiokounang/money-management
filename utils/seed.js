@@ -2,6 +2,173 @@ const {
   pool
 } = require('./db');
 
+const DEFAULT_CATEGORY_TREE = [
+  // income
+  {
+    name: 'Salary',
+    type: 'income',
+    icon: '💼',
+    color: 'green',
+    subcategories: [
+      'Monthly Salary',
+      'Bonus',
+      'Overtime',
+      'Allowance',
+      'Severance'
+    ]
+  },
+  {
+    name: 'Business',
+    type: 'income',
+    icon: '🏢',
+    color: 'blue',
+    subcategories: [
+      'Sales',
+      'Consulting',
+      'Commission',
+      'Side Hustle',
+      'Freelance'
+    ]
+  },
+  {
+    name: 'Investment',
+    type: 'income',
+    icon: '📈',
+    color: 'purple',
+    subcategories: [
+      'Dividends',
+      'Interest',
+      'Capital Gains',
+      'Rental Income',
+      'Crypto Gains'
+    ]
+  },
+
+  // expense
+  {
+    name: 'Food',
+    type: 'expense',
+    icon: '🍜',
+    color: 'orange',
+    subcategories: [
+      'Breakfast',
+      'Lunch',
+      'Dinner',
+      'Snacks',
+      'Coffee',
+      'Groceries',
+      'Delivery',
+      'Restaurant',
+      'Fast Food',
+      'Drinks'
+    ]
+  },
+  {
+    name: 'Transport',
+    type: 'expense',
+    icon: '🚗',
+    color: 'blue',
+    subcategories: [
+      'Fuel',
+      'Taxi / Ride-hail',
+      'Public Transport',
+      'Parking',
+      'Toll',
+      'Maintenance',
+      'Vehicle Tax',
+      'Car Wash',
+      'Train / Bus Ticket',
+      'Flight'
+    ]
+  },
+  {
+    name: 'Shopping',
+    type: 'expense',
+    icon: '🛍️',
+    color: 'pink',
+    subcategories: [
+      'Clothes',
+      'Electronics',
+      'Home Goods',
+      'Beauty',
+      'Gifts',
+      'Online Shopping',
+      'Accessories',
+      'Shoes',
+      'Furniture',
+      'Personal Care'
+    ]
+  },
+  {
+    name: 'Bills',
+    type: 'expense',
+    icon: '📄',
+    color: 'gray',
+    subcategories: [
+      // Utilities
+      'Electricity',
+      'Water',
+      'Gas',
+      'Internet',
+      'Mobile Phone',
+      'TV / Cable',
+      // Housing
+      'Rent',
+      'Mortgage',
+      'Building / HOA Fee',
+      'Property Tax',
+      // Insurance
+      'Home Insurance',
+      'Health Insurance',
+      'Life Insurance',
+      // Financial obligations
+      'Credit Card Payment',
+      'Loan Repayment',
+      'Bank Fees',
+      // Subscriptions
+      'Streaming Subscription',
+      'Cloud Storage',
+      'Software Subscription',
+      // Government / tax
+      'Income Tax',
+      'Vehicle Tax'
+    ]
+  },
+  {
+    name: 'Entertainment',
+    type: 'expense',
+    icon: '🎮',
+    color: 'purple',
+    subcategories: [
+      // Sports
+      'Basketball',
+      'Padel',
+      'Football',
+      'Tennis',
+      'Badminton',
+      'Swimming',
+      'Gym / Fitness',
+      'Running',
+      'Cycling',
+      'Golf',
+      // Media & leisure
+      'Movies',
+      'Games',
+      'Concerts',
+      'Music',
+      'Books',
+      'Streaming',
+      'Karaoke',
+      'Theme Parks',
+      'Night Out',
+      'Hobbies',
+      'Board Games',
+      'Sports Equipment',
+      'Travel / Outing'
+    ]
+  }
+];
+
 async function seed_user_default_data(user_id) {
   const connection = await pool.getConnection();
 
@@ -11,61 +178,7 @@ async function seed_user_default_data(user_id) {
     // ======================
     // 1. DEFAULT CATEGORIES
     // ======================
-    const categories = [
-      // income
-      {
-        name: 'Salary',
-        type: 'income',
-        icon: '💼',
-        color: 'green'
-      },
-      {
-        name: 'Business',
-        type: 'income',
-        icon: '🏢',
-        color: 'blue'
-      },
-      {
-        name: 'Investment',
-        type: 'income',
-        icon: '📈',
-        color: 'purple'
-      },
-
-      // expense
-      {
-        name: 'Food',
-        type: 'expense',
-        icon: '🍜',
-        color: 'orange'
-      },
-      {
-        name: 'Transport',
-        type: 'expense',
-        icon: '🚗',
-        color: 'blue'
-      },
-      {
-        name: 'Shopping',
-        type: 'expense',
-        icon: '🛍️',
-        color: 'pink'
-      },
-      {
-        name: 'Bills',
-        type: 'expense',
-        icon: '📄',
-        color: 'gray'
-      },
-      {
-        name: 'Entertainment',
-        type: 'expense',
-        icon: '🎮',
-        color: 'purple'
-      }
-    ];
-
-    const categoryValues = categories.map((c) => [
+    const categoryValues = DEFAULT_CATEGORY_TREE.map((c) => [
       user_id,
       c.name,
       c.type,
@@ -87,80 +200,27 @@ async function seed_user_default_data(user_id) {
 
     const [categoryResult] = await connection.query(insertCategorySql, [categoryValues]);
 
-    // get id of newly inserted row
-    const insertedCategoryIds = [];
-    let startId = categoryResult.insertId;
+    const categoryIdByName = {};
+    const startId = categoryResult.insertId;
 
-    for (let i = 0; i < categories.length; i += 1) {
-      insertedCategoryIds.push(startId + i);
+    for (let i = 0; i < DEFAULT_CATEGORY_TREE.length; i += 1) {
+      categoryIdByName[DEFAULT_CATEGORY_TREE[i].name] = startId + i;
     }
 
     // ======================
-    // 2. DEFAULT SUBCATEGORY
+    // 2. DEFAULT SUBCATEGORIES
     // ======================
-    const subcategories = [
-      // Food
-      {
-        name: 'Breakfast',
-        index: 3
-      },
-      {
-        name: 'Lunch',
-        index: 3
-      },
-      {
-        name: 'Dinner',
-        index: 3
-      },
+    const subcategoryValues = [];
 
-      // Transport
-      {
-        name: 'Fuel',
-        index: 4
-      },
-      {
-        name: 'Taxi',
-        index: 4
-      },
-
-      // Shopping
-      {
-        name: 'Clothes',
-        index: 5
-      },
-      {
-        name: 'Electronics',
-        index: 5
-      },
-
-      // Bills
-      {
-        name: 'Electricity',
-        index: 6
-      },
-      {
-        name: 'Internet',
-        index: 6
-      },
-
-      // Entertainment
-      {
-        name: 'Movies',
-        index: 7
-      },
-      {
-        name: 'Games',
-        index: 7
+    for (const category of DEFAULT_CATEGORY_TREE) {
+      const categoryId = categoryIdByName[category.name];
+      for (const subName of category.subcategories) {
+        subcategoryValues.push([categoryId, subName, 1]);
       }
-    ];
+    }
 
-    const subcategoryValues = subcategories.map((s) => [
-      insertedCategoryIds[s.index],
-      s.name,
-      1
-    ]);
-
-    const insertSubSql = `
+    if (subcategoryValues.length > 0) {
+      const insertSubSql = `
             INSERT INTO subcategories (
                 category_id,
                 subcategory_name,
@@ -168,7 +228,8 @@ async function seed_user_default_data(user_id) {
             ) VALUES ?
         `;
 
-    await connection.query(insertSubSql, [subcategoryValues]);
+      await connection.query(insertSubSql, [subcategoryValues]);
+    }
 
     // ======================
     // 3. DEFAULT ACCOUNT
@@ -207,5 +268,6 @@ async function seed_user_default_data(user_id) {
 }
 
 module.exports = {
-  seed_user_default_data
+  seed_user_default_data,
+  DEFAULT_CATEGORY_TREE
 };

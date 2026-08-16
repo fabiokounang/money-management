@@ -271,11 +271,47 @@ async function remove(req, res, next) {
     }
 }
 
+async function recalculate(req, res, next) {
+    try {
+        const user_id = req.session.user.id;
+        const id = parse_positive_int(req.params.id);
+
+        if (!id) {
+            req.flash('error_msg', 'Invalid account id');
+            return res.redirect('/account');
+        }
+
+        const item = await account.find_by_id(id, user_id);
+        if (!item) {
+            req.flash('error_msg', 'Account not found');
+            return res.redirect('/account');
+        }
+
+        const result = await account.recalculate_current_balance(id, user_id);
+        if (result.changed) {
+            req.flash(
+                'success_msg',
+                `Balance recalculated: ${result.previous.toLocaleString('id-ID')} → ${result.recomputed.toLocaleString('id-ID')}`
+            );
+        } else {
+            req.flash('success_msg', 'Balance already matches transaction history');
+        }
+        return res.redirect(`/account/${id}/edit`);
+    } catch (error) {
+        if (error.message === 'ACCOUNT_NOT_FOUND') {
+            req.flash('error_msg', 'Account not found');
+            return res.redirect('/account');
+        }
+        return next(error);
+    }
+}
+
 module.exports = {
     index,
     show_create,
     create,
     show_edit,
     update,
-    remove
+    remove,
+    recalculate
 };

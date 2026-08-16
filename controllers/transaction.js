@@ -794,6 +794,7 @@ async function update(req, res, next) {
             transaction_date,
             transaction_time,
             transaction_type,
+            debt_cash_effect: oldItem.debt_cash_effect || 'in',
             amount,
             category_id,
             subcategory_id,
@@ -881,6 +882,22 @@ async function update(req, res, next) {
             message = 'Amount must be greater than zero';
         }
 
+        if (error.message === 'INVALID_BALANCE_REVERSE') {
+            message = 'Cannot update: reversing the old amount would make an account balance inconsistent';
+        }
+
+        if (error.message === 'LOAN_PAYMENT_TX_LOCKED') {
+            message = 'This transaction is linked to a loan payment. Amount/account/type cannot be changed. Delete and re-record the payment instead.';
+        }
+
+        if (error.message === 'LOAN_SOURCE_TX_HAS_PAYMENTS') {
+            message = 'This debt transaction opened a loan that already has payments. Clear those payments first.';
+        }
+
+        if (error.message === 'LOAN_SOURCE_TX_TYPE_LOCKED') {
+            message = 'Cannot change type of a debt transaction that opened a loan entry.';
+        }
+
         return res.status(400).render('transaction/edit', {
             title: 'Edit Transaction',
             error: message,
@@ -935,6 +952,16 @@ async function remove(req, res, next) {
 
         if (error.message === 'INVALID_BALANCE_REVERSE') {
             req.flash('error_msg', 'Failed to delete transaction because account balance is inconsistent');
+            return res.redirect('/transaction');
+        }
+
+        if (error.message === 'LOAN_SOURCE_TX_HAS_PAYMENTS') {
+            req.flash('error_msg', 'Cannot delete: this debt opened a loan that already has payments');
+            return res.redirect('/transaction');
+        }
+
+        if (error.message === 'INSUFFICIENT_BALANCE') {
+            req.flash('error_msg', 'Failed to reverse transaction due to insufficient balance');
             return res.redirect('/transaction');
         }
 

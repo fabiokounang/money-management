@@ -10,6 +10,7 @@ router.get('/account/create', auth, allow_query_fields([]), account.show_create)
 router.post('/account', auth, allow_body_fields(['account_name', 'account_type', 'opening_balance', 'account_color', 'note', 'is_active']), account.create);
 router.get('/account/:id/edit', auth, allow_query_fields([]), account.show_edit);
 router.put('/account/:id', auth, allow_body_fields(['account_name', 'account_type', 'opening_balance', 'account_color', 'note', 'is_active']), account.update);
+router.post('/account/:id/recalculate', auth, allow_body_fields([]), account.recalculate);
 router.delete('/account/:id', auth, allow_body_fields([]), account.remove);
 
 module.exports = router;

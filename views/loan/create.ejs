@@ -11,17 +11,18 @@
     <section class="mt-6 overflow-hidden rounded-[32px] border border-stone-200/80 bg-white shadow-xl shadow-stone-200/50">
       <div class="border-b border-stone-100 px-5 py-5 sm:px-7 sm:py-6">
         <h1 class="text-2xl font-bold text-stone-900">Create loan entry</h1>
-        <p class="mt-1 text-sm text-stone-600">Track receivable/payable with due date and outstanding.</p>
+        <p class="mt-1 text-sm text-stone-600">Track receivable/payable. Optionally update an account balance when cash already moved.</p>
       </div>
       <div class="px-5 py-6 sm:px-7">
         <% if (error) { %><div class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><%= error %></div><% } %>
+        <% const safeAccounts = Array.isArray(accounts) ? accounts : []; %>
         <form action="/loan" method="POST" class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label class="mb-2 block text-sm font-semibold">Type</label>
             <select name="loan_type" required class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm">
               <option value="">Select type</option>
-              <option value="receivable" <%= old.loan_type === 'receivable' ? 'selected' : '' %>>Receivable (someone owes me)</option>
-              <option value="payable" <%= old.loan_type === 'payable' ? 'selected' : '' %>>Payable (I owe someone)</option>
+              <option value="receivable" <%= old.loan_type === 'receivable' ? 'selected' : '' %>>Receivable (I lend — cash out)</option>
+              <option value="payable" <%= old.loan_type === 'payable' ? 'selected' : '' %>>Payable (I borrow — cash in)</option>
             </select>
           </div>
           <div>
@@ -48,6 +49,35 @@
             <label class="mb-2 block text-sm font-semibold">Note</label>
             <textarea name="note" rows="3" maxlength="500" class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm"><%= old.note || '' %></textarea>
           </div>
+
+          <div class="md:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+            <label class="flex cursor-pointer items-start gap-3">
+              <input type="checkbox" name="create_transaction" value="1" class="mt-1 h-4 w-4 rounded border-stone-300 text-emerald-600" <%= old.create_transaction ? 'checked' : '' %>>
+              <span class="text-sm text-stone-800">Also update account balance now (recommended if cash already moved at the bank)</span>
+            </label>
+            <div>
+              <label class="mb-2 block text-sm font-semibold">Account</label>
+              <select name="account_id" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                <option value="">Select account</option>
+                <% safeAccounts.forEach((acc) => { %>
+                  <option value="<%= acc.id %>" <%= String(old.account_id) === String(acc.id) ? 'selected' : '' %>><%= acc.account_name %> - <%= acc.account_type %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-semibold">Payment method</label>
+              <select name="payment_method" class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm">
+                <option value="bank_transfer" <%= old.payment_method === 'bank_transfer' ? 'selected' : '' %>>Bank transfer</option>
+                <option value="cash" <%= old.payment_method === 'cash' ? 'selected' : '' %>>Cash</option>
+                <option value="debit_card">Debit card</option>
+                <option value="credit_card">Credit card</option>
+                <option value="qris">QRIS</option>
+                <option value="ewallet">E-wallet</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
           <div class="md:col-span-2 flex gap-2 justify-end">
             <a href="/loan" class="rounded-2xl border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-700">Cancel</a>
             <button class="rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white">Save entry</button>

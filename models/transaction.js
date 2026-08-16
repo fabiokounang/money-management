@@ -2,6 +2,11 @@ const {
 	pool
 } = require('../utils/db');
 const loan = require('./loan');
+const {
+	money,
+	normalize_debt_cash_effect,
+	apply_transaction_effects
+} = require('../utils/accountBalance');
 
 async function count_all(user_id, filters = {}) {
 	const from_date = filters.from_date || null;
@@ -73,6 +78,7 @@ async function get_list(user_id, limit, offset, filters = {}) {
             t.transaction_date,
             t.transaction_time,
             t.transaction_type,
+            t.debt_cash_effect,
             t.amount,
             t.include_in_dashboard,
             t.include_in_budget,
@@ -142,6 +148,7 @@ async function find_by_id(id, user_id) {
             transaction_date,
             transaction_time,
             transaction_type,
+            debt_cash_effect,
             amount,
             category_id,
             subcategory_id,
@@ -164,82 +171,55 @@ async function find_by_id(id, user_id) {
 	return rows[0] || null;
 }
 
-async function create_with_balance_update(data) {
-	const connection = await pool.getConnection();
+async function create_with_balance_update(data, existingConnection = null) {
+	const ownsConnection = !existingConnection;
+	const connection = existingConnection || await pool.getConnection();
 
 	try {
-		await connection.beginTransaction();
+		if (ownsConnection) {
+			await connection.beginTransaction();
+		}
 
-		const from_account_sql = `
-            SELECT
-                id,
-                user_id,
-                account_name,
-                current_balance,
-                is_active
-            FROM accounts
-            WHERE id = ?
-              AND user_id = ?
-            LIMIT ?
-        `;
+		if (!['income', 'expense', 'transfer', 'debt'].includes(data.transaction_type)) {
+			throw new Error('INVALID_TRANSACTION_TYPE');
+		}
 
-		const [from_account_rows] = await connection.query(from_account_sql, [
-			data.account_id,
-			data.user_id,
-			1
-		]);
+		const amount = money(data.amount);
+		if (amount <= 0) {
+			throw new Error('INVALID_AMOUNT');
+		}
 
-		const from_account = from_account_rows[0] || null;
-
-		if (!from_account || Number(from_account.is_active) !== 1) {
+		if (!data.account_id) {
 			throw new Error('SOURCE_ACCOUNT_INVALID');
 		}
 
-		let to_account = null;
+		let debt_cash_effect = 'in';
+		if (data.transaction_type === 'debt') {
+			if (data.linked_loan && data.linked_loan.loan_type === 'receivable') {
+				debt_cash_effect = 'out';
+			} else {
+				debt_cash_effect = normalize_debt_cash_effect(data.debt_cash_effect, 'in');
+			}
+		}
 
 		if (data.transaction_type === 'transfer') {
 			if (!data.transfer_to_account_id) {
 				throw new Error('TRANSFER_DESTINATION_REQUIRED');
 			}
-
 			if (Number(data.account_id) === Number(data.transfer_to_account_id)) {
 				throw new Error('TRANSFER_ACCOUNT_SAME');
 			}
-
-			const to_account_sql = `
-                SELECT
-                    id,
-                    user_id,
-                    account_name,
-                    current_balance,
-                    is_active
-                FROM accounts
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			const [to_account_rows] = await connection.query(to_account_sql, [
-				data.transfer_to_account_id,
-				data.user_id,
-				1
-			]);
-
-			to_account = to_account_rows[0] || null;
-
-			if (!to_account || Number(to_account.is_active) !== 1) {
-				throw new Error('DESTINATION_ACCOUNT_INVALID');
-			}
 		}
 
-		if (
-			data.transaction_type === 'expense' ||
-			data.transaction_type === 'transfer'
-		) {
-			if (Number(from_account.current_balance) < Number(data.amount)) {
-				throw new Error('INSUFFICIENT_BALANCE');
-			}
-		}
+		const txPayload = {
+			transaction_type: data.transaction_type,
+			amount,
+			account_id: data.account_id,
+			transfer_to_account_id: data.transfer_to_account_id || null,
+			debt_cash_effect
+		};
+
+		await apply_transaction_effects(connection, data.user_id, txPayload, 'apply');
 
 		const insert_sql = `
             INSERT INTO transactions (
@@ -247,132 +227,77 @@ async function create_with_balance_update(data) {
                 transaction_date,
                 transaction_time,
                 transaction_type,
+                debt_cash_effect,
                 amount,
                 category_id,
                 subcategory_id,
                 account_id,
                 transfer_to_account_id,
-            payment_method,
-            include_in_dashboard,
-            include_in_budget,
-            description,
-            reference_no
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                payment_method,
+                include_in_dashboard,
+                include_in_budget,
+                description,
+                reference_no
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
 		const [insert_result] = await connection.query(insert_sql, [
 			data.user_id,
 			data.transaction_date,
-            data.transaction_time || '00:00:00',
+			data.transaction_time || '00:00:00',
 			data.transaction_type,
-			data.amount,
+			data.transaction_type === 'debt' ? debt_cash_effect : 'in',
+			amount,
 			data.category_id || null,
 			data.subcategory_id || null,
 			data.account_id,
 			data.transfer_to_account_id || null,
 			data.payment_method,
-            Number(data.include_in_dashboard) === 0 ? 0 : 1,
-            Number(data.include_in_budget) === 0 ? 0 : 1,
+			Number(data.include_in_dashboard) === 0 ? 0 : 1,
+			Number(data.include_in_budget) === 0 ? 0 : 1,
 			data.description || null,
 			data.reference_no || null
 		]);
 
-		if (data.transaction_type === 'income' || data.transaction_type === 'debt') {
-			const update_from_sql = `
-                UPDATE accounts
-                SET current_balance = ?
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			await connection.query(update_from_sql, [
-				Number(from_account.current_balance) + Number(data.amount),
-				data.account_id,
-				data.user_id,
-				1
-			]);
-		}
-
-		if (data.transaction_type === 'expense') {
-			const update_from_sql = `
-                UPDATE accounts
-                SET current_balance = ?
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			await connection.query(update_from_sql, [
-				Number(from_account.current_balance) - Number(data.amount),
-				data.account_id,
-				data.user_id,
-				1
-			]);
-		}
-
-		if (data.transaction_type === 'transfer') {
-			const update_from_sql = `
-                UPDATE accounts
-                SET current_balance = ?
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			await connection.query(update_from_sql, [
-				Number(from_account.current_balance) - Number(data.amount),
-				data.account_id,
-				data.user_id,
-				1
-			]);
-
-			const update_to_sql = `
-                UPDATE accounts
-                SET current_balance = ?
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			await connection.query(update_to_sql, [
-				Number(to_account.current_balance) + Number(data.amount),
-				data.transfer_to_account_id,
-				data.user_id,
-				1
-			]);
-		}
+		const transaction_id = insert_result.insertId;
 
 		if (data.transaction_type === 'debt' && data.linked_loan) {
 			const L = data.linked_loan;
 			let loan_status = 'open';
-			if (L.due_date && new Date(`${L.due_date}T23:59:59`) < new Date() && Number(data.amount) > 0) {
+			if (L.due_date && new Date(`${L.due_date}T23:59:59`) < new Date() && amount > 0) {
 				loan_status = 'overdue';
 			}
 			await loan.createInConnection(connection, {
 				user_id: data.user_id,
 				loan_type: L.loan_type,
 				counterparty_name: L.counterparty_name,
-				principal_amount: Number(data.amount),
-				outstanding_amount: Number(data.amount),
+				principal_amount: amount,
+				outstanding_amount: amount,
 				start_date: data.transaction_date,
 				due_date: L.due_date || null,
 				status: loan_status,
 				reminder_days: L.reminder_days || 0,
-				note: L.note || null
+				note: L.note || null,
+				source_transaction_id: transaction_id
 			});
 		}
 
-		await connection.commit();
+		if (ownsConnection) {
+			await connection.commit();
+		}
 
 		return {
-			id: insert_result.insertId
+			id: transaction_id
 		};
 	} catch (error) {
-		await connection.rollback();
+		if (ownsConnection) {
+			await connection.rollback();
+		}
 		throw error;
 	} finally {
-		connection.release();
+		if (ownsConnection) {
+			connection.release();
+		}
 	}
 }
 
@@ -384,6 +309,7 @@ async function find_full_by_id(id, user_id) {
             transaction_date,
             transaction_time,
             transaction_type,
+            debt_cash_effect,
             amount,
             category_id,
             subcategory_id,
@@ -412,13 +338,15 @@ async function update_with_balance_update(data) {
 	try {
 		await connection.beginTransaction();
 
-		const old_transaction_sql = `
+		const [old_transaction_rows] = await connection.query(
+			`
             SELECT
                 id,
                 user_id,
                 transaction_date,
                 transaction_time,
                 transaction_type,
+                debt_cash_effect,
                 amount,
                 category_id,
                 subcategory_id,
@@ -432,190 +360,91 @@ async function update_with_balance_update(data) {
             FROM transactions
             WHERE id = ?
               AND user_id = ?
-            LIMIT ?
-        `;
-
-		const [old_transaction_rows] = await connection.query(old_transaction_sql, [
-			data.id,
-			data.user_id,
-			1
-		]);
+            LIMIT 1
+            FOR UPDATE
+            `,
+			[data.id, data.user_id]
+		);
 
 		const old_transaction = old_transaction_rows[0] || null;
-
 		if (!old_transaction) {
 			throw new Error('TRANSACTION_NOT_FOUND');
 		}
 
-		const account_ids = new Set();
-
-		if (old_transaction.account_id) {
-			account_ids.add(Number(old_transaction.account_id));
-		}
-
-		if (old_transaction.transfer_to_account_id) {
-			account_ids.add(Number(old_transaction.transfer_to_account_id));
-		}
-
-		if (data.account_id) {
-			account_ids.add(Number(data.account_id));
-		}
-
-		if (data.transfer_to_account_id) {
-			account_ids.add(Number(data.transfer_to_account_id));
-		}
-
-		const account_map = {};
-
-		for (const account_id of account_ids) {
-			const account_sql = `
-                SELECT
-                    id,
-                    user_id,
-                    account_name,
-                    current_balance,
-                    is_active
-                FROM accounts
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			const [account_rows] = await connection.query(account_sql, [
-				account_id,
-				data.user_id,
-				1
-			]);
-
-			const account_item = account_rows[0] || null;
-
-			if (!account_item) {
-				throw new Error('ACCOUNT_NOT_FOUND');
-			}
-
-			account_map[account_id] = {
-				id: Number(account_item.id),
-				current_balance: Number(account_item.current_balance || 0),
-				is_active: Number(account_item.is_active || 0)
-			};
-		}
-
-		function applyReverseEffect(transaction_item) {
-			const amount = Number(transaction_item.amount || 0);
-			const from_id = Number(transaction_item.account_id || 0);
-			const to_id = Number(transaction_item.transfer_to_account_id || 0);
-
-			if (transaction_item.transaction_type === 'income' || transaction_item.transaction_type === 'debt') {
-				account_map[from_id].current_balance -= amount;
-			}
-
-			if (transaction_item.transaction_type === 'expense') {
-				account_map[from_id].current_balance += amount;
-			}
-
-			if (transaction_item.transaction_type === 'transfer') {
-				account_map[from_id].current_balance += amount;
-				account_map[to_id].current_balance -= amount;
+		const linkedPayment = await loan.find_payment_by_transaction_id_in_connection(
+			connection,
+			data.id,
+			data.user_id
+		);
+		if (linkedPayment) {
+			const amountChanged = money(data.amount) !== money(old_transaction.amount);
+			const accountChanged = Number(data.account_id) !== Number(old_transaction.account_id);
+			const typeChanged = String(data.transaction_type) !== String(old_transaction.transaction_type);
+			const transferChanged = Number(data.transfer_to_account_id || 0) !== Number(old_transaction.transfer_to_account_id || 0);
+			if (amountChanged || accountChanged || typeChanged || transferChanged) {
+				throw new Error('LOAN_PAYMENT_TX_LOCKED');
 			}
 		}
 
-		function validateNewTransactionInput() {
-			if (!['income', 'expense', 'transfer', 'debt'].includes(data.transaction_type)) {
-				throw new Error('INVALID_TRANSACTION_TYPE');
+		const sourceLoan = await loan.find_by_source_transaction_id_in_connection(
+			connection,
+			data.id,
+			data.user_id
+		);
+
+		if (!['income', 'expense', 'transfer', 'debt'].includes(data.transaction_type)) {
+			throw new Error('INVALID_TRANSACTION_TYPE');
+		}
+
+		const newAmount = money(data.amount);
+		if (newAmount <= 0) {
+			throw new Error('INVALID_AMOUNT');
+		}
+
+		if (!data.account_id) {
+			throw new Error('SOURCE_ACCOUNT_INVALID');
+		}
+
+		if (data.transaction_type === 'transfer') {
+			if (!data.transfer_to_account_id) {
+				throw new Error('TRANSFER_DESTINATION_REQUIRED');
 			}
-
-			if (Number(data.amount) <= 0) {
-				throw new Error('INVALID_AMOUNT');
-			}
-
-			if (!data.account_id) {
-				throw new Error('SOURCE_ACCOUNT_INVALID');
-			}
-
-			const source_account = account_map[Number(data.account_id)] || null;
-
-			if (!source_account || Number(source_account.is_active) !== 1) {
-				throw new Error('SOURCE_ACCOUNT_INVALID');
-			}
-
-			if (data.transaction_type === 'transfer') {
-				if (!data.transfer_to_account_id) {
-					throw new Error('TRANSFER_DESTINATION_REQUIRED');
-				}
-
-				if (Number(data.account_id) === Number(data.transfer_to_account_id)) {
-					throw new Error('TRANSFER_ACCOUNT_SAME');
-				}
-
-				const destination_account = account_map[Number(data.transfer_to_account_id)] || null;
-
-				if (!destination_account || Number(destination_account.is_active) !== 1) {
-					throw new Error('DESTINATION_ACCOUNT_INVALID');
-				}
+			if (Number(data.account_id) === Number(data.transfer_to_account_id)) {
+				throw new Error('TRANSFER_ACCOUNT_SAME');
 			}
 		}
 
-		function applyNewEffect(transaction_item) {
-			const amount = Number(transaction_item.amount || 0);
-			const from_id = Number(transaction_item.account_id || 0);
-			const to_id = Number(transaction_item.transfer_to_account_id || 0);
-
-			if (transaction_item.transaction_type === 'income' || transaction_item.transaction_type === 'debt') {
-				account_map[from_id].current_balance += amount;
-			}
-
-			if (transaction_item.transaction_type === 'expense') {
-				if (account_map[from_id].current_balance < amount) {
-					throw new Error('INSUFFICIENT_BALANCE');
-				}
-
-				account_map[from_id].current_balance -= amount;
-			}
-
-			if (transaction_item.transaction_type === 'transfer') {
-				if (account_map[from_id].current_balance < amount) {
-					throw new Error('INSUFFICIENT_BALANCE');
-				}
-
-				account_map[from_id].current_balance -= amount;
-				account_map[to_id].current_balance += amount;
-			}
+		let debt_cash_effect = 'in';
+		if (data.transaction_type === 'debt') {
+			debt_cash_effect = normalize_debt_cash_effect(
+				data.debt_cash_effect != null ? data.debt_cash_effect : old_transaction.debt_cash_effect,
+				'in'
+			);
 		}
 
-		applyReverseEffect(old_transaction);
+		await apply_transaction_effects(connection, data.user_id, old_transaction, 'reverse');
 
-		validateNewTransactionInput();
+		await apply_transaction_effects(
+			connection,
+			data.user_id,
+			{
+				transaction_type: data.transaction_type,
+				amount: newAmount,
+				account_id: data.account_id,
+				transfer_to_account_id: data.transfer_to_account_id || null,
+				debt_cash_effect
+			},
+			'apply'
+		);
 
-		applyNewEffect({
-			transaction_type: data.transaction_type,
-			amount: data.amount,
-			account_id: data.account_id,
-			transfer_to_account_id: data.transfer_to_account_id
-		});
-
-		for (const account_id of Object.keys(account_map)) {
-			const update_account_sql = `
-                UPDATE accounts
-                SET current_balance = ?
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			await connection.query(update_account_sql, [
-				account_map[account_id].current_balance,
-				Number(account_id),
-				data.user_id,
-				1
-			]);
-		}
-
-		const update_transaction_sql = `
+		const [update_result] = await connection.query(
+			`
             UPDATE transactions
             SET
                 transaction_date = ?,
                 transaction_time = ?,
                 transaction_type = ?,
+                debt_cash_effect = ?,
                 amount = ?,
                 category_id = ?,
                 subcategory_id = ?,
@@ -628,27 +457,46 @@ async function update_with_balance_update(data) {
                 reference_no = ?
             WHERE id = ?
               AND user_id = ?
-            LIMIT ?
-        `;
+            LIMIT 1
+            `,
+			[
+				data.transaction_date,
+				data.transaction_time || '00:00:00',
+				data.transaction_type,
+				data.transaction_type === 'debt' ? debt_cash_effect : 'in',
+				newAmount,
+				data.category_id || null,
+				data.subcategory_id || null,
+				data.account_id,
+				data.transfer_to_account_id || null,
+				data.payment_method,
+				Number(data.include_in_dashboard) === 0 ? 0 : 1,
+				Number(data.include_in_budget) === 0 ? 0 : 1,
+				data.description || null,
+				data.reference_no || null,
+				data.id,
+				data.user_id
+			]
+		);
 
-		const [update_result] = await connection.query(update_transaction_sql, [
-			data.transaction_date,
-            data.transaction_time || '00:00:00',
-			data.transaction_type,
-			data.amount,
-			data.category_id || null,
-			data.subcategory_id || null,
-			data.account_id,
-			data.transfer_to_account_id || null,
-			data.payment_method,
-            Number(data.include_in_dashboard) === 0 ? 0 : 1,
-            Number(data.include_in_budget) === 0 ? 0 : 1,
-			data.description || null,
-			data.reference_no || null,
-			data.id,
-			data.user_id,
-			1
-		]);
+		if (sourceLoan) {
+			const paymentCount = await loan.count_payments_in_connection(connection, sourceLoan.id, data.user_id);
+			const amountChanged = money(old_transaction.amount) !== newAmount;
+			const typeChanged = String(old_transaction.transaction_type) !== String(data.transaction_type);
+			if ((amountChanged || typeChanged) && paymentCount > 0) {
+				throw new Error('LOAN_SOURCE_TX_HAS_PAYMENTS');
+			}
+			if (data.transaction_type === 'debt' && paymentCount === 0) {
+				await loan.update_principal_from_source_tx_in_connection(connection, {
+					loan_id: sourceLoan.id,
+					user_id: data.user_id,
+					principal_amount: newAmount,
+					debt_cash_effect
+				});
+			} else if (data.transaction_type !== 'debt') {
+				throw new Error('LOAN_SOURCE_TX_TYPE_LOCKED');
+			}
+		}
 
 		await connection.commit();
 
@@ -669,128 +517,60 @@ async function delete_with_balance_update(id, user_id) {
 	try {
 		await connection.beginTransaction();
 
-		const transaction_sql = `
+		const [transaction_rows] = await connection.query(
+			`
             SELECT
                 id,
                 user_id,
                 transaction_type,
+                debt_cash_effect,
                 amount,
                 account_id,
                 transfer_to_account_id
             FROM transactions
             WHERE id = ?
               AND user_id = ?
-            LIMIT ?
-        `;
-
-		const [transaction_rows] = await connection.query(transaction_sql, [
-			id,
-			user_id,
-			1
-		]);
+            LIMIT 1
+            FOR UPDATE
+            `,
+			[id, user_id]
+		);
 
 		const item = transaction_rows[0] || null;
-
 		if (!item) {
 			throw new Error('TRANSACTION_NOT_FOUND');
 		}
 
-		const account_ids = new Set();
-
-		if (item.account_id) {
-			account_ids.add(Number(item.account_id));
-		}
-
-		if (item.transfer_to_account_id) {
-			account_ids.add(Number(item.transfer_to_account_id));
-		}
-
-		const account_map = {};
-
-		for (const account_id of account_ids) {
-			const account_sql = `
-                SELECT
-                    id,
-                    user_id,
-                    current_balance
-                FROM accounts
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			const [account_rows] = await connection.query(account_sql, [
-				account_id,
+		const linkedPayment = await loan.find_payment_by_transaction_id_in_connection(connection, id, user_id);
+		if (linkedPayment) {
+			await loan.reverse_payment_in_connection(connection, {
+				payment_id: linkedPayment.id,
+				loan_id: linkedPayment.loan_id,
 				user_id,
-				1
-			]);
+				amount: money(linkedPayment.amount)
+			});
+		}
 
-			const account_item = account_rows[0] || null;
-
-			if (!account_item) {
-				throw new Error('ACCOUNT_NOT_FOUND');
+		const sourceLoan = await loan.find_by_source_transaction_id_in_connection(connection, id, user_id);
+		if (sourceLoan) {
+			const paymentCount = await loan.count_payments_in_connection(connection, sourceLoan.id, user_id);
+			if (paymentCount > 0) {
+				throw new Error('LOAN_SOURCE_TX_HAS_PAYMENTS');
 			}
-
-			account_map[account_id] = {
-				id: Number(account_item.id),
-				current_balance: Number(account_item.current_balance || 0)
-			};
+			await loan.delete_in_connection(connection, sourceLoan.id, user_id);
 		}
 
-		const amount = Number(item.amount || 0);
-		const from_id = Number(item.account_id || 0);
-		const to_id = Number(item.transfer_to_account_id || 0);
+		await apply_transaction_effects(connection, user_id, item, 'reverse');
 
-		if (item.transaction_type === 'income' || item.transaction_type === 'debt') {
-			if (account_map[from_id].current_balance < amount) {
-				throw new Error('INVALID_BALANCE_REVERSE');
-			}
-
-			account_map[from_id].current_balance -= amount;
-		}
-
-		if (item.transaction_type === 'expense') {
-			account_map[from_id].current_balance += amount;
-		}
-
-		if (item.transaction_type === 'transfer') {
-			if (account_map[to_id].current_balance < amount) {
-				throw new Error('INVALID_BALANCE_REVERSE');
-			}
-
-			account_map[from_id].current_balance += amount;
-			account_map[to_id].current_balance -= amount;
-		}
-
-		for (const account_id of Object.keys(account_map)) {
-			const update_account_sql = `
-                UPDATE accounts
-                SET current_balance = ?
-                WHERE id = ?
-                  AND user_id = ?
-                LIMIT ?
-            `;
-
-			await connection.query(update_account_sql, [
-				account_map[account_id].current_balance,
-				Number(account_id),
-				user_id,
-				1
-			]);
-		}
-
-		const delete_sql = `
+		const [delete_result] = await connection.query(
+			`
             DELETE FROM transactions
             WHERE id = ?
               AND user_id = ?
-            LIMIT ?
-        `;
-
-		const [delete_result] = await connection.query(delete_sql, [
-			id,
-			user_id,
-			1
-		]);
+            LIMIT 1
+            `,
+			[id, user_id]
+		);
 
 		await connection.commit();
 
@@ -804,6 +584,7 @@ async function delete_with_balance_update(id, user_id) {
 		connection.release();
 	}
 }
+
 
 async function get_export_list(user_id, filters) {
     const from_date = filters.from_date || null;

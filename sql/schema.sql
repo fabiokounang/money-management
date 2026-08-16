@@ -87,6 +87,7 @@ CREATE TABLE transactions (
     transaction_date DATE NOT NULL,
     transaction_time TIME NOT NULL DEFAULT '00:00:00',
     transaction_type ENUM('income', 'expense', 'transfer', 'debt') NOT NULL,
+    debt_cash_effect ENUM('in', 'out') NOT NULL DEFAULT 'in',
     amount DECIMAL(18, 2) NOT NULL,
     category_id INT UNSIGNED NULL,
     subcategory_id INT UNSIGNED NULL,
@@ -210,11 +211,13 @@ CREATE TABLE loan_records (
     status ENUM('open', 'settled', 'overdue') NOT NULL DEFAULT 'open',
     reminder_days INT UNSIGNED NOT NULL DEFAULT 0,
     note VARCHAR(500) NULL,
+    source_transaction_id INT UNSIGNED NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_loans_user_status_due (user_id, status, due_date),
-    KEY idx_loans_user_type (user_id, loan_type)
+    KEY idx_loans_user_type (user_id, loan_type),
+    KEY idx_loans_source_tx (source_transaction_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE loan_payments (
@@ -225,8 +228,10 @@ CREATE TABLE loan_payments (
     payment_time TIME NOT NULL DEFAULT '00:00:00',
     amount DECIMAL(18, 2) NOT NULL,
     note VARCHAR(300) NULL,
+    transaction_id INT UNSIGNED NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_loan_payments_loan_date (loan_id, payment_date),
-    KEY idx_loan_payments_user (user_id)
+    KEY idx_loan_payments_user (user_id),
+    UNIQUE KEY uq_loan_payments_transaction (transaction_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
