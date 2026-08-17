@@ -166,6 +166,11 @@ app.use((error, req, res, next) => {
 
 async function start_server() {
     try {
+        const { execFileSync } = require('child_process');
+        const migrateScript = path.join(__dirname, 'scripts', 'run-migrations-all.js');
+        console.log('[boot] running database migrations…');
+        execFileSync(process.execPath, [migrateScript], { stdio: 'inherit' });
+
         await test_connection();
 
         app.listen(PORT, () => {

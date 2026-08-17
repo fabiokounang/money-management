@@ -664,6 +664,29 @@ async function create(req, res, next) {
 			});
 		}
 
+		if (error.message === 'ACCOUNT_NOT_FOUND' || error.message === 'SOURCE_ACCOUNT_INVALID') {
+			return res.status(400).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Selected account was not found or is inactive',
+				income_categories,
+				expense_categories,
+				accounts,
+				loan_form: loan_form_from_body(req)
+			});
+		}
+
+		if (error.code === 'ER_BAD_FIELD_ERROR') {
+			console.error('[transaction.create] schema mismatch — run migrations', error.message);
+			return res.status(500).render('transaction/create', {
+				title: 'Create Transaction',
+				error: 'Database schema is out of date. Please restart the app so migrations can run, then try again.',
+				income_categories,
+				expense_categories,
+				accounts,
+				loan_form: loan_form_from_body(req)
+			});
+		}
+
 		return next(error);
 	}
 }
@@ -896,6 +919,10 @@ async function update(req, res, next) {
 
         if (error.message === 'LOAN_SOURCE_TX_TYPE_LOCKED') {
             message = 'Cannot change type of a debt transaction that opened a loan entry.';
+        }
+
+        if (error.code === 'ER_BAD_FIELD_ERROR') {
+            message = 'Database schema is out of date. Please restart the app so migrations can run, then try again.';
         }
 
         return res.status(400).render('transaction/edit', {

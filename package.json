@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "npm run migrate:all && node index.js",
+    "start": "node index.js",
     "migrate:all": "node scripts/run-migrations-all.js",
     "migrate:usernames": "node scripts/run-migration-usernames.js",
     "migrate:recurring-schedules": "node scripts/run-migration-recurring-schedules.js",

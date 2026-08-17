@@ -6,18 +6,34 @@ async function get_dashboard_summary(user_id, from_date, to_date) {
   const sql = `
         SELECT
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_income,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_debt,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = ?
+                     AND COALESCE(debt_cash_effect, 'in') = 'in'
+                    THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_debt,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = ?
+                     AND COALESCE(debt_cash_effect, 'in') = 'out'
+                    THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_debt_out,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense,
             COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_transfer
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
-          AND include_in_dashboard = 1
+          AND COALESCE(include_in_dashboard, 0) = 1
         LIMIT ?
     `;
 
   const [rows] = await pool.query(sql, [
     'income',
+    'debt',
     'debt',
     'expense',
     'transfer',
@@ -30,6 +46,7 @@ async function get_dashboard_summary(user_id, from_date, to_date) {
   return rows[0] || {
     total_income: 0,
     total_debt: 0,
+    total_debt_out: 0,
     total_expense: 0,
     total_transfer: 0
   };
@@ -54,6 +71,7 @@ async function get_recent_transactions(user_id, limit) {
         LEFT JOIN categories c
             ON c.id = t.category_id
         WHERE t.user_id = ?
+          AND t.include_in_dashboard = 1
         ORDER BY t.transaction_date DESC, t.id DESC
         LIMIT ?
     `;
@@ -78,6 +96,7 @@ async function get_top_expense_categories(user_id, from_date, to_date, limit) {
         WHERE t.user_id = ?
           AND t.transaction_type = ?
           AND t.transaction_date BETWEEN ? AND ?
+          AND t.include_in_dashboard = 1
         GROUP BY c.id, c.category_name
         ORDER BY total DESC
         LIMIT ?
@@ -150,6 +169,7 @@ async function get_summary(user_id, from_date, to_date, transaction_type, accoun
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
+          AND include_in_dashboard = 1
           AND (? = '' OR transaction_type = ?)
           AND (? = 0 OR account_id = ? OR transfer_to_account_id = ?)
         LIMIT ?
@@ -192,6 +212,7 @@ async function get_category_summary(user_id, from_date, to_date, transaction_typ
         WHERE t.user_id = ?
           AND t.transaction_date BETWEEN ? AND ?
           AND t.category_id IS NOT NULL
+          AND t.include_in_dashboard = 1
           AND (? = '' OR t.transaction_type = ?)
           AND (? = 0 OR t.account_id = ? OR t.transfer_to_account_id = ?)
         GROUP BY c.id, c.category_name, c.category_type
@@ -228,6 +249,7 @@ async function get_selected_categories_total(user_id, from_date, to_date, transa
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
           AND category_id IN (${placeholders})
+          AND include_in_dashboard = 1
           AND (? = '' OR transaction_type = ?)
           AND (? = 0 OR account_id = ? OR transfer_to_account_id = ?)
         LIMIT ?
@@ -253,17 +275,29 @@ async function get_monthly_cashflow(user_id, month_limit) {
   const sql = `
         SELECT
             DATE_FORMAT(transaction_date, '%Y-%m') AS month_label,
-            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'income' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'in' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_income,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'expense' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'out' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
+          AND include_in_dashboard = 1
         GROUP BY DATE_FORMAT(transaction_date, '%Y-%m')
         ORDER BY month_label DESC
         LIMIT ?
     `;
 
   const [rows] = await pool.query(sql, [
-    'expense',
     user_id,
     month_limit
   ]);
@@ -297,11 +331,24 @@ async function get_income_expense_trend(
   const sql = `
         SELECT
             ${bucket_expr} AS period_label,
-            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'income' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'in' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_income,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'expense' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'out' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
+          AND include_in_dashboard = 1
           AND (? = '' OR transaction_type = ?)
           AND (? = 0 OR account_id = ? OR transfer_to_account_id = ?)
         GROUP BY ${bucket_expr}
@@ -310,7 +357,6 @@ async function get_income_expense_trend(
     `;
 
   const [rows] = await pool.query(sql, [
-    'expense',
     user_id,
     from_date,
     to_date,
@@ -329,17 +375,29 @@ async function get_monthly_income_expense(user_id, month_limit) {
     const sql = `
         SELECT
             DATE_FORMAT(transaction_date, '%Y-%m') AS month_label,
-            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'income' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'in' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_income,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'expense' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'out' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
+          AND include_in_dashboard = 1
         GROUP BY DATE_FORMAT(transaction_date, '%Y-%m')
         ORDER BY month_label DESC
         LIMIT ?
     `;
 
     const [rows] = await pool.query(sql, [
-        'expense',
         user_id,
         month_limit
     ]);
@@ -386,6 +444,7 @@ async function get_expense_by_category(user_id, from_date, to_date, limit) {
         WHERE t.user_id = ?
           AND t.transaction_type = ?
           AND t.transaction_date BETWEEN ? AND ?
+          AND t.include_in_dashboard = 1
         GROUP BY c.id, c.category_name
         ORDER BY total DESC
         LIMIT ?
@@ -422,6 +481,7 @@ async function get_recent_transactions_by_range(user_id, from_date, to_date, lim
             ON c.id = t.category_id
         WHERE t.user_id = ?
           AND t.transaction_date BETWEEN ? AND ?
+          AND t.include_in_dashboard = 1
         ORDER BY t.transaction_date DESC, t.id DESC
         LIMIT ?
     `;
@@ -440,17 +500,29 @@ async function get_income_expense_trend_by_range(user_id, from_date, to_date) {
     const sql = `
         SELECT
             DATE_FORMAT(transaction_date, '%Y-%m-%d') AS day_label,
-            COALESCE(SUM(CASE WHEN transaction_type IN ('income', 'debt') THEN amount ELSE 0 END), 0) AS total_income,
-            COALESCE(SUM(CASE WHEN transaction_type = ? THEN amount ELSE 0 END), 0) AS total_expense
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'income' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'in' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_income,
+            COALESCE(SUM(
+                CASE
+                    WHEN transaction_type = 'expense' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'out' THEN amount
+                    ELSE 0
+                END
+            ), 0) AS total_expense
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
+          AND include_in_dashboard = 1
         GROUP BY DATE_FORMAT(transaction_date, '%Y-%m-%d')
         ORDER BY day_label ASC
     `;
 
     const [rows] = await pool.query(sql, [
-        'expense',
         user_id,
         from_date,
         to_date
@@ -464,17 +536,15 @@ async function get_period_summary(user_id, from_date, to_date) {
         SELECT
             COALESCE(SUM(
                 CASE
-                    WHEN transaction_type IN ('income', 'debt')
-                     AND include_in_dashboard = 1
-                    THEN amount
+                    WHEN transaction_type = 'income' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'in' THEN amount
                     ELSE 0
                 END
             ), 0) AS total_income,
             COALESCE(SUM(
                 CASE
-                    WHEN transaction_type = ?
-                     AND include_in_dashboard = 1
-                    THEN amount
+                    WHEN transaction_type = 'expense' THEN amount
+                    WHEN transaction_type = 'debt' AND COALESCE(debt_cash_effect, 'in') = 'out' THEN amount
                     ELSE 0
                 END
             ), 0) AS total_expense,
@@ -482,11 +552,11 @@ async function get_period_summary(user_id, from_date, to_date) {
         FROM transactions
         WHERE user_id = ?
           AND transaction_date BETWEEN ? AND ?
+          AND COALESCE(include_in_dashboard, 0) = 1
         LIMIT ?
     `;
 
   const [rows] = await pool.query(sql, [
-    'expense',
     user_id,
     from_date,
     to_date,
